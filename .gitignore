@@ -1,0 +1,79 @@
+# =========================
+# SISTEMA OPERATIVO
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# INTELLIJ IDEA / ANDROID STUDIO
+# =========================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# =========================
+# GRADLE / ANDROID
+# =========================
+.gradle/
+build/
+**/build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Archivos generados de Android
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# =========================
+# KOTLIN / JAVA
+# =========================
+*.class
+*.jar
+*.war
+*.ear
+
+# =========================
+# MAVEN / SPRING BOOT
+# =========================
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+
+# =========================
+# VARIABLES LOCALES / SECRETOS
+# =========================
+.env
+*.env
+application-local.properties
+application-dev.properties
+application-prod.properties
+
+# No subir contraseñas locales reales
+backend/**/src/main/resources/application.properties
+
+# Pero sí se permite subir archivo de ejemplo
+!backend/**/src/main/resources/application-example.properties
+
+# =========================
+# POSTGRESQL / BASE DE DATOS
+# =========================
+*.backup
+*.dump
+*.sql.gz
+
+# =========================
+# ARCHIVOS TEMPORALES
+# =========================
+*.tmp
+*.temp
+*.bak
+*.swp
