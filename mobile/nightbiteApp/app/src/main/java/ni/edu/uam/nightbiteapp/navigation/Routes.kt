@@ -9,9 +9,15 @@ package ni.edu.uam.nightbiteapp.navigation
 object Routes {
     const val START = "start"
     const val LOGIN = "login"
+    const val AGE_CHECK = "age_check"
     const val REGISTER = "register"
+    const val REGISTER_WITH_AGE = "register/{age}"
     const val HOME = "home"
     const val PROFILE = "profile"
     const val SETTINGS = "settings"
     const val GAME_PLACEHOLDER = "game_placeholder"
+
+    fun registerWithAge(age: Int): String {
+        return "register/$age"
+    }
 }

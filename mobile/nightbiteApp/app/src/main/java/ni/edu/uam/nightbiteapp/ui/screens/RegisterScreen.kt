@@ -36,6 +36,7 @@ import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
  */
 @Composable
 fun RegisterScreen(
+    age: Int,
     onBackToLogin: () -> Unit,
     registerViewModel: RegisterViewModel = viewModel()
 ) {

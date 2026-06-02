@@ -14,6 +14,9 @@ import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
 import androidx.compose.ui.platform.LocalContext
 import android.app.Activity
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import ni.edu.uam.nightbiteapp.ui.screens.AgeCheckScreen
 
 /**
  * Componente principal de navegación de la aplicación.
@@ -44,7 +47,7 @@ fun AppNavigation() {
         composable(Routes.LOGIN) {
             LoginScreen(
                 onNavigateToRegister = {
-                    navController.navigate(Routes.REGISTER)
+                    navController.navigate(Routes.AGE_CHECK)
                 },
                 onNavigateToHome = {
                     navController.navigate(Routes.HOME) {
@@ -59,10 +62,31 @@ fun AppNavigation() {
             )
         }
 
-        composable(Routes.REGISTER) {
-            RegisterScreen(
+        composable(Routes.AGE_CHECK) {
+            AgeCheckScreen(
+                onAgeApproved = { age ->
+                    navController.navigate(Routes.registerWithAge(age))
+                },
                 onBackToLogin = {
-                    navController.popBackStack()
+                    navController.popBackStack(Routes.LOGIN, false)
+                }
+            )
+        }
+
+        composable(
+            route = Routes.REGISTER_WITH_AGE,
+            arguments = listOf(
+                navArgument("age") {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStackEntry ->
+            val age = backStackEntry.arguments?.getInt("age") ?: 13
+
+            RegisterScreen(
+                age = age,
+                onBackToLogin = {
+                    navController.popBackStack(Routes.LOGIN, false)
                 }
             )
         }
