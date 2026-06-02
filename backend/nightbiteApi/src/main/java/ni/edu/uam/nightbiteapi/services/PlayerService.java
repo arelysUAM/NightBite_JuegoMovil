@@ -33,6 +33,29 @@ public class PlayerService {
         return playerRepository.save(player);
     }
 
+    /**
+     * Actualiza los datos básicos de un jugador existente.
+     *
+     * Este método primero busca el jugador en la base de datos para conservar
+     * valores que no deben perderse, como la fecha de creación.
+     *
+     * @param id identificador del jugador a actualizar.
+     * @param playerData nuevos datos recibidos desde la petición.
+     * @return jugador actualizado o null si no existe.
+     */
+    public Player updatePlayer(Long id, Player playerData) {
+        Player existingPlayer = playerRepository.findById(id).orElse(null);
+
+        if (existingPlayer == null) {
+            return null;
+        }
+
+        existingPlayer.setUsername(playerData.getUsername());
+        existingPlayer.setEmail(playerData.getEmail());
+
+        return playerRepository.save(existingPlayer);
+    }
+
     public void deletePlayer(Long id) {
         playerRepository.deleteById(id);
     }

@@ -40,9 +40,10 @@ public class Player {
 
     /**
      * Fecha y hora en que el jugador fue registrado.
-     * Este valor se asigna automáticamente antes de guardar el registro.
+     * Este valor se asigna automáticamente antes de guardar el registro
+     * y no debe modificarse en actualizaciones posteriores.
      */
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     /**

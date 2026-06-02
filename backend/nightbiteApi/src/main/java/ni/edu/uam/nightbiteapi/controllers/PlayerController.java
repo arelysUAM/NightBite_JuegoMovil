@@ -37,10 +37,19 @@ public class PlayerController {
         return playerService.savePlayer(player);
     }
 
+    /**
+     * Endpoint para actualizar un jugador existente.
+     *
+     * Método HTTP: PUT
+     * URL: /api/players/{id}
+     *
+     * @param id identificador del jugador a actualizar.
+     * @param player nuevos datos del jugador.
+     * @return jugador actualizado.
+     */
     @PutMapping("/{id}")
     public Player updatePlayer(@PathVariable Long id, @RequestBody Player player) {
-        player.setId(id);
-        return playerService.savePlayer(player);
+        return playerService.updatePlayer(id, player);
     }
 
     @DeleteMapping("/{id}")
