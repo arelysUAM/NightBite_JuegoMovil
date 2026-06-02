@@ -112,12 +112,6 @@ private fun RegisterInfoPanel(
             fontWeight = FontWeight.Black
         )
 
-        Text(
-            text = "Registra tu repartidor nocturno",
-            color = LavenderGray,
-            fontSize = 13.sp
-        )
-
         Spacer(modifier = Modifier.height(24.dp))
 
         Box(
@@ -175,7 +169,7 @@ private fun RegisterFormPanel(
         NightTextField(
             value = username,
             onValueChange = onUsernameChange,
-            label = "Nombre de jugador",
+            label = "Nombre de usuario",
             icon = Icons.Default.Person,
             modifier = Modifier.width(320.dp)
         )

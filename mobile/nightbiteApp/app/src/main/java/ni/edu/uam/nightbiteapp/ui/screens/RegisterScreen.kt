@@ -108,9 +108,12 @@ fun RegisterScreen(
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
-                    registerViewModel.registerPlayer(
+                    registerViewModel.registerUser(
                         username = username,
-                        email = email
+                        email = email,
+                        password = password,
+                        confirmPassword = confirmPassword,
+                        age = age
                     )
                 }
             },
