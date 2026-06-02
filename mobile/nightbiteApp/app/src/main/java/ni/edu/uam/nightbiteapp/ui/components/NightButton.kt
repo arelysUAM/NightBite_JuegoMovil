@@ -1,5 +1,6 @@
 package ni.edu.uam.nightbiteapp.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,10 +15,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
+import ni.edu.uam.nightbiteapp.ui.theme.DarkText
+import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 
 /**
  * Botón principal reutilizable para acciones importantes.
@@ -33,12 +36,12 @@ fun NightPrimaryButton(
         onClick = onClick,
         shape = RoundedCornerShape(28.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFFFD166),
-            contentColor = Color(0xFF1B1F3B)
+            containerColor = CheeseYellow,
+            contentColor = DarkText
         ),
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .height(40.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -48,7 +51,7 @@ fun NightPrimaryButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = text,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
@@ -73,12 +76,13 @@ fun NightSecondaryButton(
     OutlinedButton(
         onClick = onClick,
         shape = RoundedCornerShape(28.dp),
+        border = BorderStroke(1.5.dp, SmokeWhite),
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color(0xFFF8F5E9)
+            contentColor = SmokeWhite
         ),
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(38.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -88,7 +92,7 @@ fun NightSecondaryButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = text,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
 

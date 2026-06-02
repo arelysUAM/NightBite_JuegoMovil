@@ -1,6 +1,7 @@
 package ni.edu.uam.nightbiteapp.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -8,16 +9,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
+import ni.edu.uam.nightbiteapp.ui.theme.DarkText
+import ni.edu.uam.nightbiteapp.ui.theme.FieldBackground
+import ni.edu.uam.nightbiteapp.ui.theme.LavenderGray
+import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 
 /**
  * Campo de texto reutilizable para formularios de NightBite.
- *
- * Se utiliza en pantallas como Login y Registro para mantener
- * una apariencia visual consistente.
  */
 @Composable
 fun NightTextField(
@@ -31,30 +33,33 @@ fun NightTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = {
+        placeholder = {
             Text(text = label)
         },
         leadingIcon = {
             Icon(
                 imageVector = icon,
-                contentDescription = label,
-                tint = Color(0xFF4A4A68)
+                contentDescription = label
             )
         },
         singleLine = true,
         visualTransformation = visualTransformation,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFFF8F5E9),
-            unfocusedContainerColor = Color(0xFFF8F5E9),
-            focusedIndicatorColor = Color(0xFFFFD166),
-            unfocusedIndicatorColor = Color(0xFFFFD166),
-            focusedLabelColor = Color(0xFF1B1F3B),
-            unfocusedLabelColor = Color(0xFF4A4A68),
-            focusedTextColor = Color(0xFF1B1F3B),
-            unfocusedTextColor = Color(0xFF1B1F3B),
-            cursorColor = Color(0xFFFFD166)
+            focusedContainerColor = FieldBackground,
+            unfocusedContainerColor = FieldBackground,
+            focusedIndicatorColor = CheeseYellow,
+            unfocusedIndicatorColor = CheeseYellow,
+            focusedTextColor = DarkText,
+            unfocusedTextColor = DarkText,
+            focusedLeadingIconColor = NightSurface,
+            unfocusedLeadingIconColor = LavenderGray,
+            focusedPlaceholderColor = LavenderGray,
+            unfocusedPlaceholderColor = LavenderGray,
+            cursorColor = CheeseYellow
         ),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 44.dp)
     )
 }
