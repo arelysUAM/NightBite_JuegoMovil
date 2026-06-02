@@ -2,6 +2,9 @@ package ni.edu.uam.nightbiteapp.data.remote
 
 import ni.edu.uam.nightbiteapp.data.remote.dto.PlayerRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.PlayerResponse
+import ni.edu.uam.nightbiteapp.data.remote.dto.UserLoginRequest
+import ni.edu.uam.nightbiteapp.data.remote.dto.UserRegisterRequest
+import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -46,4 +49,26 @@ interface ApiService {
     suspend fun createPlayer(
         @Body playerRequest: PlayerRequest
     ): Response<PlayerResponse>
+
+    /**
+     * Registra una nueva cuenta de usuario.
+     *
+     * Endpoint esperado:
+     * POST /api/users/register
+     */
+    @POST("api/users/register")
+    suspend fun registerUser(
+        @Body userRegisterRequest: UserRegisterRequest
+    ): Response<UserResponse>
+
+    /**
+     * Inicia sesión con una cuenta existente.
+     *
+     * Endpoint esperado:
+     * POST /api/users/login
+     */
+    @POST("api/users/login")
+    suspend fun loginUser(
+        @Body userLoginRequest: UserLoginRequest
+    ): Response<UserResponse>
 }
