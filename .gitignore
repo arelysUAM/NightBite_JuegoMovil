@@ -9,27 +9,33 @@ desktop.ini
 # INTELLIJ IDEA / ANDROID STUDIO
 # =========================
 .idea/
+**/.idea/
 *.iml
 *.iws
 *.ipr
 out/
+.idea_modules/
 
 # =========================
 # GRADLE / ANDROID
 # =========================
 .gradle/
+**/.gradle/
 build/
 **/build/
 local.properties
+**/local.properties
 captures/
 .externalNativeBuild/
 .cxx/
+**/.cxx/
 
 # Archivos generados de Android
 *.apk
 *.aab
 *.ap_
 *.dex
+*.idsig
 
 # =========================
 # KOTLIN / JAVA
@@ -43,9 +49,15 @@ captures/
 # MAVEN / SPRING BOOT
 # =========================
 target/
+**/target/
+
+# Maven Wrapper
+# Normalmente sí se sube el wrapper, pero si no lo usarán, pueden ignorar el .jar.
 .mvn/wrapper/maven-wrapper.jar
 
-# Logs
+# =========================
+# LOGS
+# =========================
 *.log
 
 # =========================
@@ -53,11 +65,12 @@ target/
 # =========================
 .env
 *.env
+**/.env
 application-local.properties
 application-dev.properties
 application-prod.properties
 
-# No subir contraseñas locales reales
+# No subir contraseñas locales reales del backend
 backend/**/src/main/resources/application.properties
 
 # Pero sí se permite subir archivo de ejemplo
@@ -69,6 +82,15 @@ backend/**/src/main/resources/application.properties
 *.backup
 *.dump
 *.sql.gz
+
+# =========================
+# ROOM / SQLITE LOCAL
+# =========================
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
 
 # =========================
 # ARCHIVOS TEMPORALES
