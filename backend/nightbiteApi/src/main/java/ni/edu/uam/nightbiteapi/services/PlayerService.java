@@ -1,10 +1,13 @@
 package ni.edu.uam.nightbiteapi.services;
 
+import ni.edu.uam.nightbiteapi.dto.PlayerRequest;
+import ni.edu.uam.nightbiteapi.dto.PlayerResponse;
 import ni.edu.uam.nightbiteapi.model.Player;
 import ni.edu.uam.nightbiteapi.repositories.PlayerRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Servicio encargado de manejar la lógica relacionada con los jugadores.
@@ -17,46 +20,107 @@ public class PlayerService {
 
     private final PlayerRepository playerRepository;
 
+    /**
+     * Constructor que inyecta el repositorio de jugadores.
+     *
+     * @param playerRepository repositorio utilizado para acceder a PostgreSQL.
+     */
     public PlayerService(PlayerRepository playerRepository) {
         this.playerRepository = playerRepository;
     }
 
-    public List<Player> getAllPlayers() {
-        return playerRepository.findAll();
+    /**
+     * Convierte una entidad Player en un DTO PlayerResponse.
+     *
+     * @param player entidad obtenida desde la base de datos.
+     * @return DTO con los datos que serán enviados al cliente.
+     */
+    private PlayerResponse mapToResponse(Player player) {
+        return new PlayerResponse(
+                player.getId(),
+                player.getUsername(),
+                player.getEmail(),
+                player.getCreatedAt()
+        );
     }
 
-    public Player getPlayerById(Long id) {
-        return playerRepository.findById(id).orElse(null);
+    /**
+     * Obtiene la lista completa de jugadores registrados.
+     *
+     * @return lista de jugadores convertidos a DTO de respuesta.
+     */
+    public List<PlayerResponse> getAllPlayers() {
+        return playerRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
-    public Player savePlayer(Player player) {
-        return playerRepository.save(player);
+    /**
+     * Busca un jugador por su identificador.
+     *
+     * @param id identificador del jugador.
+     * @return Optional con el jugador encontrado o vacío si no existe.
+     */
+    public Optional<PlayerResponse> getPlayerById(Long id) {
+        return playerRepository.findById(id)
+                .map(this::mapToResponse);
+    }
+
+    /**
+     * Guarda un nuevo jugador en la base de datos.
+     *
+     * @param request datos recibidos desde la petición HTTP.
+     * @return jugador guardado convertido a DTO de respuesta.
+     */
+    public PlayerResponse savePlayer(PlayerRequest request) {
+        Player player = new Player();
+        player.setUsername(request.getUsername());
+        player.setEmail(request.getEmail());
+
+        Player savedPlayer = playerRepository.save(player);
+
+        return mapToResponse(savedPlayer);
     }
 
     /**
      * Actualiza los datos básicos de un jugador existente.
      *
-     * Este método primero busca el jugador en la base de datos para conservar
-     * valores que no deben perderse, como la fecha de creación.
+     * Este método busca primero el jugador para conservar datos internos como
+     * la fecha de creación.
      *
      * @param id identificador del jugador a actualizar.
-     * @param playerData nuevos datos recibidos desde la petición.
-     * @return jugador actualizado o null si no existe.
+     * @param request nuevos datos recibidos desde la petición HTTP.
+     * @return Optional con el jugador actualizado o vacío si no existe.
      */
-    public Player updatePlayer(Long id, Player playerData) {
-        Player existingPlayer = playerRepository.findById(id).orElse(null);
+    public Optional<PlayerResponse> updatePlayer(Long id, PlayerRequest request) {
+        Optional<Player> optionalPlayer = playerRepository.findById(id);
 
-        if (existingPlayer == null) {
-            return null;
+        if (optionalPlayer.isEmpty()) {
+            return Optional.empty();
         }
 
-        existingPlayer.setUsername(playerData.getUsername());
-        existingPlayer.setEmail(playerData.getEmail());
+        Player existingPlayer = optionalPlayer.get();
+        existingPlayer.setUsername(request.getUsername());
+        existingPlayer.setEmail(request.getEmail());
 
-        return playerRepository.save(existingPlayer);
+        Player updatedPlayer = playerRepository.save(existingPlayer);
+
+        return Optional.of(mapToResponse(updatedPlayer));
     }
 
-    public void deletePlayer(Long id) {
+    /**
+     * Elimina un jugador usando su identificador.
+     *
+     * @param id identificador del jugador a eliminar.
+     * @return true si el jugador existía y fue eliminado; false si no existe.
+     */
+    public boolean deletePlayer(Long id) {
+        if (!playerRepository.existsById(id)) {
+            return false;
+        }
+
         playerRepository.deleteById(id);
+        return true;
     }
 }
