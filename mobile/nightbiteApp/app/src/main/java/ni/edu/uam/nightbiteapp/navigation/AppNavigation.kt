@@ -10,21 +10,37 @@ import ni.edu.uam.nightbiteapp.ui.screens.LoginScreen
 import ni.edu.uam.nightbiteapp.ui.screens.ProfileScreen
 import ni.edu.uam.nightbiteapp.ui.screens.RegisterScreen
 import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
+import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
+import androidx.compose.ui.platform.LocalContext
+import android.app.Activity
+import androidx.compose.ui.platform.LocalContext
 
 /**
  * Componente principal de navegación de la aplicación.
- *
- * Define el NavHost, las rutas disponibles y las pantallas asociadas
- * a cada destino de navegación.
  */
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val activity = context as? Activity
+
 
     NavHost(
         navController = navController,
-        startDestination = Routes.LOGIN
+        startDestination = Routes.START
     ) {
+        composable(Routes.START) {
+            StartScreen(
+                onPressStart = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.START) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+
         composable(Routes.LOGIN) {
             LoginScreen(
                 onNavigateToRegister = {
@@ -36,6 +52,9 @@ fun AppNavigation() {
                             inclusive = true
                         }
                     }
+                },
+                onExitApp = {
+                    activity?.finish()
                 }
             )
         }

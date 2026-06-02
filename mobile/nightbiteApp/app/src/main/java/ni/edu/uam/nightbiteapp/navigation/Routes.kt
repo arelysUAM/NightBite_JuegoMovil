@@ -7,6 +7,7 @@ package ni.edu.uam.nightbiteapp.navigation
  * directamente en las pantallas o en el NavHost.
  */
 object Routes {
+    const val START = "start"
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val HOME = "home"
