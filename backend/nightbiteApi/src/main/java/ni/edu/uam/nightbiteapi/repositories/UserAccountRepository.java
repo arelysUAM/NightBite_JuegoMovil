@@ -1,4 +1,19 @@
 package ni.edu.uam.nightbiteapi.repositories;
 
-public class UserAccountRepository {
+import ni.edu.uam.nightbiteapi.model.UserAccount;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface UserAccountRepository extends JpaRepository<UserAccount, Long> {
+
+    Optional<UserAccount> findByUsername(String username);
+
+    Optional<UserAccount> findByEmail(String email);
+
+    Optional<UserAccount> findByUsernameOrEmail(String username, String email);
+
+    boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
 }
