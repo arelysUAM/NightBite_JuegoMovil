@@ -1,4 +1,4 @@
-package com.example.nightbiteApi.dto;
+package ni.edu.uam.nightbiteapi.dto;
 
 public class PlayerResponse {
 }

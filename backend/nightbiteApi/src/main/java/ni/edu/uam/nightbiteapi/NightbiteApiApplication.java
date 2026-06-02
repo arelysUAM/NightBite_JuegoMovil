@@ -1,4 +1,4 @@
-package com.example.nightbiteApi;
+package ni.edu.uam.nightbiteapi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

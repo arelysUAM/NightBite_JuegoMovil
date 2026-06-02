@@ -1,4 +1,4 @@
-package com.example.nightbiteApi;
+package ni.edu.uam.nightbiteapi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
