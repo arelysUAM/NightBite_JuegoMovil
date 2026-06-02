@@ -40,7 +40,6 @@ fun NightPrimaryButton(
             contentColor = DarkText
         ),
         modifier = modifier
-            .fillMaxWidth()
             .height(40.dp)
     ) {
         Row(
@@ -81,7 +80,6 @@ fun NightSecondaryButton(
             contentColor = SmokeWhite
         ),
         modifier = modifier
-            .fillMaxWidth()
             .height(38.dp)
     ) {
         Row(

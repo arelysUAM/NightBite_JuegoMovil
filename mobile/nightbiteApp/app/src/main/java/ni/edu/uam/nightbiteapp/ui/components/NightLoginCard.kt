@@ -1,19 +1,19 @@
 package ni.edu.uam.nightbiteapp.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -25,14 +25,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ni.edu.uam.nightbiteapp.ui.theme.NeonCyan
+import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
+import ni.edu.uam.nightbiteapp.ui.theme.LavenderGray
+import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 
 /**
- * Tarjeta visual de inicio de sesión.
- *
- * Agrupa los campos del formulario y las acciones principales
- * del acceso a la aplicación.
+ * Tarjeta visual centrada para el inicio de sesión.
  */
 @Composable
 fun NightLoginCard(
@@ -45,48 +44,47 @@ fun NightLoginCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = NeonCyan
+            containerColor = NightSurface
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
-        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         modifier = modifier
     ) {
         Column(
-            modifier = Modifier.padding(
-                horizontal = 22.dp,
-                vertical = 18.dp
-            ),
+            modifier = Modifier
+                .background(NightSurface)
+                .width(380.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Spacer(modifier = Modifier.height(24.dp))
+
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Key,
-                    contentDescription = "Inicio de sesión",
-                    tint = SmokeWhite,
-                    modifier = Modifier.size(20.dp)
+                    contentDescription = "Iniciar sesión",
+                    tint = SmokeWhite
                 )
 
                 Text(
                     text = "  INICIAR SESIÓN",
                     color = SmokeWhite,
-                    fontSize = 17.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Black
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             NightTextField(
                 value = username,
                 onValueChange = onUsernameChange,
                 label = "Usuario o correo",
-                icon = Icons.Default.Person
+                icon = Icons.Default.Person,
+                modifier = Modifier.width(300.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -96,24 +94,30 @@ fun NightLoginCard(
                 onValueChange = onPasswordChange,
                 label = "Contraseña",
                 icon = Icons.Default.Lock,
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.width(300.dp)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            NightSecondaryButton(
-                text = "CREAR CUENTA",
-                onClick = onRegisterClick,
-                icon = Icons.Default.PersonAdd
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             NightPrimaryButton(
                 text = "ENTRAR",
                 onClick = onLoginClick,
-                icon = Icons.Default.Login
+                icon = Icons.Default.Login,
+                modifier = Modifier.width(300.dp)
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "Crear cuenta",
+                color = LavenderGray,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.clickable { onRegisterClick() }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

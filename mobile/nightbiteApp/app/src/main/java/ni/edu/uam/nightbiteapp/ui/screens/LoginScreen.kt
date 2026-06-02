@@ -26,8 +26,8 @@ import ni.edu.uam.nightbiteapp.ui.components.NightLoginCard
 /**
  * Pantalla visual de inicio de sesión.
  *
- * Muestra el formulario de acceso centrado en pantalla.
- * Permite iniciar sesión o navegar hacia la pantalla de registro.
+ * Muestra el formulario de acceso del jugador en una tarjeta centrada
+ * y permite navegar hacia la pantalla de registro.
  */
 @Composable
 fun LoginScreen(
@@ -63,7 +63,7 @@ fun LoginScreen(
             .background(MaterialTheme.colorScheme.background)
             .imePadding()
             .verticalScroll(scrollState)
-            .padding(horizontal = 40.dp, vertical = 20.dp),
+            .padding(horizontal = 32.dp, vertical = 20.dp),
         contentAlignment = Alignment.Center
     ) {
         NightLoginCard(
@@ -74,8 +74,8 @@ fun LoginScreen(
             onLoginClick = onNavigateToHome,
             onRegisterClick = onNavigateToRegister,
             modifier = Modifier.widthIn(
-                min = 300.dp,
-                max = 340.dp
+                min = 340.dp,
+                max = 400.dp
             )
         )
     }

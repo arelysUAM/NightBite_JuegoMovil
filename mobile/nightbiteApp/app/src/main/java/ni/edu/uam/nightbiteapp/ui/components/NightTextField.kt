@@ -1,7 +1,8 @@
 package ni.edu.uam.nightbiteapp.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.DarkText
 import ni.edu.uam.nightbiteapp.ui.theme.FieldBackground
@@ -34,12 +36,16 @@ fun NightTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = {
-            Text(text = label)
+            Text(
+                text = label,
+                fontSize = 12.sp
+            )
         },
         leadingIcon = {
             Icon(
                 imageVector = icon,
-                contentDescription = label
+                contentDescription = label,
+                modifier = Modifier.size(18.dp)
             )
         },
         singleLine = true,
@@ -60,6 +66,6 @@ fun NightTextField(
         ),
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 44.dp)
+            .height(50.dp)
     )
 }
