@@ -9,6 +9,7 @@ public class UserResponse {
     private String email;
     private Integer age;
     private LocalDateTime createdAt;
+    private PlayerSummaryResponse player;
 
     public UserResponse() {
     }
@@ -19,6 +20,16 @@ public class UserResponse {
         this.email = email;
         this.age = age;
         this.createdAt = createdAt;
+    }
+
+    public UserResponse(Long id, String username, String email, Integer age,
+                        LocalDateTime createdAt, PlayerSummaryResponse player) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.age = age;
+        this.createdAt = createdAt;
+        this.player = player;
     }
 
     public Long getId() {
@@ -41,6 +52,10 @@ public class UserResponse {
         return createdAt;
     }
 
+    public PlayerSummaryResponse getPlayer() {
+        return player;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -59,5 +74,9 @@ public class UserResponse {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setPlayer(PlayerSummaryResponse player) {
+        this.player = player;
     }
 }

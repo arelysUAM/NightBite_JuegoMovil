@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * Controlador REST para la gestión de cuentas de usuario.
  */
@@ -20,6 +22,33 @@ public class UserAccountController {
 
     public UserAccountController(UserAccountService userAccountService) {
         this.userAccountService = userAccountService;
+    }
+
+    /**
+     * Endpoint para obtener todas las cuentas de usuario.
+     *
+     * Método HTTP: GET
+     * URL: /api/users
+     */
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userAccountService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Endpoint para obtener una cuenta de usuario por su id.
+     *
+     * Método HTTP: GET
+     * URL: /api/users/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+        return userAccountService.getUserById(id)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(new MessageResponse("Cuenta de usuario no encontrada")));
     }
 
     @PostMapping("/register")

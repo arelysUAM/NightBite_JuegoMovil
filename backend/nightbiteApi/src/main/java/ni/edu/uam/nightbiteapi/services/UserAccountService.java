@@ -1,25 +1,46 @@
 package ni.edu.uam.nightbiteapi.services;
 
+import ni.edu.uam.nightbiteapi.dto.PlayerSummaryResponse;
 import ni.edu.uam.nightbiteapi.dto.UserLoginRequest;
 import ni.edu.uam.nightbiteapi.dto.UserRegisterRequest;
 import ni.edu.uam.nightbiteapi.dto.UserResponse;
+import ni.edu.uam.nightbiteapi.model.Player;
 import ni.edu.uam.nightbiteapi.model.UserAccount;
+import ni.edu.uam.nightbiteapi.repositories.PlayerRepository;
 import ni.edu.uam.nightbiteapi.repositories.UserAccountRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserAccountService {
 
     private final UserAccountRepository userAccountRepository;
+    private final PlayerRepository playerRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     public UserAccountService(
             UserAccountRepository userAccountRepository,
+            PlayerRepository playerRepository,
             BCryptPasswordEncoder passwordEncoder
     ) {
         this.userAccountRepository = userAccountRepository;
+        this.playerRepository = playerRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public List<UserResponse> getAllUsers() {
+        return userAccountRepository.findAll()
+                .stream()
+                .map(this::mapToResponseWithPlayer)
+                .toList();
+    }
+
+    public Optional<UserResponse> getUserById(Long id) {
+        return userAccountRepository.findById(id)
+                .map(this::mapToResponseWithPlayer);
     }
 
     public UserResponse registerUser(UserRegisterRequest request) {
@@ -41,7 +62,7 @@ public class UserAccountService {
 
         UserAccount savedUser = userAccountRepository.save(user);
 
-        return mapToResponse(savedUser);
+        return mapToResponseWithPlayer(savedUser);
     }
 
     public UserResponse loginUser(UserLoginRequest request) {
@@ -69,7 +90,7 @@ public class UserAccountService {
             throw new RuntimeException("Credenciales inválidas");
         }
 
-        return mapToResponse(user);
+        return mapToResponseWithPlayer(user);
     }
 
     private void validateRegisterRequest(UserRegisterRequest request) {
@@ -98,13 +119,30 @@ public class UserAccountService {
         }
     }
 
-    private UserResponse mapToResponse(UserAccount user) {
+    private UserResponse mapToResponseWithPlayer(UserAccount user) {
+        PlayerSummaryResponse playerSummary = playerRepository
+                .findByUserAccountId(user.getId())
+                .map(this::mapPlayerToSummary)
+                .orElse(null);
+
         return new UserResponse(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getAge(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                playerSummary
+        );
+    }
+
+    private PlayerSummaryResponse mapPlayerToSummary(Player player) {
+        return new PlayerSummaryResponse(
+                player.getId(),
+                player.getNickname(),
+                player.getDriverName(),
+                player.getGender(),
+                player.getHelmetColor(),
+                player.getMotorcycleType()
         );
     }
 }
