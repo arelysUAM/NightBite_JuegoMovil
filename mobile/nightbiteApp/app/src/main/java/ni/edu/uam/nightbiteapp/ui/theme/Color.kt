@@ -10,6 +10,7 @@ val PizzaRed = Color(0xFFFF3B3B)
 val CheeseYellow = Color(0xFFFFD166)
 
 val ParanormalGreen = Color(0xFF39FF88)
+val NeonGreen = Color(0xFF39FF88)
 val NeonCyan = Color(0xFF2DE2E6)
 
 val SmokeWhite = Color(0xFFF4F4F8)
