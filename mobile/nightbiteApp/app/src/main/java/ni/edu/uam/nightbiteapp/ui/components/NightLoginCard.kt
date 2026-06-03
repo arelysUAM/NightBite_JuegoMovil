@@ -25,13 +25,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.LavenderGray
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 
 /**
  * Tarjeta visual centrada para el inicio de sesión.
+ *
+ * Recibe los datos del formulario y expone acciones para iniciar sesión
+ * o navegar hacia el flujo de creación de cuenta.
  */
 @Composable
 fun NightLoginCard(
@@ -114,7 +116,9 @@ fun NightLoginCard(
                 color = LavenderGray,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable { onRegisterClick() }
+                modifier = Modifier.clickable {
+                    onRegisterClick()
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
