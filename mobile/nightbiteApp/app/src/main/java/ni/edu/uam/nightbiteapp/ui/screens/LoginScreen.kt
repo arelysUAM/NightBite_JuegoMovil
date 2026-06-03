@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.ui.components.NightLoginCard
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
@@ -45,6 +46,10 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val sessionManager = remember {
+        SessionManager(context.applicationContext)
+    }
+
     val scrollState = rememberScrollState()
     val uiState = loginViewModel.uiState
 
@@ -55,13 +60,15 @@ fun LoginScreen(
     LaunchedEffect(uiState) {
         when (uiState) {
             is LoginUiState.Success -> {
+                val loggedUser = uiState.user
+
+                sessionManager.saveSession(loggedUser)
+
                 Toast.makeText(
                     context,
-                    "Bienvenida, ${uiState.user.username}",
+                    "Bienvenida, ${loggedUser.username}",
                     Toast.LENGTH_SHORT
                 ).show()
-
-                val loggedUser = uiState.user
 
                 loginViewModel.resetState()
                 onNavigateToHome(loggedUser)
