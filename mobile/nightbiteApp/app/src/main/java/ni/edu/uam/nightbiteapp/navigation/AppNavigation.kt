@@ -2,6 +2,7 @@ package ni.edu.uam.nightbiteapp.navigation
 
 import android.app.Activity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,6 +13,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
+import ni.edu.uam.nightbiteapp.data.local.session.UserSession
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.ui.screens.AgeCheckScreen
 import ni.edu.uam.nightbiteapp.ui.screens.GamePlaceholderScreen
@@ -31,7 +34,17 @@ fun AppNavigation() {
     val context = LocalContext.current
     val activity = context as? Activity
 
-    var loggedUser by remember { mutableStateOf<UserResponse?>(null) }
+    val sessionManager = remember {
+        SessionManager(context.applicationContext)
+    }
+
+    val userSession by sessionManager.userSessionFlow.collectAsState(
+        initial = UserSession()
+    )
+
+    var loggedUser by remember {
+        mutableStateOf<UserResponse?>(null)
+    }
 
     NavHost(
         navController = navController,
@@ -40,9 +53,28 @@ fun AppNavigation() {
         composable(Routes.START) {
             StartScreen(
                 onPressStart = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.START) {
-                            inclusive = true
+                    val currentUserId = userSession.userId
+
+                    if (userSession.isLoggedIn && currentUserId != null) {
+                        loggedUser = UserResponse(
+                            id = currentUserId,
+                            username = userSession.username,
+                            email = userSession.email,
+                            age = userSession.age ?: 0,
+                            createdAt = null,
+                            player = null
+                        )
+
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.START) {
+                                inclusive = true
+                            }
+                        }
+                    } else {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.START) {
+                                inclusive = true
+                            }
                         }
                     }
                 }
