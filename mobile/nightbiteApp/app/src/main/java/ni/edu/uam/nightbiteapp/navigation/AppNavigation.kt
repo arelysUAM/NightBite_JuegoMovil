@@ -24,6 +24,8 @@ import ni.edu.uam.nightbiteapp.ui.screens.ProfileScreen
 import ni.edu.uam.nightbiteapp.ui.screens.RegisterScreen
 import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
 import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Componente principal de navegación de la aplicación.
@@ -37,6 +39,8 @@ fun AppNavigation() {
     val sessionManager = remember {
         SessionManager(context.applicationContext)
     }
+
+    val coroutineScope = rememberCoroutineScope()
 
     val userSession by sessionManager.userSessionFlow.collectAsState(
         initial = UserSession()
@@ -149,7 +153,20 @@ fun AppNavigation() {
 
         composable(Routes.PROFILE) {
             ProfileScreen(
-                user = loggedUser
+                user = loggedUser,
+                onLogout = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.HOME) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+
+                    coroutineScope.launch {
+                        sessionManager.clearSession()
+                        loggedUser = null
+                    }
+                }
             )
         }
 
