@@ -106,7 +106,7 @@ public class UserAccountService {
             throw new RuntimeException("La contraseña es obligatoria");
         }
 
-        if (request.getPassword().length() < 6) {
+        if (request.getPassword().length() < 8) {
             throw new RuntimeException("La contraseña debe tener al menos 6 caracteres");
         }
 
