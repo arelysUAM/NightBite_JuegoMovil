@@ -12,7 +12,7 @@ import retrofit2.Response
  * con cuentas de usuario.
  *
  * UserAccount representa la cuenta real del jugador, mientras que Player
- * se usará más adelante para el personaje o avatar dentro del juego.
+ * representa la ficha/personaje del repartidor dentro del juego.
  */
 class UserRepository(
     private val apiService: ApiService = RetrofitClient.apiService
@@ -34,5 +34,27 @@ class UserRepository(
         userLoginRequest: UserLoginRequest
     ): Response<UserResponse> {
         return apiService.loginUser(userLoginRequest)
+    }
+
+    /**
+     * Obtiene todas las cuentas de usuario registradas.
+     *
+     * Este método puede servir para pruebas o administración,
+     * pero no debería usarse como forma principal para cargar
+     * el perfil del usuario activo.
+     */
+    suspend fun getUsers(): Response<List<UserResponse>> {
+        return apiService.getUsers()
+    }
+
+    /**
+     * Obtiene una cuenta de usuario específica por su id.
+     *
+     * Este método será usado por ProfileViewModel para cargar
+     * el perfil actualizado del usuario autenticado, incluyendo
+     * su Player asignado si existe.
+     */
+    suspend fun getUserById(id: Long): Response<UserResponse> {
+        return apiService.getUserById(id)
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
@@ -13,9 +14,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
-import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.ui.screens.AgeCheckScreen
 import ni.edu.uam.nightbiteapp.ui.screens.GamePlaceholderScreen
 import ni.edu.uam.nightbiteapp.ui.screens.HomeScreen
@@ -24,8 +25,6 @@ import ni.edu.uam.nightbiteapp.ui.screens.ProfileScreen
 import ni.edu.uam.nightbiteapp.ui.screens.RegisterScreen
 import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
 import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
 
 /**
  * Componente principal de navegación de la aplicación.
@@ -46,8 +45,8 @@ fun AppNavigation() {
         initial = UserSession()
     )
 
-    var loggedUser by remember {
-        mutableStateOf<UserResponse?>(null)
+    var activeUserId by remember {
+        mutableStateOf<Long?>(null)
     }
 
     NavHost(
@@ -60,14 +59,7 @@ fun AppNavigation() {
                     val currentUserId = userSession.userId
 
                     if (userSession.isLoggedIn && currentUserId != null) {
-                        loggedUser = UserResponse(
-                            id = currentUserId,
-                            username = userSession.username,
-                            email = userSession.email,
-                            age = userSession.age ?: 0,
-                            createdAt = null,
-                            player = null
-                        )
+                        activeUserId = currentUserId
 
                         navController.navigate(Routes.HOME) {
                             popUpTo(Routes.START) {
@@ -91,7 +83,7 @@ fun AppNavigation() {
                     navController.navigate(Routes.AGE_CHECK)
                 },
                 onNavigateToHome = { user ->
-                    loggedUser = user
+                    activeUserId = user.id
 
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.LOGIN) {
@@ -153,7 +145,7 @@ fun AppNavigation() {
 
         composable(Routes.PROFILE) {
             ProfileScreen(
-                user = loggedUser,
+                userId = activeUserId ?: userSession.userId,
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.HOME) {
@@ -164,7 +156,7 @@ fun AppNavigation() {
 
                     coroutineScope.launch {
                         sessionManager.clearSession()
-                        loggedUser = null
+                        activeUserId = null
                     }
                 }
             )

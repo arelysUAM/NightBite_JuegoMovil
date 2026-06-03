@@ -37,6 +37,11 @@ interface ApiService {
     @GET("api/users")
     suspend fun getUsers(): Response<List<UserResponse>>
 
+    @GET("api/users/{id}")
+    suspend fun getUserById(
+        @Path("id") id: Long
+    ): Response<UserResponse>
+
     @POST("api/users/register")
     suspend fun registerUser(
         @Body userRegisterRequest: UserRegisterRequest
