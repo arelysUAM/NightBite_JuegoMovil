@@ -1,43 +1,74 @@
 package ni.edu.uam.nightbiteapi.dto;
 
+import ni.edu.uam.nightbiteapi.enums.Gender;
+
 import java.time.LocalDateTime;
 
 /**
- * DTO utilizado para devolver los datos de un jugador al cliente.
- *
- * Este objeto evita exponer directamente la entidad Player y permite controlar
- * qué información será enviada como respuesta desde la API.
+ * DTO utilizado para devolver los datos de la ficha/personaje del repartidor.
  */
 public class PlayerResponse {
 
     private Long id;
-    private String username;
-    private String email;
+    private Long userAccountId;
+    private String nickname;
+    private String driverName;
+    private Gender gender;
+    private String helmetColor;
+    private String motorcycleType;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public PlayerResponse() {
     }
 
-    public PlayerResponse(Long id, String username, String email, LocalDateTime createdAt) {
+    public PlayerResponse(Long id, Long userAccountId, String nickname, String driverName,
+                          Gender gender, String helmetColor, String motorcycleType,
+                          LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
-        this.username = username;
-        this.email = email;
+        this.userAccountId = userAccountId;
+        this.nickname = nickname;
+        this.driverName = driverName;
+        this.gender = gender;
+        this.helmetColor = helmetColor;
+        this.motorcycleType = motorcycleType;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public Long getId() {
         return id;
     }
 
-    public String getUsername() {
-        return username;
+    public Long getUserAccountId() {
+        return userAccountId;
     }
 
-    public String getEmail() {
-        return email;
+    public String getNickname() {
+        return nickname;
+    }
+
+    public String getDriverName() {
+        return driverName;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public String getHelmetColor() {
+        return helmetColor;
+    }
+
+    public String getMotorcycleType() {
+        return motorcycleType;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 }

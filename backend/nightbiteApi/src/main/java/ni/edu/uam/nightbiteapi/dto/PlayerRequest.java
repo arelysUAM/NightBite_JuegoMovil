@@ -1,37 +1,77 @@
 package ni.edu.uam.nightbiteapi.dto;
 
+import ni.edu.uam.nightbiteapi.enums.Gender;
+
 /**
- * DTO utilizado para recibir los datos de un jugador desde una petición HTTP.
- *
- * Este objeto representa la información que el cliente, como Postman o Android,
- * envía al backend para crear o actualizar un jugador.
+ * DTO utilizado para recibir los datos de la ficha/personaje del repartidor.
  */
 public class PlayerRequest {
 
-    private String username;
-    private String email;
+    private Long userAccountId;
+    private String nickname;
+    private String driverName;
+    private Gender gender;
+    private String helmetColor;
+    private String motorcycleType;
 
     public PlayerRequest() {
     }
 
-    public PlayerRequest(String username, String email) {
-        this.username = username;
-        this.email = email;
+    public PlayerRequest(Long userAccountId, String nickname, String driverName,
+                         Gender gender, String helmetColor, String motorcycleType) {
+        this.userAccountId = userAccountId;
+        this.nickname = nickname;
+        this.driverName = driverName;
+        this.gender = gender;
+        this.helmetColor = helmetColor;
+        this.motorcycleType = motorcycleType;
     }
 
-    public String getUsername() {
-        return username;
+    public Long getUserAccountId() {
+        return userAccountId;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUserAccountId(Long userAccountId) {
+        this.userAccountId = userAccountId;
     }
 
-    public String getEmail() {
-        return email;
+    public String getNickname() {
+        return nickname;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getDriverName() {
+        return driverName;
+    }
+
+    public void setDriverName(String driverName) {
+        this.driverName = driverName;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public String getHelmetColor() {
+        return helmetColor;
+    }
+
+    public void setHelmetColor(String helmetColor) {
+        this.helmetColor = helmetColor;
+    }
+
+    public String getMotorcycleType() {
+        return motorcycleType;
+    }
+
+    public void setMotorcycleType(String motorcycleType) {
+        this.motorcycleType = motorcycleType;
     }
 }
