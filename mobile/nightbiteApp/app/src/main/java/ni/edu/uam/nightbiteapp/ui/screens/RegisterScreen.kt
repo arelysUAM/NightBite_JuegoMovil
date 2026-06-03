@@ -24,11 +24,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
+import ni.edu.uam.nightbiteapp.ui.components.NightFloatingMessage
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.NightRegisterCard
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.NeonGreen
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
+import ni.edu.uam.nightbiteapp.ui.validation.RegisterValidators
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterUiState
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
 
@@ -52,6 +55,16 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+    //Estados de error
+    var usernameError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
+
+    //Estados para el mensaje flotante de advertencia
+    var floatingMessage by remember { mutableStateOf<String?>(null) }
+    var lastShownError by remember { mutableStateOf<String?>(null) }
 
     var showCancelRegisterDialog by remember { mutableStateOf(false) }
     var dialogTitle by remember { mutableStateOf("") }
@@ -78,6 +91,28 @@ fun RegisterScreen(
         }
     }
 
+    LaunchedEffect(floatingMessage) {
+
+        if (floatingMessage != null) {
+
+            delay(3000)
+
+            floatingMessage = null
+        }
+    }
+
+    fun showValidationMessage(
+        error: String?
+    ) {
+        if (
+            error != null &&
+            error != lastShownError
+        ) {
+            floatingMessage = error
+            lastShownError = error
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -92,11 +127,106 @@ fun RegisterScreen(
             email = email,
             password = password,
             confirmPassword = confirmPassword,
-            onUsernameChange = { username = it },
-            onEmailChange = { email = it },
-            onPasswordChange = { password = it },
-            onConfirmPasswordChange = { confirmPassword = it },
+
+            usernameError = usernameError != null,
+            emailError = emailError != null,
+            passwordError = passwordError != null,
+            confirmPasswordError = confirmPasswordError != null,
+
+            onUsernameChange = { username = it
+
+                val error =
+                    RegisterValidators.validateUsername(it)
+
+                usernameError = error
+
+                showValidationMessage(error)},
+            onEmailChange = { val normalizedEmail =
+                it.lowercase()
+
+                email = normalizedEmail
+
+                val error =
+                    RegisterValidators.validateEmail(
+                        normalizedEmail
+                    )
+
+                emailError = error
+
+                showValidationMessage(error) },
+            onPasswordChange = { password = it
+
+                val passwordValidation =
+                    RegisterValidators.validatePassword(it)
+
+                passwordError = passwordValidation
+
+                showValidationMessage(passwordValidation)
+
+                val confirmValidation =
+                    RegisterValidators.validateConfirmPassword(
+                        password = it,
+                        confirmPassword = confirmPassword
+                    )
+
+                confirmPasswordError = confirmValidation
+                showValidationMessage(confirmValidation) },
+            onConfirmPasswordChange = { confirmPassword = it
+
+                val error =
+                    RegisterValidators.validateConfirmPassword(
+                        password = password,
+                        confirmPassword = it
+                    )
+
+                confirmPasswordError = error
+
+                showValidationMessage(error) },
+            /**
+             * Ejecuta todas las validaciones visuales antes
+             * de enviar la información al ViewModel.
+             */
             onRegisterClick = {
+
+                usernameError =
+                    RegisterValidators.validateUsername(
+                        username
+                    )
+
+                emailError =
+                    RegisterValidators.validateEmail(
+                        email
+                    )
+
+                passwordError =
+                    RegisterValidators.validatePassword(
+                        password
+                    )
+
+                confirmPasswordError =
+                    RegisterValidators.validateConfirmPassword(
+                        password = password,
+                        confirmPassword = confirmPassword
+                    )
+
+                val hasErrors =
+                    usernameError != null ||
+                            emailError != null ||
+                            passwordError != null ||
+                            confirmPasswordError != null
+
+                if (hasErrors) {
+
+                    showValidationMessage(
+                        usernameError
+                            ?: emailError
+                            ?: passwordError
+                            ?: confirmPasswordError
+                    )
+
+                    return@NightRegisterCard
+                }
+
                 registerViewModel.registerUser(
                     username = username,
                     email = email,
@@ -167,6 +297,25 @@ fun RegisterScreen(
             }
 
             RegisterDialogType.None -> Unit
+        }
+
+        floatingMessage?.let { message ->
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.TopStart
+            ) {
+
+                NightFloatingMessage(
+                    message = message,
+                    modifier = Modifier
+                        .padding(
+                            start = 20.dp,
+                            top = 8.dp
+                        )
+                )
+            }
         }
     }
 }

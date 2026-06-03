@@ -5,7 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import ni.edu.uam.nightbiteapp.data.remote.dto.MessageResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserRegisterRequest
 import ni.edu.uam.nightbiteapp.data.repository.UserRepository
 
@@ -54,8 +56,8 @@ class RegisterViewModel(
             return
         }
 
-        if (password.length < 6) {
-            uiState = RegisterUiState.Error("La contraseña debe tener al menos 6 caracteres.")
+        if (password.length < 8) {
+            uiState = RegisterUiState.Error("La contraseña debe tener al menos 8 caracteres.")
             return
         }
 
@@ -82,11 +84,42 @@ class RegisterViewModel(
 
                 val response = userRepository.registerUser(request)
 
-                uiState = if (response.isSuccessful && response.body() != null) {
-                    RegisterUiState.Success("Cuenta creada correctamente.")
+                if (
+                    response.isSuccessful &&
+                    response.body() != null
+                ) {
+
+                    uiState = RegisterUiState.Success(
+                        "Cuenta creada correctamente."
+                    )
+
                 } else {
-                    RegisterUiState.Error("No se pudo crear la cuenta.")
+
+                    /**
+                     * Si la API devuelve un error, intenta recuperar el mensaje
+                     * enviado por el backend para mostrarlo al usuario.
+                     */
+
+                    val errorMessage = try {
+
+                        val errorBody =
+                            response.errorBody()?.string()
+
+                        Gson().fromJson(
+                            errorBody,
+                            MessageResponse::class.java
+                        )?.message
+
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    uiState = RegisterUiState.Error(
+                        errorMessage
+                            ?: "No se pudo crear la cuenta."
+                    )
                 }
+
             } catch (e: Exception) {
                 uiState = RegisterUiState.Error("Error de conexión con la API.")
             }

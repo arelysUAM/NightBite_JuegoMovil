@@ -19,6 +19,7 @@ import ni.edu.uam.nightbiteapp.ui.theme.DarkText
 import ni.edu.uam.nightbiteapp.ui.theme.FieldBackground
 import ni.edu.uam.nightbiteapp.ui.theme.LavenderGray
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
+import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 
 /**
  * Campo de texto reutilizable para formularios de NightBite.
@@ -30,11 +31,13 @@ fun NightTextField(
     label: String,
     icon: ImageVector,
     modifier: Modifier = Modifier,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    isError: Boolean = false
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+        isError = isError,
         placeholder = {
             Text(
                 text = label,
@@ -54,14 +57,23 @@ fun NightTextField(
         colors = TextFieldDefaults.colors(
             focusedContainerColor = FieldBackground,
             unfocusedContainerColor = FieldBackground,
-            focusedIndicatorColor = CheeseYellow,
-            unfocusedIndicatorColor = CheeseYellow,
+
+            focusedIndicatorColor =
+                if (isError) PizzaRed else CheeseYellow,
+            unfocusedIndicatorColor =
+                if (isError) PizzaRed else CheeseYellow,
+
+            errorIndicatorColor = PizzaRed,
+
             focusedTextColor = DarkText,
             unfocusedTextColor = DarkText,
+
             focusedLeadingIconColor = NightSurface,
             unfocusedLeadingIconColor = LavenderGray,
+
             focusedPlaceholderColor = LavenderGray,
             unfocusedPlaceholderColor = LavenderGray,
+
             cursorColor = CheeseYellow
         ),
         modifier = modifier

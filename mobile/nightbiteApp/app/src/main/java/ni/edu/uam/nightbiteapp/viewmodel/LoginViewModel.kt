@@ -5,7 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import ni.edu.uam.nightbiteapp.data.remote.dto.MessageResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserLoginRequest
 import ni.edu.uam.nightbiteapp.data.repository.UserRepository
 
@@ -50,10 +52,39 @@ class LoginViewModel(
 
                 val response = userRepository.loginUser(request)
 
-                uiState = if (response.isSuccessful && response.body() != null) {
-                    LoginUiState.Success(response.body()!!)
+                if (
+                    response.isSuccessful &&
+                    response.body() != null
+                ) {
+
+                    uiState = LoginUiState.Success(
+                        response.body()!!
+                    )
+
                 } else {
-                    LoginUiState.Error("Credenciales inválidas.")
+
+                    /**
+                     * Obtiene el mensaje enviado por la API
+                     * cuando ocurre un error de autenticación.
+                     */
+                    val errorMessage = try {
+
+                        val errorBody =
+                            response.errorBody()?.string()
+
+                        Gson().fromJson(
+                            errorBody,
+                            MessageResponse::class.java
+                        )?.message
+
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    uiState = LoginUiState.Error(
+                        errorMessage
+                            ?: "Credenciales inválidas."
+                    )
                 }
             } catch (e: Exception) {
                 uiState = LoginUiState.Error("Error de conexión con la API.")

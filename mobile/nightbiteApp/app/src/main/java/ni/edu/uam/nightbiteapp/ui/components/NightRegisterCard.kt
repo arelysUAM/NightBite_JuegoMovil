@@ -48,6 +48,12 @@ fun NightRegisterCard(
     email: String,
     password: String,
     confirmPassword: String,
+
+    usernameError: Boolean = false,
+    emailError: Boolean = false,
+    passwordError: Boolean = false,
+    confirmPasswordError: Boolean = false,
+
     onUsernameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -81,6 +87,12 @@ fun NightRegisterCard(
                 email = email,
                 password = password,
                 confirmPassword = confirmPassword,
+
+                usernameError = usernameError,
+                emailError = emailError,
+                passwordError = passwordError,
+                confirmPasswordError = confirmPasswordError,
+
                 onUsernameChange = onUsernameChange,
                 onEmailChange = onEmailChange,
                 onPasswordChange = onPasswordChange,
@@ -152,6 +164,12 @@ private fun RegisterFormPanel(
     email: String,
     password: String,
     confirmPassword: String,
+
+    usernameError: Boolean,
+    emailError: Boolean,
+    passwordError: Boolean,
+    confirmPasswordError: Boolean,
+
     onUsernameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -171,6 +189,7 @@ private fun RegisterFormPanel(
             onValueChange = onUsernameChange,
             label = "Nombre de usuario",
             icon = Icons.Default.Person,
+            isError = usernameError,
             modifier = Modifier.width(320.dp)
         )
 
@@ -181,6 +200,7 @@ private fun RegisterFormPanel(
             onValueChange = onEmailChange,
             label = "Correo electrónico",
             icon = Icons.Default.Email,
+            isError = emailError,
             modifier = Modifier.width(320.dp)
         )
 
@@ -191,6 +211,7 @@ private fun RegisterFormPanel(
             onValueChange = onPasswordChange,
             label = "Contraseña",
             icon = Icons.Default.Lock,
+            isError = passwordError,
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.width(320.dp)
         )
@@ -202,6 +223,7 @@ private fun RegisterFormPanel(
             onValueChange = onConfirmPasswordChange,
             label = "Confirmar contraseña",
             icon = Icons.Default.Lock,
+            isError = confirmPasswordError,
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.width(320.dp)
         )
