@@ -10,5 +10,6 @@ data class UserResponse(
     val username: String,
     val email: String,
     val age: Int,
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    val player: PlayerSummaryResponse? = null
 )

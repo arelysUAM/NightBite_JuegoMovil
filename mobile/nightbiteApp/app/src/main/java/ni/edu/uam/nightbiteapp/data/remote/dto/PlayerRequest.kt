@@ -1,13 +1,16 @@
 package ni.edu.uam.nightbiteapp.data.remote.dto
 
 /**
- * DTO utilizado para enviar los datos de un jugador hacia la API.
+ * DTO utilizado para enviar los datos de la ficha/personaje del repartidor hacia la API.
  *
- * Se usará principalmente en el registro de nuevos jugadores.
- * Más adelante será enviado mediante Retrofit al endpoint correspondiente
- * del backend desarrollado en Spring Boot.
+ * Player ya no representa la cuenta real de inicio de sesión.
+ * La cuenta real pertenece a UserAccount.
  */
 data class PlayerRequest(
-    val username: String,
-    val email: String
+    val userAccountId: Long,
+    val nickname: String,
+    val driverName: String,
+    val gender: String,
+    val helmetColor: String,
+    val motorcycleType: String
 )

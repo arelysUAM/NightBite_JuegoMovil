@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.ui.components.NightLoginCard
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.LoginUiState
@@ -39,7 +40,7 @@ import ni.edu.uam.nightbiteapp.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onNavigateToHome: () -> Unit,
+    onNavigateToHome: (UserResponse) -> Unit,
     onExitApp: () -> Unit,
     loginViewModel: LoginViewModel = viewModel()
 ) {
@@ -60,8 +61,10 @@ fun LoginScreen(
                     Toast.LENGTH_SHORT
                 ).show()
 
+                val loggedUser = uiState.user
+
                 loginViewModel.resetState()
-                onNavigateToHome()
+                onNavigateToHome(loggedUser)
             }
 
             is LoginUiState.Error -> {
