@@ -8,6 +8,8 @@ import ni.edu.uam.nightbiteapi.services.UserAccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ni.edu.uam.nightbiteapi.dto.UpdatePasswordRequest;
+import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
 
 import java.util.List;
 
@@ -71,6 +73,48 @@ public class UserAccountController {
         } catch (RuntimeException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Endpoint para cambiar el nombre de usuario de una cuenta.
+     *
+     * Método HTTP: PUT
+     * URL: /api/users/{id}/username
+     */
+    @PutMapping("/{id}/username")
+    public ResponseEntity<?> updateUsername(
+            @PathVariable Long id,
+            @RequestBody UpdateUsernameRequest request
+    ) {
+        try {
+            UserResponse response = userAccountService.updateUsername(id, request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Endpoint para cambiar la contraseña de una cuenta.
+     *
+     * Método HTTP: PUT
+     * URL: /api/users/{id}/password
+     */
+    @PutMapping("/{id}/password")
+    public ResponseEntity<?> updatePassword(
+            @PathVariable Long id,
+            @RequestBody UpdatePasswordRequest request
+    ) {
+        try {
+            userAccountService.updatePassword(id, request);
+            return ResponseEntity.ok(new MessageResponse("Contraseña actualizada correctamente"));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .badRequest()
                     .body(new MessageResponse(e.getMessage()));
         }
     }
