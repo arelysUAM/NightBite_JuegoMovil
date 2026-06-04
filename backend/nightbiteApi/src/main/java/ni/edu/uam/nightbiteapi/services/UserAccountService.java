@@ -107,7 +107,7 @@ public class UserAccountService {
         }
 
         if (request.getPassword().length() < 8) {
-            throw new RuntimeException("La contraseña debe tener al menos 6 caracteres");
+            throw new RuntimeException("La contraseña debe tener al menos 8 caracteres");
         }
 
         if (request.getAge() == null) {
