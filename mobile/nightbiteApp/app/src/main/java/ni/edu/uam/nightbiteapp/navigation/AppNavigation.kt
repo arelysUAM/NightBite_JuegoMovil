@@ -14,22 +14,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import ni.edu.uam.nightbiteapp.data.local.mock.NightLevelsData
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
+import ni.edu.uam.nightbiteapp.ui.screens.AccountScreen
 import ni.edu.uam.nightbiteapp.ui.screens.AgeCheckScreen
 import ni.edu.uam.nightbiteapp.ui.screens.GamePlaceholderScreen
 import ni.edu.uam.nightbiteapp.ui.screens.HomeScreen
+import ni.edu.uam.nightbiteapp.ui.screens.LevelIntroScreen
 import ni.edu.uam.nightbiteapp.ui.screens.LoginScreen
 import ni.edu.uam.nightbiteapp.ui.screens.PlayerCreationScreen
 import ni.edu.uam.nightbiteapp.ui.screens.PlayerDetailScreen
 import ni.edu.uam.nightbiteapp.ui.screens.RegisterScreen
 import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
 import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
-import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
-import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
-import ni.edu.uam.nightbiteapp.ui.screens.AccountScreen
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModelFactory
+import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
+import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 
 /**
  * Componente principal de navegación de la aplicación.
@@ -131,11 +133,15 @@ fun AppNavigation() {
 
         composable(Routes.HOME) {
             HomeScreen(
-                onNavigateToGame = {
-                    navController.navigate(Routes.GAME_PLACEHOLDER)
+                userId = activeUserId ?: userSession.userId,
+                onNavigateToLevelIntro = { levelId ->
+                    navController.navigate(Routes.levelIntro(levelId))
                 },
                 onNavigateToPlayerDetail = {
                     navController.navigate(Routes.PLAYER_DETAIL)
+                },
+                onNavigateToPlayerCreation = {
+                    navController.navigate(Routes.PLAYER_CREATION)
                 },
                 onNavigateToAchievements = {
                     // Pendiente: crear pantalla de libro de logros.
@@ -145,6 +151,30 @@ fun AppNavigation() {
                 },
                 onExitApp = {
                     activity?.finish()
+                }
+            )
+        }
+
+        composable(
+            route = Routes.LEVEL_INTRO,
+            arguments = listOf(
+                navArgument("levelId") {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStackEntry ->
+            val levelId = backStackEntry.arguments?.getInt("levelId")
+            val selectedLevel = levelId?.let {
+                NightLevelsData.getLevelById(it)
+            }
+
+            LevelIntroScreen(
+                level = selectedLevel,
+                onStartLevel = {
+                    navController.navigate(Routes.GAME_PLACEHOLDER)
+                },
+                onBackToHome = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -159,7 +189,7 @@ fun AppNavigation() {
                     navController.navigate(Routes.PLAYER_CREATION)
                 },
                 onEditPlayer = {
-                    // Pendiente: conectar después con pantalla o modo de edición de Player.
+                    // Pendiente: edición de Player.
                 }
             )
         }
@@ -183,6 +213,7 @@ fun AppNavigation() {
                         popUpTo(Routes.PLAYER_CREATION) {
                             inclusive = true
                         }
+                        launchSingleTop = true
                     }
                 }
             )
