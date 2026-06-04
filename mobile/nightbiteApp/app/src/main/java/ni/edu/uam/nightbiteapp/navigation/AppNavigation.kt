@@ -6,7 +6,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -15,7 +14,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
 import ni.edu.uam.nightbiteapp.ui.screens.AgeCheckScreen
@@ -24,12 +22,14 @@ import ni.edu.uam.nightbiteapp.ui.screens.HomeScreen
 import ni.edu.uam.nightbiteapp.ui.screens.LoginScreen
 import ni.edu.uam.nightbiteapp.ui.screens.PlayerCreationScreen
 import ni.edu.uam.nightbiteapp.ui.screens.PlayerDetailScreen
-import ni.edu.uam.nightbiteapp.ui.screens.ProfileScreen
 import ni.edu.uam.nightbiteapp.ui.screens.RegisterScreen
 import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
 import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
+import ni.edu.uam.nightbiteapp.ui.screens.AccountScreen
+import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModel
+import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModelFactory
 
 /**
  * Componente principal de navegación de la aplicación.
@@ -43,8 +43,6 @@ fun AppNavigation() {
     val sessionManager = remember {
         SessionManager(context.applicationContext)
     }
-
-    val coroutineScope = rememberCoroutineScope()
 
     val userSession by sessionManager.userSessionFlow.collectAsState(
         initial = UserSession()
@@ -192,8 +190,8 @@ fun AppNavigation() {
 
         composable(Routes.SETTINGS) {
             SettingsScreen(
-                onNavigateToProfile = {
-                    navController.navigate(Routes.PROFILE)
+                onNavigateToAccount = {
+                    navController.navigate(Routes.ACCOUNT)
                 },
                 onBackToHome = {
                     navController.popBackStack()
@@ -201,24 +199,26 @@ fun AppNavigation() {
             )
         }
 
-        composable(Routes.PROFILE) {
-            ProfileScreen(
-                userId = activeUserId ?: userSession.userId,
-                onLogout = {
+        composable(Routes.ACCOUNT) {
+            val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(
+                factory = AccountCredentialsViewModelFactory(sessionManager)
+            )
+
+            AccountScreen(
+                userSession = userSession,
+                viewModel = accountCredentialsViewModel,
+                onBackToSettings = {
+                    navController.popBackStack()
+                },
+                onNavigateToLogin = {
+                    activeUserId = null
+
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.HOME) {
                             inclusive = true
                         }
                         launchSingleTop = true
                     }
-
-                    coroutineScope.launch {
-                        sessionManager.clearSession()
-                        activeUserId = null
-                    }
-                },
-                onDeleteAccount = {
-                    // Pendiente: conectar con endpoint DELETE de cuenta cuando exista en backend.
                 }
             )
         }

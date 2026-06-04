@@ -6,6 +6,8 @@ import ni.edu.uam.nightbiteapp.data.remote.dto.UserLoginRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserRegisterRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import retrofit2.Response
+import ni.edu.uam.nightbiteapp.data.remote.dto.UpdatePasswordRequest
+import ni.edu.uam.nightbiteapp.data.remote.dto.UpdateUsernameRequest
 
 /**
  * Repositorio encargado de gestionar las operaciones relacionadas
@@ -56,5 +58,25 @@ class UserRepository(
      */
     suspend fun getUserById(id: Long): Response<UserResponse> {
         return apiService.getUserById(id)
+    }
+
+    /**
+     * Actualiza el nombre de usuario de una cuenta.
+     */
+    suspend fun updateUsername(
+        userId: Long,
+        request: UpdateUsernameRequest
+    ): Response<UserResponse> {
+        return apiService.updateUsername(userId, request)
+    }
+
+    /**
+     * Actualiza la contraseña de una cuenta.
+     */
+    suspend fun updatePassword(
+        userId: Long,
+        request: UpdatePasswordRequest
+    ): Response<UserResponse> {
+        return apiService.updatePassword(userId, request)
     }
 }

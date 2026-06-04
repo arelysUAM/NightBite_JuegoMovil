@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun SettingsScreen(
-    onNavigateToProfile: () -> Unit,
+    onNavigateToAccount: () -> Unit,
     onBackToHome: () -> Unit
 ) {
     var musicEnabled by remember {
@@ -73,16 +73,16 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Consulta la información de tu cuenta, el ID de usuario y las acciones administrativas."
+                    text = "Consulta tus datos de cuenta y actualiza tus credenciales de acceso."
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedButton(
-                    onClick = onNavigateToProfile,
+                    onClick = onNavigateToAccount,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = "Perfil de cuenta")
+                    Text(text = "Cuenta")
                 }
             }
         }
