@@ -73,7 +73,7 @@ fun PlayerCreationScreen(
         verticalArrangement = Arrangement.Top
     ) {
         Text(
-            text = "Ficha de contratación nocturna",
+            text = "Ficha de Contratación",
             style = MaterialTheme.typography.headlineSmall
         )
 

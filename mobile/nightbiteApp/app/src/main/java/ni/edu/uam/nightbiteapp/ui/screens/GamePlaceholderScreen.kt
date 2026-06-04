@@ -205,7 +205,7 @@ private fun TutorialResultButtons(
         "Ganador: 3 estrellas" to GameResultType.TUTORIAL_THREE_STARS,
         "Resultado: 2 estrellas" to GameResultType.TUTORIAL_TWO_STARS,
         "Resultado: 1 estrella" to GameResultType.TUTORIAL_ONE_STAR,
-        "Despedido" to GameResultType.FIRED
+        "Resultado: 0 estrellas" to GameResultType.FIRED
     )
 
     ResultButtonsRow(

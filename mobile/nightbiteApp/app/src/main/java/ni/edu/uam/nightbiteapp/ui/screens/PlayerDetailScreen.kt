@@ -188,7 +188,7 @@ private fun PlayerDetailContent(
 
             Text(text = "ID de jugador: #${player.id}")
             Text(text = "Apodo: ${player.nickname}")
-            Text(text = "Noche máxima alcanzada: Nivel 1")
+            Text(text = "Noche máxima alcanzada: Nivel 0")
         }
     }
 
@@ -231,7 +231,7 @@ private fun PlayerDetailContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(text = "Puesto: Delivery")
+            Text(text = "Puesto: Repartidor")
             Text(text = "Jornada laboral: 12:00 a.m. - 3:00 a.m.")
             Text(text = "Restaurante: NightBite Pizza")
             Text(text = "Estado: Contratado")
