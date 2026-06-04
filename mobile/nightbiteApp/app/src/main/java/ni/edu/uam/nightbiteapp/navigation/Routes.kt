@@ -21,7 +21,8 @@ object Routes {
     const val PLAYER_DETAIL = "player_detail"
 
     const val LEVEL_INTRO = "level_intro/{levelId}"
-    const val GAME_PLACEHOLDER = "game_placeholder"
+    const val GAME_PLACEHOLDER = "game_placeholder/{levelId}"
+    const val GAME_RESULT = "game_result/{levelId}/{resultType}"
 
     fun registerWithAge(age: Int): String {
         return "register/$age"
@@ -29,5 +30,16 @@ object Routes {
 
     fun levelIntro(levelId: Int): String {
         return "level_intro/$levelId"
+    }
+
+    fun gamePlaceholder(levelId: Int): String {
+        return "game_placeholder/$levelId"
+    }
+
+    fun gameResult(
+        levelId: Int,
+        resultType: String
+    ): String {
+        return "game_result/$levelId/$resultType"
     }
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,6 +37,9 @@ import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 /**
  * Cuadro superpuesto para mostrar mensajes de confirmación,
  * advertencia, éxito o error dentro de la app.
+ *
+ * additionalContent permite agregar controles personalizados,
+ * como las opciones del menú de pausa.
  */
 @Composable
 fun NightMessageDialog(
@@ -47,7 +51,8 @@ fun NightMessageDialog(
     icon: ImageVector = Icons.Default.Warning,
     iconColor: Color = CheeseYellow,
     dismissText: String? = null,
-    onDismiss: (() -> Unit)? = null
+    onDismiss: (() -> Unit)? = null,
+    additionalContent: (@Composable () -> Unit)? = null
 ) {
     Dialog(
         onDismissRequest = {
@@ -81,7 +86,9 @@ fun NightMessageDialog(
                 colors = CardDefaults.cardColors(
                     containerColor = NightSurface
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 10.dp
+                ),
                 modifier = Modifier.width(360.dp)
             ) {
                 Column(
@@ -107,6 +114,17 @@ fun NightMessageDialog(
                         fontSize = 14.sp,
                         textAlign = TextAlign.Center
                     )
+
+                    if (additionalContent != null) {
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            additionalContent()
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(22.dp))
 
