@@ -2,15 +2,15 @@ package ni.edu.uam.nightbiteapp.viewmodel
 
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 
-sealed class ProfileUiState {
-    object Idle : ProfileUiState()
-    object Loading : ProfileUiState()
+sealed class PlayerDetailUiState {
+    object Idle : PlayerDetailUiState()
+    object Loading : PlayerDetailUiState()
 
     data class Success(
         val user: UserResponse
-    ) : ProfileUiState()
+    ) : PlayerDetailUiState()
 
     data class Error(
         val message: String
-    ) : ProfileUiState()
+    ) : PlayerDetailUiState()
 }

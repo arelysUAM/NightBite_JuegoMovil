@@ -28,8 +28,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
-import ni.edu.uam.nightbiteapp.viewmodel.ProfileUiState
-import ni.edu.uam.nightbiteapp.viewmodel.ProfileViewModel
+import ni.edu.uam.nightbiteapp.viewmodel.PlayerDetailUiState
+import ni.edu.uam.nightbiteapp.viewmodel.PlayerDetailViewModel
 
 /**
  * Pantalla que muestra la ficha completa del repartidor.
@@ -43,13 +43,13 @@ fun PlayerDetailScreen(
     onBackToHome: () -> Unit,
     onNavigateToPlayerCreation: () -> Unit,
     onEditPlayer: () -> Unit = {},
-    profileViewModel: ProfileViewModel = viewModel()
+    playerDetailViewModel: PlayerDetailViewModel = viewModel()
 ) {
-    val uiState = profileViewModel.uiState
+    val uiState = playerDetailViewModel.uiState
 
     LaunchedEffect(userId) {
         if (userId != null) {
-            profileViewModel.loadUserProfile(userId)
+            playerDetailViewModel.loadPlayerDetail(userId)
         }
     }
 
@@ -76,20 +76,20 @@ fun PlayerDetailScreen(
                 )
             }
 
-            uiState is ProfileUiState.Loading -> {
+            uiState is PlayerDetailUiState.Loading -> {
                 LoadingPlayerDetailContent()
             }
 
-            uiState is ProfileUiState.Success -> {
+            uiState is PlayerDetailUiState.Success -> {
                 PlayerDetailContent(
                     user = uiState.user,
-                    onBackToProfile = onBackToHome,
+                    onBackToHome = onBackToHome,
                     onNavigateToPlayerCreation = onNavigateToPlayerCreation,
                     onEditPlayer = onEditPlayer
                 )
             }
 
-            uiState is ProfileUiState.Error -> {
+            uiState is PlayerDetailUiState.Error -> {
                 EmptyPlayerDetailContent(
                     message = uiState.message,
                     buttonText = "Volver al perfil",
@@ -151,7 +151,7 @@ private fun EmptyPlayerDetailContent(
 @Composable
 private fun PlayerDetailContent(
     user: UserResponse,
-    onBackToProfile: () -> Unit,
+    onBackToHome: () -> Unit,
     onNavigateToPlayerCreation: () -> Unit,
     onEditPlayer: () -> Unit
 ) {
@@ -166,7 +166,7 @@ private fun PlayerDetailContent(
             icon = Icons.Default.Warning,
             iconColor = CheeseYellow,
             onConfirm = onNavigateToPlayerCreation,
-            onDismiss = onBackToProfile
+            onDismiss = onBackToHome
         )
 
         return
@@ -250,9 +250,9 @@ private fun PlayerDetailContent(
     Spacer(modifier = Modifier.height(12.dp))
 
     OutlinedButton(
-        onClick = onBackToProfile,
+        onClick = onBackToHome,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(text = "Volver al perfil")
+        Text(text = "Volver al menú principal")
     }
 }
