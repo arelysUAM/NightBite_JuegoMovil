@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -22,10 +21,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -37,26 +32,19 @@ import ni.edu.uam.nightbiteapp.viewmodel.ProfileUiState
 import ni.edu.uam.nightbiteapp.viewmodel.ProfileViewModel
 
 /**
- * Pantalla de perfil de cuenta.
+ * Pantalla que muestra la ficha completa del repartidor.
  *
- * Esta pantalla muestra únicamente información de la cuenta del usuario.
- * La ficha del repartidor se consulta desde HomeScreen.
+ * Esta pantalla pertenece al Player, no a la cuenta del usuario.
+ * Aquí se muestran los datos del personaje/repartidor dentro del juego.
  */
 @Composable
-fun ProfileScreen(
+fun PlayerDetailScreen(
     userId: Long?,
-    onLogout: () -> Unit,
-    onDeleteAccount: () -> Unit = {},
+    onBackToHome: () -> Unit,
+    onNavigateToPlayerCreation: () -> Unit,
+    onEditPlayer: () -> Unit = {},
     profileViewModel: ProfileViewModel = viewModel()
 ) {
-    var showLogoutDialog by remember {
-        mutableStateOf(false)
-    }
-
-    var showDeleteAccountDialog by remember {
-        mutableStateOf(false)
-    }
-
     val uiState = profileViewModel.uiState
 
     LaunchedEffect(userId) {
@@ -73,7 +61,7 @@ fun ProfileScreen(
         verticalArrangement = Arrangement.Top
     ) {
         Text(
-            text = "Perfil de cuenta",
+            text = "Ficha del repartidor",
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -81,86 +69,43 @@ fun ProfileScreen(
 
         when {
             userId == null -> {
-                EmptyProfileContent(
+                EmptyPlayerDetailContent(
                     message = "No hay una sesión activa.",
-                    buttonText = "Volver al inicio de sesión",
-                    onButtonClick = {
-                        showLogoutDialog = true
-                    }
+                    buttonText = "Volver al perfil",
+                    onButtonClick = onBackToHome
                 )
             }
 
             uiState is ProfileUiState.Loading -> {
-                LoadingProfileContent()
+                LoadingPlayerDetailContent()
             }
 
             uiState is ProfileUiState.Success -> {
-                ProfileContent(
+                PlayerDetailContent(
                     user = uiState.user,
-                    onLogoutClick = {
-                        showLogoutDialog = true
-                    },
-                    onDeleteAccountClick = {
-                        showDeleteAccountDialog = true
-                    }
+                    onBackToProfile = onBackToHome,
+                    onNavigateToPlayerCreation = onNavigateToPlayerCreation,
+                    onEditPlayer = onEditPlayer
                 )
             }
 
             uiState is ProfileUiState.Error -> {
-                EmptyProfileContent(
+                EmptyPlayerDetailContent(
                     message = uiState.message,
-                    buttonText = "Volver al inicio de sesión",
-                    onButtonClick = {
-                        showLogoutDialog = true
-                    }
+                    buttonText = "Volver al perfil",
+                    onButtonClick = onBackToHome
                 )
             }
 
             else -> {
-                LoadingProfileContent()
+                LoadingPlayerDetailContent()
             }
         }
-    }
-
-    if (showLogoutDialog) {
-        NightMessageDialog(
-            title = "Cerrar sesión",
-            message = "¿Deseas cerrar sesión y volver al inicio de sesión?",
-            confirmText = "Continuar",
-            dismissText = "Cancelar",
-            icon = Icons.Default.Warning,
-            iconColor = CheeseYellow,
-            onConfirm = {
-                showLogoutDialog = false
-                onLogout()
-            },
-            onDismiss = {
-                showLogoutDialog = false
-            }
-        )
-    }
-
-    if (showDeleteAccountDialog) {
-        NightMessageDialog(
-            title = "Eliminar cuenta",
-            message = "Esta acción eliminará la cuenta del usuario. Por ahora queda pendiente conectarla con el backend.",
-            confirmText = "Entendido",
-            dismissText = "Cancelar",
-            icon = Icons.Default.Delete,
-            iconColor = CheeseYellow,
-            onConfirm = {
-                showDeleteAccountDialog = false
-                onDeleteAccount()
-            },
-            onDismiss = {
-                showDeleteAccountDialog = false
-            }
-        )
     }
 }
 
 @Composable
-private fun LoadingProfileContent() {
+private fun LoadingPlayerDetailContent() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -173,12 +118,12 @@ private fun LoadingProfileContent() {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(text = "Cargando perfil...")
+        Text(text = "Cargando ficha del repartidor...")
     }
 }
 
 @Composable
-private fun EmptyProfileContent(
+private fun EmptyPlayerDetailContent(
     message: String,
     buttonText: String,
     onButtonClick: () -> Unit
@@ -204,11 +149,28 @@ private fun EmptyProfileContent(
 }
 
 @Composable
-private fun ProfileContent(
+private fun PlayerDetailContent(
     user: UserResponse,
-    onLogoutClick: () -> Unit,
-    onDeleteAccountClick: () -> Unit
+    onBackToProfile: () -> Unit,
+    onNavigateToPlayerCreation: () -> Unit,
+    onEditPlayer: () -> Unit
 ) {
+    val player = user.player
+
+    if (player == null) {
+        NightMessageDialog(
+            title = "Ficha no disponible",
+            message = "Todavía no has creado tu ficha de repartidor.",
+            confirmText = "Crear ficha",
+            dismissText = "Volver",
+            icon = Icons.Default.Warning,
+            iconColor = CheeseYellow,
+            onConfirm = onNavigateToPlayerCreation,
+            onDismiss = onBackToProfile
+        )
+
+        return
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -218,35 +180,79 @@ private fun ProfileContent(
             modifier = Modifier.padding(PaddingValues(16.dp))
         ) {
             Text(
-                text = "Datos de cuenta",
+                text = "Contrato NightBite",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(text = "ID de jugador: #${player.id}")
+            Text(text = "Apodo: ${player.nickname}")
+            Text(text = "Noche máxima alcanzada: Nivel 1")
+        }
+    }
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(PaddingValues(16.dp))
+        ) {
+            Text(
+                text = "Datos del repartidor",
                 style = MaterialTheme.typography.titleMedium
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(text = "ID de usuario: ${user.id}")
-            Text(text = "Usuario: ${user.username}")
-            Text(text = "Correo: ${user.email}")
-            Text(text = "Edad: ${user.age}")
-            Text(text = "Creado el: ${user.createdAt ?: "No disponible"}")
+            Text(text = "Nombre del repartidor: ${player.driverName}")
+            Text(text = "Género: ${player.gender}")
+            Text(text = "Color de casco: ${player.helmetColor}")
+            Text(text = "Tipo de moto: ${player.motorcycleType}")
         }
     }
 
-    Spacer(modifier = Modifier.height(28.dp))
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(PaddingValues(16.dp))
+        ) {
+            Text(
+                text = "Datos laborales",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(text = "Puesto: Delivery")
+            Text(text = "Jornada laboral: 12:00 a.m. - 3:00 a.m.")
+            Text(text = "Restaurante: NightBite Pizza")
+            Text(text = "Estado: Contratado")
+        }
+    }
+
+    Spacer(modifier = Modifier.height(24.dp))
 
     Button(
-        onClick = onLogoutClick,
+        onClick = onEditPlayer,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(text = "Cerrar sesión")
+        Text(text = "Editar ficha")
     }
 
     Spacer(modifier = Modifier.height(12.dp))
 
     OutlinedButton(
-        onClick = onDeleteAccountClick,
+        onClick = onBackToProfile,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(text = "Eliminar cuenta")
+        Text(text = "Volver al perfil")
     }
 }

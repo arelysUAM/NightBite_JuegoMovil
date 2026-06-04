@@ -42,14 +42,22 @@ import androidx.compose.ui.unit.dp
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Warning
 
 @Composable
 fun PlayerCreationScreen(
     viewModel: PlayerCreationViewModel,
     onPlayerCreated: () -> Unit,
-    onBackToProfile: () -> Unit
+    onBackToHome: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    var showExitDialog by remember {
+        mutableStateOf(false)
+    }
 
     LaunchedEffect(uiState.isPlayerCreated) {
         if (uiState.isPlayerCreated) {
@@ -197,13 +205,16 @@ fun PlayerCreationScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Button(
-            onClick = onBackToProfile,
+            onClick = {
+                showExitDialog = true
+            },
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Volver al perfil")
+            Text(text = "Volver")
         }
     }
+
 
     if (uiState.errorMessage != null) {
         NightMessageDialog(
@@ -218,6 +229,24 @@ fun PlayerCreationScreen(
             },
             onDismiss = {
                 viewModel.clearError()
+            }
+        )
+    }
+
+    if (showExitDialog) {
+        NightMessageDialog(
+            title = "Salir sin crear ficha",
+            message = "Todavía no has creado tu ficha de repartidor. ¿Deseas volver al menú principal sin completar la ficha?",
+            confirmText = "Sí, volver",
+            dismissText = "Cancelar",
+            icon = Icons.Default.Warning,
+            iconColor = CheeseYellow,
+            onConfirm = {
+                showExitDialog = false
+                onBackToHome()
+            },
+            onDismiss = {
+                showExitDialog = false
             }
         )
     }
