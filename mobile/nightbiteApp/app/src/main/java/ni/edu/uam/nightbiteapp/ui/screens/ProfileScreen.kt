@@ -44,6 +44,7 @@ import ni.edu.uam.nightbiteapp.viewmodel.ProfileViewModel
 fun ProfileScreen(
     userId: Long?,
     onLogout: () -> Unit,
+    onNavigateToPlayerCreation: () -> Unit,
     profileViewModel: ProfileViewModel = viewModel()
 ) {
     var showLogoutDialog by remember {
@@ -92,7 +93,8 @@ fun ProfileScreen(
                     user = uiState.user,
                     onLogoutClick = {
                         showLogoutDialog = true
-                    }
+                    },
+                    onNavigateToPlayerCreation = onNavigateToPlayerCreation
                 )
             }
 
@@ -178,7 +180,8 @@ private fun EmptyProfileContent(
 @Composable
 private fun ProfileContent(
     user: UserResponse,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onNavigateToPlayerCreation: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -222,6 +225,15 @@ private fun ProfileContent(
 
             if (player == null) {
                 Text(text = "Aún no ha creado su player")
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = onNavigateToPlayerCreation,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Crear ficha de repartidor")
+                }
             } else {
                 Text(text = "ID Player: ${player.id}")
                 Text(text = "Apodo: ${player.nickname}")

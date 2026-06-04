@@ -25,6 +25,10 @@ import ni.edu.uam.nightbiteapp.ui.screens.ProfileScreen
 import ni.edu.uam.nightbiteapp.ui.screens.RegisterScreen
 import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
 import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import ni.edu.uam.nightbiteapp.ui.screens.PlayerCreationScreen
+import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
+import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 
 /**
  * Componente principal de navegación de la aplicación.
@@ -146,6 +150,9 @@ fun AppNavigation() {
         composable(Routes.PROFILE) {
             ProfileScreen(
                 userId = activeUserId ?: userSession.userId,
+                onNavigateToPlayerCreation = {
+                    navController.navigate(Routes.PLAYER_CREATION)
+                },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.HOME) {
@@ -168,6 +175,26 @@ fun AppNavigation() {
 
         composable(Routes.GAME_PLACEHOLDER) {
             GamePlaceholderScreen()
+        }
+
+        composable(Routes.PLAYER_CREATION) {
+            val playerCreationViewModel: PlayerCreationViewModel = viewModel(
+                factory = PlayerCreationViewModelFactory(sessionManager)
+            )
+
+            PlayerCreationScreen(
+                viewModel = playerCreationViewModel,
+                onPlayerCreated = {
+                    navController.navigate(Routes.PROFILE) {
+                        popUpTo(Routes.PLAYER_CREATION) {
+                            inclusive = true
+                        }
+                    }
+                },
+                onBackToProfile = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

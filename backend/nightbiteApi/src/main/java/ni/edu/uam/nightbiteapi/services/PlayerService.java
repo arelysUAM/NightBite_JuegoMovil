@@ -23,19 +23,19 @@ public class PlayerService {
     private final UserAccountRepository userAccountRepository;
 
     private static final Set<String> ALLOWED_HELMET_COLORS = Set.of(
-            "BLACK",
-            "RED",
-            "BLUE",
-            "WHITE",
-            "PINK"
+            "Negro",
+            "Rojo",
+            "Azul",
+            "Blanco",
+            "Amarillo"
     );
 
     private static final Set<String> ALLOWED_MOTORCYCLE_TYPES = Set.of(
-            "STANDARD",
-            "SPORT",
-            "RETRO",
-            "SCOOTER",
-            "DELIVERY"
+            "Estándar",
+            "Scooter",
+            "Deportiva",
+            "Retro",
+            "Delivery"
     );
 
     public PlayerService(PlayerRepository playerRepository,
@@ -87,20 +87,20 @@ public class PlayerService {
     private void normalizeRequest(PlayerRequest request) {
         request.setNickname(request.getNickname().trim().toLowerCase());
         request.setDriverName(request.getDriverName().trim());
-        request.setHelmetColor(request.getHelmetColor().trim().toUpperCase());
-        request.setMotorcycleType(request.getMotorcycleType().trim().toUpperCase());
+        request.setHelmetColor(request.getHelmetColor().trim());
+        request.setMotorcycleType(request.getMotorcycleType().trim());
     }
 
     private void validatePlayerOptions(PlayerRequest request) {
         if (!ALLOWED_HELMET_COLORS.contains(request.getHelmetColor())) {
             throw new IllegalArgumentException(
-                    "Color de casco no permitido. Opciones válidas: BLACK, RED, BLUE, WHITE, PINK"
+                    "Color de casco no permitido. Opciones válidas: Negro, Rojo, Azul, Blanco, Amarillo"
             );
         }
 
         if (!ALLOWED_MOTORCYCLE_TYPES.contains(request.getMotorcycleType())) {
             throw new IllegalArgumentException(
-                    "Tipo de moto no permitido. Opciones válidas: STANDARD, SPORT, RETRO, SCOOTER, DELIVERY"
+                    "Tipo de moto no permitido. Opciones válidas: Estándar, Scooter, Deportiva, Retro, Delivery"
             );
         }
     }

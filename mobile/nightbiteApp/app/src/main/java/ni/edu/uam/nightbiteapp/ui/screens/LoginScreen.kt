@@ -66,7 +66,7 @@ fun LoginScreen(
 
                 Toast.makeText(
                     context,
-                    "Bienvenida, ${loggedUser.username}",
+                    "Bienvenido, ${loggedUser.username}",
                     Toast.LENGTH_SHORT
                 ).show()
 

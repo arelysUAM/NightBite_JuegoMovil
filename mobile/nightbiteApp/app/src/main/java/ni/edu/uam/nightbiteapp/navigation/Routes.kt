@@ -16,6 +16,7 @@ object Routes {
     const val PROFILE = "profile"
     const val SETTINGS = "settings"
     const val GAME_PLACEHOLDER = "game_placeholder"
+    const val PLAYER_CREATION = "player_creation"
 
     fun registerWithAge(age: Int): String {
         return "register/$age"
