@@ -1,10 +1,13 @@
 package ni.edu.uam.nightbiteapp.ui.components
 
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -21,9 +24,6 @@ import ni.edu.uam.nightbiteapp.ui.theme.LavenderGray
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 
-/**
- * Campo de texto reutilizable para formularios de NightBite.
- */
 @Composable
 fun NightTextField(
     value: String,
@@ -32,52 +32,91 @@ fun NightTextField(
     icon: ImageVector,
     modifier: Modifier = Modifier,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    isError: Boolean = false
+    isError: Boolean = false,
+    errorMessage: String? = null,
+    trailingIcon: ImageVector? = null,
+    trailingIconDescription: String? = null,
+    onTrailingIconClick: (() -> Unit)? = null
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        isError = isError,
-        placeholder = {
-            Text(
-                text = label,
-                fontSize = 12.sp
-            )
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                modifier = Modifier.size(18.dp)
-            )
-        },
-        singleLine = true,
-        visualTransformation = visualTransformation,
-        shape = RoundedCornerShape(22.dp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = FieldBackground,
-            unfocusedContainerColor = FieldBackground,
-
-            focusedIndicatorColor =
-                if (isError) PizzaRed else CheeseYellow,
-            unfocusedIndicatorColor =
-                if (isError) PizzaRed else CheeseYellow,
-
-            errorIndicatorColor = PizzaRed,
-
-            focusedTextColor = DarkText,
-            unfocusedTextColor = DarkText,
-
-            focusedLeadingIconColor = NightSurface,
-            unfocusedLeadingIconColor = LavenderGray,
-
-            focusedPlaceholderColor = LavenderGray,
-            unfocusedPlaceholderColor = LavenderGray,
-
-            cursorColor = CheeseYellow
-        ),
+    Column(
         modifier = modifier
-            .fillMaxWidth()
-            .height(50.dp)
-    )
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            isError = isError,
+            placeholder = {
+                Text(
+                    text = label,
+                    fontSize = 11.sp
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    modifier = Modifier.size(19.dp)
+                )
+            },
+            trailingIcon = {
+                if (trailingIcon != null && onTrailingIconClick != null) {
+                    IconButton(
+                        onClick = onTrailingIconClick
+                    ) {
+                        Icon(
+                            imageVector = trailingIcon,
+                            contentDescription = trailingIconDescription,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+                }
+            },
+            singleLine = true,
+            visualTransformation = visualTransformation,
+            shape = RoundedCornerShape(26.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = FieldBackground,
+                unfocusedContainerColor = FieldBackground,
+                disabledContainerColor = FieldBackground,
+                errorContainerColor = FieldBackground,
+
+                focusedIndicatorColor = if (isError) PizzaRed else CheeseYellow,
+                unfocusedIndicatorColor = if (isError) PizzaRed else CheeseYellow,
+                errorIndicatorColor = PizzaRed,
+
+                focusedTextColor = DarkText,
+                unfocusedTextColor = DarkText,
+                errorTextColor = DarkText,
+
+                focusedLeadingIconColor = NightSurface,
+                unfocusedLeadingIconColor = LavenderGray,
+                errorLeadingIconColor = PizzaRed,
+
+                focusedTrailingIconColor = NightSurface,
+                unfocusedTrailingIconColor = LavenderGray,
+                errorTrailingIconColor = PizzaRed,
+
+                focusedPlaceholderColor = LavenderGray,
+                unfocusedPlaceholderColor = LavenderGray,
+                errorPlaceholderColor = LavenderGray,
+
+                cursorColor = CheeseYellow,
+                errorCursorColor = PizzaRed
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+        )
+
+        if (isError && !errorMessage.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = errorMessage,
+                color = PizzaRed,
+                fontSize = 10.sp,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
 }

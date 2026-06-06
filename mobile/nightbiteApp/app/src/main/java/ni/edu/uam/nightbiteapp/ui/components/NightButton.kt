@@ -3,7 +3,6 @@ package ni.edu.uam.nightbiteapp.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.DarkText
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
@@ -39,8 +39,11 @@ fun NightPrimaryButton(
             containerColor = CheeseYellow,
             contentColor = DarkText
         ),
-        modifier = modifier
-            .height(40.dp)
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            horizontal = 14.dp,
+            vertical = 0.dp
+        ),
+        modifier = modifier.height(34.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -50,13 +53,15 @@ fun NightPrimaryButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = text,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
 
             Text(
                 text = if (icon != null) "  $text" else text,
-                fontWeight = FontWeight.Bold
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.8.sp
             )
         }
     }
@@ -79,8 +84,7 @@ fun NightSecondaryButton(
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = SmokeWhite
         ),
-        modifier = modifier
-            .height(38.dp)
+        modifier = modifier.height(38.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
