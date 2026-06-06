@@ -84,7 +84,7 @@ fun AppNavigation() {
     ) {
         composable(Routes.START) {
             StartScreen(
-                onPressStart = {
+                onLoadingFinished  = {
                     val currentUserId = userSession.userId
 
                     if (userSession.isLoggedIn && currentUserId != null) {

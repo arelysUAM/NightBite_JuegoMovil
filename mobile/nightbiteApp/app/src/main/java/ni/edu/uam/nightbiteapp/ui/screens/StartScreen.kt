@@ -1,74 +1,50 @@
 package ni.edu.uam.nightbiteapp.ui.screens
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import ni.edu.uam.nightbiteapp.ui.components.PixelGameTitle
-import ni.edu.uam.nightbiteapp.ui.components.PressStartButton
-import ni.edu.uam.nightbiteapp.ui.components.StartPixelBackground
+import kotlinx.coroutines.delay
+import ni.edu.uam.nightbiteapp.ui.components.AnimatedLoadingText
+import ni.edu.uam.nightbiteapp.ui.components.GameTitle
+import ni.edu.uam.nightbiteapp.ui.components.StartBackground
 
 /**
- * Pantalla inicial del videojuego.
+ * Pantalla inicial tipo Splash / Loading Screen.
  *
- * Muestra el título del juego y el botón "PRESS START".
- * Funciona como entrada visual antes del login o menú principal.
+ * Muestra el fondo oficial, logo del juego y texto de carga animado.
+ * Al finalizar la carga visual, continúa con el flujo definido en AppNavigation.
  */
 @Composable
 fun StartScreen(
-    onPressStart: () -> Unit
+    onLoadingFinished: () -> Unit
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "press_start_animation")
-
-    val buttonAlpha by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.45f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 850),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "press_start_alpha"
-    )
+    LaunchedEffect(Unit) {
+        delay(2800)
+        onLoadingFinished()
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        StartPixelBackground()
+        StartBackground()
 
-        Column(
+        GameTitle(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            PixelGameTitle()
+                .align(Alignment.CenterEnd)
+                .padding(end = 48.dp)
+                .widthIn(max = 290.dp)
+        )
 
-            Text(
-                text = "Delivery nocturno",
-                color = Color(0xFFB8B8D1),
-                modifier = Modifier.padding(top = 8.dp, bottom = 28.dp)
-            )
-
-            PressStartButton(
-                modifier = Modifier.alpha(buttonAlpha),
-                onClick = onPressStart
-            )
-        }
+        AnimatedLoadingText(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 34.dp)
+        )
     }
 }
