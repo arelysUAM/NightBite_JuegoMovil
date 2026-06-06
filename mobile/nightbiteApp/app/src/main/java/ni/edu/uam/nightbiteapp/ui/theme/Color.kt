@@ -19,3 +19,13 @@ val LavenderGray = Color(0xFFB8B8D1)
 // Colores auxiliares
 val FieldBackground = Color(0xFFF8F5E9)
 val DarkText = Color(0xFF1B1F3B)
+
+val NightCard = Color(0xFF141A33)
+val NightCardBorder = Color(0xFF2DE2E6)
+val DarkPurple = Color(0xFF120A2A)
+val SoftPurple = Color(0xFF2A1B5A)
+val ErrorRed = Color(0xFFFF3B3B)
+val SuccessGreen = Color(0xFF39FF88)
+val WarningYellow = Color(0xFFFFD166)
+val MutedText = Color(0xFFB8B8D1)
+val InputBackground = Color(0xFFF4F4F8)
