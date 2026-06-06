@@ -36,9 +36,8 @@ fun StartScreen(
 
         GameTitle(
             modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 48.dp)
-                .widthIn(max = 290.dp)
+                .align(Alignment.Center)
+                .widthIn(max = 420.dp)
         )
 
         AnimatedLoadingText(
