@@ -1,19 +1,16 @@
 package ni.edu.uam.nightbiteapp.ui.screens
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,9 +19,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.NightFloatingMessage
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.NightRegisterCard
@@ -35,20 +35,12 @@ import ni.edu.uam.nightbiteapp.ui.validation.RegisterValidators
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterUiState
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
 
-/**
- * Pantalla visual de registro de cuenta.
- *
- * Permite ingresar los datos necesarios para crear una cuenta de usuario.
- * La edad se recibe desde AgeCheckScreen y se envía al backend junto
- * con los demás datos.
- */
 @Composable
 fun RegisterScreen(
     age: Int,
     onBackToLogin: () -> Unit,
     registerViewModel: RegisterViewModel = viewModel()
 ) {
-    val scrollState = rememberScrollState()
     val uiState = registerViewModel.uiState
 
     var username by remember { mutableStateOf("") }
@@ -56,13 +48,11 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
-    //Estados de error
     var usernameError by remember { mutableStateOf<String?>(null) }
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
     var confirmPasswordError by remember { mutableStateOf<String?>(null) }
 
-    //Estados para el mensaje flotante de advertencia
     var floatingMessage by remember { mutableStateOf<String?>(null) }
     var lastShownError by remember { mutableStateOf<String?>(null) }
 
@@ -92,22 +82,14 @@ fun RegisterScreen(
     }
 
     LaunchedEffect(floatingMessage) {
-
         if (floatingMessage != null) {
-
             delay(3000)
-
             floatingMessage = null
         }
     }
 
-    fun showValidationMessage(
-        error: String?
-    ) {
-        if (
-            error != null &&
-            error != lastShownError
-        ) {
+    fun showValidationMessage(error: String?) {
+        if (error != null && error != lastShownError) {
             floatingMessage = error
             lastShownError = error
         }
@@ -116,133 +98,134 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .imePadding()
-            .verticalScroll(scrollState)
-            .padding(horizontal = 32.dp, vertical = 20.dp),
+            .imePadding(),
         contentAlignment = Alignment.Center
     ) {
-        NightRegisterCard(
-            username = username,
-            email = email,
-            password = password,
-            confirmPassword = confirmPassword,
-
-            usernameError = usernameError != null,
-            emailError = emailError != null,
-            passwordError = passwordError != null,
-            confirmPasswordError = confirmPasswordError != null,
-
-            onUsernameChange = { username = it
-
-                val error =
-                    RegisterValidators.validateUsername(it)
-
-                usernameError = error
-
-                showValidationMessage(error)},
-            onEmailChange = { val normalizedEmail =
-                it.lowercase()
-
-                email = normalizedEmail
-
-                val error =
-                    RegisterValidators.validateEmail(
-                        normalizedEmail
-                    )
-
-                emailError = error
-
-                showValidationMessage(error) },
-            onPasswordChange = { password = it
-
-                val passwordValidation =
-                    RegisterValidators.validatePassword(it)
-
-                passwordError = passwordValidation
-
-                showValidationMessage(passwordValidation)
-
-                val confirmValidation =
-                    RegisterValidators.validateConfirmPassword(
-                        password = it,
-                        confirmPassword = confirmPassword
-                    )
-
-                confirmPasswordError = confirmValidation
-                showValidationMessage(confirmValidation) },
-            onConfirmPasswordChange = { confirmPassword = it
-
-                val error =
-                    RegisterValidators.validateConfirmPassword(
-                        password = password,
-                        confirmPassword = it
-                    )
-
-                confirmPasswordError = error
-
-                showValidationMessage(error) },
-            /**
-             * Ejecuta todas las validaciones visuales antes
-             * de enviar la información al ViewModel.
-             */
-            onRegisterClick = {
-
-                usernameError =
-                    RegisterValidators.validateUsername(
-                        username
-                    )
-
-                emailError =
-                    RegisterValidators.validateEmail(
-                        email
-                    )
-
-                passwordError =
-                    RegisterValidators.validatePassword(
-                        password
-                    )
-
-                confirmPasswordError =
-                    RegisterValidators.validateConfirmPassword(
-                        password = password,
-                        confirmPassword = confirmPassword
-                    )
-
-                val hasErrors =
-                    usernameError != null ||
-                            emailError != null ||
-                            passwordError != null ||
-                            confirmPasswordError != null
-
-                if (hasErrors) {
-
-                    showValidationMessage(
-                        usernameError
-                            ?: emailError
-                            ?: passwordError
-                            ?: confirmPasswordError
-                    )
-
-                    return@NightRegisterCard
-                }
-
-                registerViewModel.registerUser(
-                    username = username,
-                    email = email,
-                    password = password,
-                    confirmPassword = confirmPassword,
-                    age = age
-                )
-            },
-            onBackToLoginClick = {
-                showCancelRegisterDialog = true
-            },
-            modifier = Modifier.widthIn(
-                min = 620.dp,
-                max = 760.dp
-            )
+        Image(
+            painter = painterResource(id = R.drawable.fondo_estampado_morado),
+            contentDescription = "Fondo de registro",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp, vertical = 20.dp),
+            contentAlignment = Alignment.Center
+        )  {
+            NightRegisterCard(
+                username = username,
+                email = email,
+                password = password,
+                confirmPassword = confirmPassword,
+
+                usernameError = usernameError,
+                emailError = emailError,
+                passwordError = passwordError,
+                confirmPasswordError = confirmPasswordError,
+
+                onUsernameChange = {
+                    username = it
+
+                    val error = RegisterValidators.validateUsername(it)
+                    usernameError = error
+                    showValidationMessage(error)
+                },
+
+                onEmailChange = {
+                    val normalizedEmail = it.lowercase()
+                    email = normalizedEmail
+
+                    val error = RegisterValidators.validateEmail(normalizedEmail)
+                    emailError = error
+                    showValidationMessage(error)
+                },
+
+                onPasswordChange = {
+                    password = it
+
+                    val passwordValidation =
+                        RegisterValidators.validatePassword(it)
+
+                    passwordError = passwordValidation
+                    showValidationMessage(passwordValidation)
+
+                    val confirmValidation =
+                        RegisterValidators.validateConfirmPassword(
+                            password = it,
+                            confirmPassword = confirmPassword
+                        )
+
+                    confirmPasswordError = confirmValidation
+                    showValidationMessage(confirmValidation)
+                },
+
+                onConfirmPasswordChange = {
+                    confirmPassword = it
+
+                    val error =
+                        RegisterValidators.validateConfirmPassword(
+                            password = password,
+                            confirmPassword = it
+                        )
+
+                    confirmPasswordError = error
+                    showValidationMessage(error)
+                },
+
+                onRegisterClick = {
+                    usernameError =
+                        RegisterValidators.validateUsername(username)
+
+                    emailError =
+                        RegisterValidators.validateEmail(email)
+
+                    passwordError =
+                        RegisterValidators.validatePassword(password)
+
+                    confirmPasswordError =
+                        RegisterValidators.validateConfirmPassword(
+                            password = password,
+                            confirmPassword = confirmPassword
+                        )
+
+                    val hasErrors =
+                        usernameError != null ||
+                                emailError != null ||
+                                passwordError != null ||
+                                confirmPasswordError != null
+
+                    if (hasErrors) {
+                        showValidationMessage(
+                            usernameError
+                                ?: emailError
+                                ?: passwordError
+                                ?: confirmPasswordError
+                        )
+
+                        return@NightRegisterCard
+                    }
+
+                    registerViewModel.registerUser(
+                        username = username,
+                        email = email,
+                        password = password,
+                        confirmPassword = confirmPassword,
+                        age = age
+                    )
+                },
+
+                onBackToLoginClick = {
+                    showCancelRegisterDialog = true
+                },
+
+                modifier = Modifier.widthIn(
+                    min = 720.dp,
+                    max = 820.dp
+                )
+            )
+        }
 
         if (uiState is RegisterUiState.Loading) {
             CircularProgressIndicator(
@@ -300,29 +283,22 @@ fun RegisterScreen(
         }
 
         floatingMessage?.let { message ->
-
             Box(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopStart
             ) {
-
                 NightFloatingMessage(
                     message = message,
-                    modifier = Modifier
-                        .padding(
-                            start = 20.dp,
-                            top = 8.dp
-                        )
+                    modifier = Modifier.padding(
+                        start = 20.dp,
+                        top = 8.dp
+                    )
                 )
             }
         }
     }
 }
 
-/**
- * Tipo de diálogo mostrado en la pantalla de registro.
- */
 private enum class RegisterDialogType {
     None,
     Success,

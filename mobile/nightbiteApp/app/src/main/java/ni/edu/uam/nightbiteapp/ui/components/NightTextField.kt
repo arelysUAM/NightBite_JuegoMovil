@@ -1,10 +1,11 @@
 package ni.edu.uam.nightbiteapp.ui.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -12,9 +13,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
@@ -36,7 +39,9 @@ fun NightTextField(
     errorMessage: String? = null,
     trailingIcon: ImageVector? = null,
     trailingIconDescription: String? = null,
-    onTrailingIconClick: (() -> Unit)? = null
+    onTrailingIconClick: (() -> Unit)? = null,
+    reserveErrorSpace: Boolean = false,
+    fieldHeight: Dp = 60.dp
 ) {
     Column(
         modifier = modifier
@@ -55,7 +60,7 @@ fun NightTextField(
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    modifier = Modifier.size(19.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             },
             trailingIcon = {
@@ -66,7 +71,7 @@ fun NightTextField(
                         Icon(
                             imageVector = trailingIcon,
                             contentDescription = trailingIconDescription,
-                            modifier = Modifier.size(19.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
@@ -105,18 +110,35 @@ fun NightTextField(
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(fieldHeight)
         )
 
-        if (isError && !errorMessage.isNullOrBlank()) {
-            Spacer(modifier = Modifier.height(4.dp))
+        if (reserveErrorSpace) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(18.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                if (isError && !errorMessage.isNullOrBlank()) {
+                    Text(
+                        text = errorMessage,
+                        color = PizzaRed,
+                        fontSize = 10.sp
+                    )
+                }
+            }
+        } else {
+            if (isError && !errorMessage.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = errorMessage,
-                color = PizzaRed,
-                fontSize = 10.sp,
-                modifier = Modifier.fillMaxWidth()
-            )
+                Text(
+                    text = errorMessage,
+                    color = PizzaRed,
+                    fontSize = 10.sp,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
