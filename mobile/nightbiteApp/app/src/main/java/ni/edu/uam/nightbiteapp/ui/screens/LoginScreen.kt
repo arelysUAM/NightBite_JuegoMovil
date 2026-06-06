@@ -33,6 +33,7 @@ import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.LoginUiState
 import ni.edu.uam.nightbiteapp.viewmodel.LoginViewModel
 
+
 /**
  * Pantalla visual de inicio de sesión.
  *
@@ -138,8 +139,8 @@ fun LoginScreen(
                 },
                 onRegisterClick = onNavigateToRegister,
                 modifier = Modifier.widthIn(
-                    min = 380.dp,
-                    max = 460.dp
+                    min = 430.dp,
+                    max = 520.dp
                 )
             )
         }

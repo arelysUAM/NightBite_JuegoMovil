@@ -48,7 +48,7 @@ fun NightTextField(
             placeholder = {
                 Text(
                     text = label,
-                    fontSize = 11.sp
+                    fontSize = 14.sp
                 )
             },
             leadingIcon = {
