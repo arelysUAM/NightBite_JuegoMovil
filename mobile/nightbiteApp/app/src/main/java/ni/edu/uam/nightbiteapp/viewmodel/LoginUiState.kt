@@ -14,6 +14,14 @@ sealed class LoginUiState {
     ) : LoginUiState()
 
     data class Error(
-        val message: String
+        val message: String,
+        val type: LoginErrorType
     ) : LoginUiState()
+}
+
+enum class LoginErrorType {
+    UserNotFound,
+    InvalidCredentials,
+    IncompleteFields,
+    ConnectionError
 }

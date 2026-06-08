@@ -70,11 +70,11 @@ public class UserAccountService {
 
     public UserResponse loginUser(UserLoginRequest request) {
         if (request.getUsernameOrEmail() == null || request.getUsernameOrEmail().isBlank()) {
-            throw new RuntimeException("Ingresa usuario o correo");
+            throw new RuntimeException("Campos incompletos");
         }
 
         if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new RuntimeException("Ingresa la contraseña");
+            throw new RuntimeException("Campos incompletos");
         }
 
         UserAccount user = userAccountRepository
@@ -82,7 +82,7 @@ public class UserAccountService {
                         request.getUsernameOrEmail().trim(),
                         request.getUsernameOrEmail().trim()
                 )
-                .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         boolean passwordMatches = passwordEncoder.matches(
                 request.getPassword(),
@@ -90,7 +90,7 @@ public class UserAccountService {
         );
 
         if (!passwordMatches) {
-            throw new RuntimeException("Credenciales inválidas");
+            throw new RuntimeException("Usuario o contraseña incorrectos");
         }
 
         return mapToResponseWithPlayer(user);

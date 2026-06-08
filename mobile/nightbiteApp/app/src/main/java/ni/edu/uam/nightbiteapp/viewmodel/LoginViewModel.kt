@@ -13,9 +13,6 @@ import ni.edu.uam.nightbiteapp.data.repository.UserRepository
 
 /**
  * ViewModel encargado de manejar el inicio de sesión de cuentas de usuario.
- *
- * Valida los campos ingresados y se comunica con la API para comprobar
- * que las credenciales pertenezcan a una cuenta registrada.
  */
 class LoginViewModel(
     private val userRepository: UserRepository = UserRepository()
@@ -24,20 +21,15 @@ class LoginViewModel(
     var uiState by mutableStateOf<LoginUiState>(LoginUiState.Idle)
         private set
 
-    /**
-     * Inicia sesión usando usuario/correo y contraseña.
-     */
     fun loginUser(
         usernameOrEmail: String,
         password: String
     ) {
-        if (usernameOrEmail.isBlank()) {
-            uiState = LoginUiState.Error("Ingresa tu usuario o correo.")
-            return
-        }
-
-        if (password.isBlank()) {
-            uiState = LoginUiState.Error("Ingresa tu contraseña.")
+        if (usernameOrEmail.isBlank() || password.isBlank()) {
+            uiState = LoginUiState.Error(
+                message = "Ingresa tu usuario o correo y contraseña.",
+                type = LoginErrorType.IncompleteFields
+            )
             return
         }
 
@@ -56,45 +48,74 @@ class LoginViewModel(
                     response.isSuccessful &&
                     response.body() != null
                 ) {
-
                     uiState = LoginUiState.Success(
                         response.body()!!
                     )
-
                 } else {
-
-                    /**
-                     * Obtiene el mensaje enviado por la API
-                     * cuando ocurre un error de autenticación.
-                     */
-                    val errorMessage = try {
-
-                        val errorBody =
-                            response.errorBody()?.string()
+                    val apiMessage = try {
+                        val errorBody = response.errorBody()?.string()
 
                         Gson().fromJson(
                             errorBody,
                             MessageResponse::class.java
                         )?.message
-
                     } catch (e: Exception) {
                         null
                     }
 
-                    uiState = LoginUiState.Error(
-                        errorMessage
-                            ?: "Credenciales inválidas."
-                    )
+                    uiState = buildLoginError(apiMessage)
                 }
             } catch (e: Exception) {
-                uiState = LoginUiState.Error("Error de conexión con la API.")
+                uiState = LoginUiState.Error(
+                    message = "No se pudo conectar con el servidor. Inténtalo nuevamente.",
+                    type = LoginErrorType.ConnectionError
+                )
             }
         }
     }
 
-    /**
-     * Reinicia el estado después de mostrar un mensaje o navegar.
-     */
+    private fun buildLoginError(
+        apiMessage: String?
+    ): LoginUiState.Error {
+        val cleanMessage = apiMessage.orEmpty().trim()
+        val normalizedMessage = cleanMessage.lowercase()
+
+        return when {
+            normalizedMessage.contains("usuario no encontrado") ||
+                    normalizedMessage.contains("cuenta no encontrada") -> {
+                LoginUiState.Error(
+                    message = "Usuario no encontrado. Puedes crear una cuenta para continuar.",
+                    type = LoginErrorType.UserNotFound
+                )
+            }
+
+            normalizedMessage.contains("campos incompletos") ||
+                    normalizedMessage.contains("ingresa") -> {
+                LoginUiState.Error(
+                    message = "Ingresa tu usuario o correo y contraseña.",
+                    type = LoginErrorType.IncompleteFields
+                )
+            }
+
+            normalizedMessage.contains("contraseña") ||
+                    normalizedMessage.contains("credenciales") ||
+                    normalizedMessage.contains("incorrectos") ||
+                    normalizedMessage.contains("inválidas") -> {
+                LoginUiState.Error(
+                    message = "Usuario o contraseña incorrectos. Vuelve a intentarlo.",
+                    type = LoginErrorType.InvalidCredentials
+                )
+            }
+
+            else -> {
+                LoginUiState.Error(
+                    message = "Usuario o contraseña incorrectos. Vuelve a intentarlo.",
+                    type = LoginErrorType.InvalidCredentials
+                )
+            }
+        }
+    }
+
     fun resetState() {
         uiState = LoginUiState.Idle
     }
