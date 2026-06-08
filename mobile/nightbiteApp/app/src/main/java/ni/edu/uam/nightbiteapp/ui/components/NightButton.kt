@@ -59,7 +59,7 @@ fun NightPrimaryButton(
 
             Text(
                 text = if (icon != null) "  $text" else text,
-                fontSize = 11.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 0.8.sp
             )
