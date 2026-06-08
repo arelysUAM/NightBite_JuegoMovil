@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,18 +33,14 @@ import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.ui.components.NightLoginCard
+import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
+import ni.edu.uam.nightbiteapp.ui.theme.NeonGreen
+import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
+import ni.edu.uam.nightbiteapp.viewmodel.LoginErrorType
 import ni.edu.uam.nightbiteapp.viewmodel.LoginUiState
 import ni.edu.uam.nightbiteapp.viewmodel.LoginViewModel
 
-
-/**
- * Pantalla visual de inicio de sesión.
- *
- * Muestra el formulario de acceso del usuario en una tarjeta centrada,
- * valida las credenciales mediante el LoginViewModel y permite navegar
- * hacia la verificación de edad antes del registro.
- */
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
@@ -60,6 +60,9 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
 
+    var loginErrorMessage by remember { mutableStateOf<String?>(null) }
+    var loginErrorType by remember { mutableStateOf<LoginErrorType?>(null) }
+
     LaunchedEffect(uiState) {
         when (uiState) {
             is LoginUiState.Success -> {
@@ -67,22 +70,13 @@ fun LoginScreen(
 
                 sessionManager.saveSession(loggedUser)
 
-                Toast.makeText(
-                    context,
-                    "Bienvenido, ${loggedUser.username}",
-                    Toast.LENGTH_SHORT
-                ).show()
-
                 loginViewModel.resetState()
                 onNavigateToHome(loggedUser)
             }
 
             is LoginUiState.Error -> {
-                Toast.makeText(
-                    context,
-                    uiState.message,
-                    Toast.LENGTH_SHORT
-                ).show()
+                loginErrorMessage = uiState.message
+                loginErrorType = uiState.type
 
                 loginViewModel.resetState()
             }
@@ -129,8 +123,12 @@ fun LoginScreen(
             NightLoginCard(
                 username = username,
                 password = password,
-                onUsernameChange = { username = it },
-                onPasswordChange = { password = it },
+                onUsernameChange = {
+                    username = it
+                },
+                onPasswordChange = {
+                    password = it
+                },
                 onLoginClick = {
                     loginViewModel.loginUser(
                         usernameOrEmail = username,
@@ -149,6 +147,74 @@ fun LoginScreen(
             CircularProgressIndicator(
                 color = CheeseYellow
             )
+        }
+
+        loginErrorMessage?.let { message ->
+            when (loginErrorType) {
+                LoginErrorType.UserNotFound -> {
+                    NightMessageDialog(
+                        title = "Usuario no encontrado",
+                        message = message,
+                        confirmText = "REGISTRAR AHORA",
+                        dismissText = "VOLVER",
+                        icon = Icons.Default.PersonAdd,
+                        iconColor = NeonGreen,
+                        onConfirm = {
+                            loginErrorMessage = null
+                            loginErrorType = null
+                            onNavigateToRegister()
+                        },
+                        onDismiss = {
+                            loginErrorMessage = null
+                            loginErrorType = null
+                        }
+                    )
+                }
+
+                LoginErrorType.InvalidCredentials -> {
+                    NightMessageDialog(
+                        title = "Credenciales incorrectas",
+                        message = message,
+                        confirmText = "VOLVER A INTENTAR",
+                        icon = Icons.Default.Error,
+                        iconColor = PizzaRed,
+                        onConfirm = {
+                            loginErrorMessage = null
+                            loginErrorType = null
+                        }
+                    )
+                }
+
+                LoginErrorType.IncompleteFields -> {
+                    NightMessageDialog(
+                        title = "Campos incompletos",
+                        message = message,
+                        confirmText = "ENTENDIDO",
+                        icon = Icons.Default.Warning,
+                        iconColor = CheeseYellow,
+                        onConfirm = {
+                            loginErrorMessage = null
+                            loginErrorType = null
+                        }
+                    )
+                }
+
+                LoginErrorType.ConnectionError -> {
+                    NightMessageDialog(
+                        title = "Error de conexión",
+                        message = message,
+                        confirmText = "VOLVER A INTENTAR",
+                        icon = Icons.Default.Warning,
+                        iconColor = CheeseYellow,
+                        onConfirm = {
+                            loginErrorMessage = null
+                            loginErrorType = null
+                        }
+                    )
+                }
+
+                null -> Unit
+            }
         }
     }
 }
