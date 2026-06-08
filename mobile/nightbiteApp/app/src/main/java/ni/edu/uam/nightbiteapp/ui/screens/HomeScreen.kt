@@ -2,11 +2,12 @@ package ni.edu.uam.nightbiteapp.ui.screens
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,10 +35,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.NightLevelButton
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
@@ -90,96 +94,112 @@ fun HomeScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
-        IconButton(
-            onClick = onNavigateToSettings,
-            modifier = Modifier.align(Alignment.TopStart)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Configuración"
-            )
-        }
+        Image(
+            painter = painterResource(id = R.drawable.fondo_estampado_azul),
+            contentDescription = "Fondo del menú principal",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
 
-        Column(
-            modifier = Modifier.align(Alignment.TopEnd),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            IconButton(
-                onClick = {
-                    if (uiState.hasPlayer) {
-                        onNavigateToPlayerDetail()
-                    } else {
-                        showMissingPlayerDialog = true
-                    }
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Badge,
-                    contentDescription = "Plantilla del repartidor"
-                )
-            }
-
-            IconButton(
-                onClick = onNavigateToAchievements
-            ) {
-                Icon(
-                    imageVector = Icons.Default.EmojiEvents,
-                    contentDescription = "Libro de logros"
-                )
-            }
-        }
-
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .fillMaxSize()
+                .padding(20.dp)
         ) {
-            Text(
-                text = "NightBite",
-                style = MaterialTheme.typography.headlineLarge,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Seleccionar noche",
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    color = CheeseYellow
+            IconButton(
+                onClick = onNavigateToSettings,
+                modifier = Modifier.align(Alignment.TopStart)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Configuración",
+                    tint = SmokeWhite
                 )
-            } else {
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        space = 12.dp,
-                        alignment = Alignment.CenterHorizontally
-                    ),
-                    contentPadding = PaddingValues(horizontal = 8.dp)
+            }
+
+            Column(
+                modifier = Modifier.align(Alignment.TopEnd),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                IconButton(
+                    onClick = {
+                        if (uiState.hasPlayer) {
+                            onNavigateToPlayerDetail()
+                        } else {
+                            showMissingPlayerDialog = true
+                        }
+                    }
                 ) {
-                    items(uiState.levels) { level ->
-                        NightLevelButton(
-                            level = level,
-                            onClick = {
-                                if (uiState.hasPlayer) {
-                                    onNavigateToLevelIntro(level.id)
-                                } else {
-                                    showMissingPlayerDialog = true
+                    Icon(
+                        imageVector = Icons.Default.Badge,
+                        contentDescription = "Plantilla del repartidor",
+                        tint = SmokeWhite
+                    )
+                }
+
+                IconButton(
+                    onClick = onNavigateToAchievements
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.EmojiEvents,
+                        contentDescription = "Libro de logros",
+                        tint = SmokeWhite
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "NightBite",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = SmokeWhite,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Seleccionar noche",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = SmokeWhite,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        color = CheeseYellow
+                    )
+                } else {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            space = 12.dp,
+                            alignment = Alignment.CenterHorizontally
+                        ),
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        items(uiState.levels) { level ->
+                            NightLevelButton(
+                                level = level,
+                                onClick = {
+                                    if (uiState.hasPlayer) {
+                                        onNavigateToLevelIntro(level.id)
+                                    } else {
+                                        showMissingPlayerDialog = true
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }

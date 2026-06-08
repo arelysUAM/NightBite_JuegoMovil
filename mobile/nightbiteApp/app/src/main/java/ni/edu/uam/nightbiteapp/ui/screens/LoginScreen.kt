@@ -70,6 +70,12 @@ fun LoginScreen(
 
                 sessionManager.saveSession(loggedUser)
 
+                Toast.makeText(
+                    context,
+                    "Bienvenido, ${loggedUser.username}",
+                    Toast.LENGTH_SHORT
+                ).show()
+
                 loginViewModel.resetState()
                 onNavigateToHome(loggedUser)
             }
@@ -137,8 +143,8 @@ fun LoginScreen(
                 },
                 onRegisterClick = onNavigateToRegister,
                 modifier = Modifier.widthIn(
-                    min = 430.dp,
-                    max = 520.dp
+                    min = 390.dp,
+                    max = 470.dp
                 )
             )
         }

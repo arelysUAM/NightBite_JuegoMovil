@@ -3,9 +3,10 @@ package ni.edu.uam.nightbiteapp.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
@@ -34,6 +35,7 @@ import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.validation.RegisterValidators
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterUiState
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
+import androidx.compose.foundation.layout.imePadding
 
 @Composable
 fun RegisterScreen(
@@ -42,6 +44,7 @@ fun RegisterScreen(
     registerViewModel: RegisterViewModel = viewModel()
 ) {
     val uiState = registerViewModel.uiState
+    val scrollState = rememberScrollState()
 
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -111,9 +114,10 @@ fun RegisterScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp, vertical = 20.dp),
+                .verticalScroll(scrollState)
+                .padding(horizontal = 32.dp, vertical = 24.dp),
             contentAlignment = Alignment.Center
-        )  {
+        ) {
             NightRegisterCard(
                 username = username,
                 email = email,

@@ -119,7 +119,7 @@ fun NightRegisterCard(
                 Column(
                     modifier = Modifier
                         .width(295.dp)
-                        .height(282.dp),
+                        .height(306.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -131,7 +131,7 @@ fun NightRegisterCard(
                         isError = usernameError != null,
                         errorMessage = usernameError,
                         reserveErrorSpace = true,
-                        fieldHeight = 48.dp,
+                        fieldHeight = 54.dp,
                         modifier = Modifier.width(295.dp)
                     )
 
@@ -143,7 +143,7 @@ fun NightRegisterCard(
                         isError = emailError != null,
                         errorMessage = emailError,
                         reserveErrorSpace = true,
-                        fieldHeight = 48.dp,
+                        fieldHeight = 54.dp,
                         modifier = Modifier.width(295.dp)
                     )
 
@@ -173,7 +173,7 @@ fun NightRegisterCard(
                         isError = passwordError != null,
                         errorMessage = passwordError,
                         reserveErrorSpace = true,
-                        fieldHeight = 48.dp,
+                        fieldHeight = 54.dp,
                         modifier = Modifier.width(295.dp)
                     )
 
@@ -203,7 +203,7 @@ fun NightRegisterCard(
                         isError = confirmPasswordError != null,
                         errorMessage = confirmPasswordError,
                         reserveErrorSpace = true,
-                        fieldHeight = 48.dp,
+                        fieldHeight = 54.dp,
                         modifier = Modifier.width(295.dp)
                     )
                 }
@@ -213,7 +213,7 @@ fun NightRegisterCard(
                 Box(
                     modifier = Modifier
                         .width(3.dp)
-                        .height(282.dp)
+                        .height(306.dp)
                         .background(SmokeWhite.copy(alpha = 0.9f))
                 )
 
@@ -222,7 +222,7 @@ fun NightRegisterCard(
                 Column(
                     modifier = Modifier
                         .width(245.dp)
-                        .height(282.dp),
+                        .height(306.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -230,7 +230,7 @@ fun NightRegisterCard(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Crear Cuenta",
+                            text = "CREAR CUENTA",
                             color = SmokeWhite,
                             fontSize = 30.sp,
                             fontWeight = FontWeight.Black,

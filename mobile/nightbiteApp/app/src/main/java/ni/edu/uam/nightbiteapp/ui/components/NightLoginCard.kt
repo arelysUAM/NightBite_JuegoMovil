@@ -67,18 +67,18 @@ fun NightLoginCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
         modifier = modifier.widthIn(
-            min = 430.dp,
-            max = 520.dp
+            min = 390.dp,
+            max = 470.dp
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = 42.dp,
-                    end = 42.dp,
-                    top = 24.dp,
-                    bottom = 24.dp
+                    start = 34.dp,
+                    end = 34.dp,
+                    top = 22.dp,
+                    bottom = 22.dp
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -109,7 +109,7 @@ fun NightLoginCard(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             NightTextField(
                 value = username,
@@ -119,10 +119,11 @@ fun NightLoginCard(
                 isError = false,
                 errorMessage = null,
                 reserveErrorSpace = false,
-                modifier = Modifier.width(330.dp)
+                fieldHeight = 54.dp,
+                modifier = Modifier.width(285.dp)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             NightTextField(
                 value = password,
@@ -150,7 +151,8 @@ fun NightLoginCard(
                 isError = false,
                 errorMessage = null,
                 reserveErrorSpace = false,
-                modifier = Modifier.width(330.dp)
+                fieldHeight = 54.dp,
+                modifier = Modifier.width(285.dp)
             )
 
             Spacer(modifier = Modifier.height(18.dp))

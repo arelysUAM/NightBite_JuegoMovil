@@ -50,6 +50,9 @@ import ni.edu.uam.nightbiteapp.ui.theme.NightBackground
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import java.util.Calendar
+import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.text.style.TextAlign
 
 /**
  * Pantalla para verificar la edad antes de permitir crear una cuenta.
@@ -121,15 +124,19 @@ fun AgeCheckScreen(
             ) {
                 Column(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(horizontal = 22.dp, vertical = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Verificar edad",
+                        text = "Verificación de Edad",
                         color = DarkText,
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.Black
+                        fontFamily = LilitaOne,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -138,7 +145,9 @@ fun AgeCheckScreen(
                         text = "Selecciona tu año de nacimiento",
                         color = DarkText.copy(alpha = 0.72f),
                         fontSize = 9.5.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     // Menor separación para que el texto quede más cerca
@@ -180,8 +189,8 @@ fun AgeCheckScreen(
                 contentDescription = "Cerrar",
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .offset(x = 20.dp, y = (-18).dp)
-                    .width(58.dp)
+                    .offset(x = 10.dp, y = (-16).dp)
+                    .width(54.dp)
                     .clickable {
                         onBackToLogin()
                     }
@@ -214,10 +223,8 @@ private fun YearPicker(
 ) {
     Column(
         modifier = Modifier
-            .width(240.dp)
+            .width(245.dp)
             .background(
-                // Fondo más oscuro del selector, parecido al bloque central
-                // de tu referencia.
                 color = Color(0xFF37A9AD),
                 shape = RoundedCornerShape(14.dp)
             )
@@ -245,7 +252,7 @@ private fun YearPicker(
                 Box(
                     modifier = Modifier
                         .height(itemHeight)
-                        .width(210.dp)
+                        .width(213.dp)
                         .clickable {
                             onYearClick(index)
                         },
