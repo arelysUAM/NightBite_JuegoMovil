@@ -32,3 +32,13 @@ val InputBackground = Color(0xFFF4F4F8)
 
 val LoginTabCyan = Color(0xFF5CE1E6)
 val LoginTabBorder = Color(0xFF2AA0A5)
+
+// Colores para la nueva interfaz de configuración
+val SettingsPanelPink = Color(0xFFE879A8)
+val SettingsPanelDarkPink = Color(0xFF9B3A68)
+val SettingsTabPink = Color(0xFFFF9BC5)
+val SettingsCream = Color(0xFFFFF0C2)
+val SettingsCreamDark = Color(0xFFE0B85C)
+val SettingsTextDark = Color(0xFF33172A)
+val SettingsDangerRed = Color(0xFFFF4E6D)
+val SettingsOverlay = Color(0x99000000)
