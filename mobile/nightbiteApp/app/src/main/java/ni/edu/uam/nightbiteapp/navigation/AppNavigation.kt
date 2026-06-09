@@ -166,6 +166,7 @@ fun AppNavigation() {
         composable(Routes.HOME) {
             HomeScreen(
                 userId = activeUserId ?: userSession.userId,
+                userSession = userSession,
                 onNavigateToLevelIntro = { levelId ->
                     navController.navigate(Routes.levelIntro(levelId))
                 },
@@ -178,8 +179,23 @@ fun AppNavigation() {
                 onNavigateToAchievements = {
                     // Pendiente: crear pantalla de libro de logros.
                 },
-                onNavigateToSettings = {
-                    navController.navigate(Routes.SETTINGS)
+                onNavigateToAccount = {
+                    navController.navigate(Routes.ACCOUNT)
+                },
+                onLogout = {
+                    activeUserId = null
+
+                    coroutineScope.launch {
+                        sessionManager.clearSession()
+
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.HOME) {
+                                inclusive = true
+                            }
+
+                            launchSingleTop = true
+                        }
+                    }
                 },
                 onExitApp = {
                     activity?.finish()

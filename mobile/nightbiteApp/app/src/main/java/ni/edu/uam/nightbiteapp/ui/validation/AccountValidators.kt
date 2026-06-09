@@ -4,6 +4,7 @@ import android.util.Patterns
 
 object AccountValidators {
 
+    const val USERNAME_MIN_LENGTH = 4
     const val USERNAME_MAX_LENGTH = 16
     const val EMAIL_MAX_LENGTH = 100
     const val PASSWORD_MIN_LENGTH = 8
@@ -16,12 +17,16 @@ object AccountValidators {
 
         val normalizedUsername = username.trim()
 
+        if (normalizedUsername.length < USERNAME_MIN_LENGTH) {
+            return "El nombre de usuario debe tener al menos 4 caracteres."
+        }
+
         if (normalizedUsername.length > USERNAME_MAX_LENGTH) {
             return "El nombre de usuario no debe superar los 16 caracteres."
         }
 
         if (!normalizedUsername.matches(Regex("^[a-z0-9_]+$"))) {
-            return "Caracteres no permitidos. Usa solo letras, números y (_)."
+            return "Caracteres no permitidos. Usa solo letras minúsculas, números y (_)."
         }
 
         return null
@@ -58,7 +63,7 @@ object AccountValidators {
         fieldName: String = "La contraseña"
     ): String? {
         if (password.isBlank()) {
-            return "$fieldName es obligatoria"
+            return "$fieldName es obligatoria."
         }
 
         if (password.length < PASSWORD_MIN_LENGTH) {

@@ -1,8 +1,10 @@
 package ni.edu.uam.nightbiteapp.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -33,8 +35,6 @@ import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterUiState
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
-import androidx.compose.foundation.layout.imePadding
-import androidx.activity.compose.BackHandler
 
 @Composable
 fun RegisterScreen(
@@ -51,10 +51,40 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
-    var usernameError by remember { mutableStateOf<String?>(null) }
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var passwordError by remember { mutableStateOf<String?>(null) }
-    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
+    var usernameTouched by remember { mutableStateOf(false) }
+    var emailTouched by remember { mutableStateOf(false) }
+    var passwordTouched by remember { mutableStateOf(false) }
+    var confirmPasswordTouched by remember { mutableStateOf(false) }
+
+    var showAllErrors by remember { mutableStateOf(false) }
+    var showEmptyFieldsDialog by remember { mutableStateOf(false) }
+
+    val usernameError = if (usernameTouched || showAllErrors) {
+        AccountValidators.validateUsername(username)
+    } else {
+        null
+    }
+
+    val emailError = if (emailTouched || showAllErrors) {
+        AccountValidators.validateEmail(email)
+    } else {
+        null
+    }
+
+    val passwordError = if (passwordTouched || showAllErrors) {
+        AccountValidators.validatePassword(password)
+    } else {
+        null
+    }
+
+    val confirmPasswordError = if (confirmPasswordTouched || showAllErrors) {
+        AccountValidators.validateConfirmPassword(
+            password = password,
+            confirmPassword = confirmPassword
+        )
+    } else {
+        null
+    }
 
     var returnToLoginAfterConfirm by remember { mutableStateOf(true) }
     var showCancelRegisterDialog by remember { mutableStateOf(false) }
@@ -67,6 +97,12 @@ fun RegisterScreen(
                 email.isNotBlank() ||
                 password.isNotBlank() ||
                 confirmPassword.isNotBlank()
+
+    val allFieldsAreEmpty =
+        username.isBlank() &&
+                email.isBlank() &&
+                password.isBlank() &&
+                confirmPassword.isBlank()
 
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -129,103 +165,77 @@ fun RegisterScreen(
                 confirmPasswordError = confirmPasswordError,
 
                 onUsernameChange = { value ->
-                    val normalizedUsername = value
+                    usernameTouched = true
+
+                    username = value
                         .lowercase()
                         .replace(" ", "")
-
-                    username = normalizedUsername
-
-                    usernameError = if (normalizedUsername.isBlank()) {
-                        null
-                    } else {
-                        AccountValidators.validateUsername(normalizedUsername)
-                    }
                 },
 
                 onEmailChange = { value ->
-                    val normalizedEmail = value
+                    emailTouched = true
+
+                    email = value
                         .lowercase()
                         .replace(" ", "")
-
-                    email = normalizedEmail
-
-                    emailError = if (normalizedEmail.isBlank()) {
-                        null
-                    } else {
-                        AccountValidators.validateEmail(normalizedEmail)
-                    }
                 },
 
                 onPasswordChange = { value ->
+                    passwordTouched = true
                     password = value
-
-                    passwordError = if (value.isBlank()) {
-                        null
-                    } else {
-                        AccountValidators.validatePassword(value)
-                    }
-
-                    confirmPasswordError = if (confirmPassword.isBlank()) {
-                        null
-                    } else {
-                        AccountValidators.validateConfirmPassword(
-                            password = value,
-                            confirmPassword = confirmPassword
-                        )
-                    }
                 },
 
                 onConfirmPasswordChange = { value ->
+                    confirmPasswordTouched = true
                     confirmPassword = value
-
-                    confirmPasswordError = if (value.isBlank()) {
-                        null
-                    } else {
-                        AccountValidators.validateConfirmPassword(
-                            password = password,
-                            confirmPassword = value
-                        )
-                    }
                 },
 
                 onRegisterClick = {
-                    usernameError =
-                        AccountValidators.validateUsername(username)
+                    showAllErrors = true
 
-                    emailError =
-                        AccountValidators.validateEmail(email)
+                    if (allFieldsAreEmpty) {
+                        showEmptyFieldsDialog = true
+                    } else {
+                        val currentUsernameError =
+                            AccountValidators.validateUsername(username)
 
-                    passwordError =
-                        AccountValidators.validatePassword(password)
+                        val currentEmailError =
+                            AccountValidators.validateEmail(email)
 
-                    confirmPasswordError =
-                        AccountValidators.validateConfirmPassword(
-                            password = password,
-                            confirmPassword = confirmPassword
-                        )
+                        val currentPasswordError =
+                            AccountValidators.validatePassword(password)
 
-                    val hasErrors =
-                        usernameError != null ||
-                                emailError != null ||
-                                passwordError != null ||
-                                confirmPasswordError != null
+                        val currentConfirmPasswordError =
+                            AccountValidators.validateConfirmPassword(
+                                password = password,
+                                confirmPassword = confirmPassword
+                            )
 
-                    if (hasErrors) {
-                        return@NightRegisterCard
+                        val formIsValid =
+                            currentUsernameError == null &&
+                                    currentEmailError == null &&
+                                    currentPasswordError == null &&
+                                    currentConfirmPasswordError == null
+
+                        if (formIsValid) {
+                            registerViewModel.registerUser(
+                                username = username,
+                                email = email,
+                                password = password,
+                                confirmPassword = confirmPassword,
+                                age = age
+                            )
+                        }
                     }
-
-                    registerViewModel.registerUser(
-                        username = username,
-                        email = email,
-                        password = password,
-                        confirmPassword = confirmPassword,
-                        age = age
-                    )
                 },
 
                 onBackToLoginClick = {
-                    returnToLoginAfterConfirm = true
-                    showCancelRegisterDialog = true
+                    if (hasRegisterData) {
+                        returnToLoginAfterConfirm = false
+                        showCancelRegisterDialog = true
+                    } else {
+                        onBackToAgeCheck()
+                    }
                 },
 
                 modifier = Modifier.widthIn(
@@ -244,26 +254,30 @@ fun RegisterScreen(
         if (showCancelRegisterDialog) {
             NightMessageDialog(
                 title = "Cancelar registro",
-                message = if (returnToLoginAfterConfirm) {
-                    "¿Deseas terminar el registro y volver al inicio de sesión?"
-                } else {
-                    "¿Seguro quieres volver? Los datos no se guardarán."
-                },
+                message = "¿Seguro quieres volver? Los datos no se guardarán.",
                 confirmText = "SÍ, VOLVER",
                 dismissText = "CONTINUAR",
                 icon = Icons.Default.Warning,
                 iconColor = CheeseYellow,
                 onConfirm = {
                     showCancelRegisterDialog = false
-
-                    if (returnToLoginAfterConfirm) {
-                        onBackToLogin()
-                    } else {
-                        onBackToAgeCheck()
-                    }
+                    onBackToAgeCheck()
                 },
                 onDismiss = {
                     showCancelRegisterDialog = false
+                }
+            )
+        }
+
+        if (showEmptyFieldsDialog) {
+            NightMessageDialog(
+                title = "Campos incompletos",
+                message = "Debes completar todos los campos para registrarte.",
+                confirmText = "CONTINUAR",
+                icon = Icons.Default.Warning,
+                iconColor = CheeseYellow,
+                onConfirm = {
+                    showEmptyFieldsDialog = false
                 }
             )
         }

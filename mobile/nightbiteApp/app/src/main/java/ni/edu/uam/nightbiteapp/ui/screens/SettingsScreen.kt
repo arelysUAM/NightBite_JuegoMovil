@@ -1,38 +1,46 @@
 package ni.edu.uam.nightbiteapp.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,7 +48,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -49,25 +61,35 @@ import androidx.compose.ui.unit.dp
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
-import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
-import ni.edu.uam.nightbiteapp.ui.theme.DarkText
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsCardDark
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsCardLight
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsCream
-import ni.edu.uam.nightbiteapp.ui.theme.SettingsCreamDark
-import ni.edu.uam.nightbiteapp.ui.theme.SettingsDangerRed
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsDangerPink
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsOverlay
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsPanelDarkPink
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsPanelLightPink
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsPanelPink
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsTabPink
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsTextDark
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.ui.utils.UserDisplayIdGenerator
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material.icons.filled.Edit
 
-/**
- * Pantalla de configuración general de NightBite.
- *
- * Esta versión actualiza únicamente la interfaz visual.
- * La navegación hacia edición de cuenta y el cierre de sesión se mantienen igual.
- */
 @Composable
 fun SettingsScreen(
     userSession: UserSession,
@@ -80,24 +102,21 @@ fun SettingsScreen(
         mutableStateOf(SettingsTab.VOLUME)
     }
 
-    var musicEnabled by remember {
-        mutableStateOf(true)
-    }
-
-    var soundEnabled by remember {
-        mutableStateOf(true)
-    }
-
-    var vibrationEnabled by remember {
-        mutableStateOf(true)
-    }
-
-    var notificationsEnabled by remember {
-        mutableStateOf(true)
-    }
+    var musicEnabled by remember { mutableStateOf(true) }
+    var soundEnabled by remember { mutableStateOf(true) }
+    var vibrationEnabled by remember { mutableStateOf(true) }
+    var notificationsEnabled by remember { mutableStateOf(true) }
 
     var showLogoutDialog by remember {
         mutableStateOf(false)
+    }
+
+    var showPanel by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+        showPanel = true
     }
 
     BoxWithConstraints(
@@ -110,57 +129,55 @@ fun SettingsScreen(
             contentScale = ContentScale.Crop
         )
 
+        SettingsHomePreview()
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(SettingsOverlay)
         )
 
-        SettingsHomePreview()
-
-        val panelWidth = if (maxWidth < 720.dp) {
-            maxWidth * 0.88f
+        val panelWidth = if (maxWidth < 760.dp) {
+            maxWidth * 0.40f
         } else {
-            390.dp
+            330.dp
         }
 
-        SettingsSidePanel(
-            userSession = userSession,
-            selectedTab = selectedTab,
-            onTabSelected = {
-                selectedTab = it
-            },
-            musicEnabled = musicEnabled,
-            onMusicChange = {
-                musicEnabled = it
-            },
-            soundEnabled = soundEnabled,
-            onSoundChange = {
-                soundEnabled = it
-            },
-            vibrationEnabled = vibrationEnabled,
-            onVibrationChange = {
-                vibrationEnabled = it
-            },
-            notificationsEnabled = notificationsEnabled,
-            onNotificationsChange = {
-                notificationsEnabled = it
-            },
-            onNavigateToAccount = onNavigateToAccount,
-            onLogoutClick = {
-                showLogoutDialog = true
-            },
-            onBackToHome = onBackToHome,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(
-                    start = 24.dp,
-                    top = 18.dp,
-                    bottom = 18.dp
-                )
-                .width(panelWidth)
-                .fillMaxHeight()
-        )
+        AnimatedVisibility(
+            visible = showPanel,
+            enter = slideInHorizontally(
+                initialOffsetX = { -it },
+                animationSpec = tween(durationMillis = 420)
+            ) + fadeIn(
+                animationSpec = tween(durationMillis = 280)
+            ),
+            modifier = Modifier.align(Alignment.CenterStart)
+        ) {
+            SettingsSidePanel(
+                userSession = userSession,
+                selectedTab = selectedTab,
+                onTabSelected = {
+                    selectedTab = it
+                },
+                musicEnabled = musicEnabled,
+                onMusicChange = { musicEnabled = it },
+                soundEnabled = soundEnabled,
+                onSoundChange = { soundEnabled = it },
+                vibrationEnabled = vibrationEnabled,
+                onVibrationChange = { vibrationEnabled = it },
+                notificationsEnabled = notificationsEnabled,
+                onNotificationsChange = { notificationsEnabled = it },
+                onNavigateToAccount = onNavigateToAccount,
+                onLogoutClick = {
+                    showLogoutDialog = true
+                },
+                onBackToHome = onBackToHome,
+                modifier = Modifier
+                    .padding(start = 0.dp, top = 8.dp, bottom = 8.dp)
+                    .width(panelWidth)
+                    .fillMaxHeight()
+            )
+        }
     }
 
     if (showLogoutDialog) {
@@ -188,76 +205,6 @@ private enum class SettingsTab {
 }
 
 @Composable
-private fun SettingsHomePreview() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start = 32.dp,
-                top = 18.dp,
-                end = 32.dp,
-                bottom = 18.dp
-            )
-            .alpha(0.35f)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.boton_configuracion),
-            contentDescription = "Configuración decorativa",
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .width(58.dp)
-                .height(58.dp),
-            contentScale = ContentScale.Fit
-        )
-
-        Column(
-            modifier = Modifier.align(Alignment.TopEnd),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.boton_planilla),
-                contentDescription = "Plantilla decorativa",
-                modifier = Modifier
-                    .width(58.dp)
-                    .height(58.dp),
-                contentScale = ContentScale.Fit
-            )
-
-            Image(
-                painter = painterResource(id = R.drawable.boton_logros),
-                contentDescription = "Logros decorativo",
-                modifier = Modifier
-                    .width(58.dp)
-                    .height(58.dp),
-                contentScale = ContentScale.Fit
-            )
-        }
-
-        Column(
-            modifier = Modifier.align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "NightBite",
-                style = MaterialTheme.typography.headlineLarge,
-                color = SmokeWhite,
-                fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center
-            )
-
-            Text(
-                text = "Seleccionar noche",
-                style = MaterialTheme.typography.titleLarge,
-                color = SmokeWhite,
-                fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
 private fun SettingsSidePanel(
     userSession: UserSession,
     selectedTab: SettingsTab,
@@ -275,70 +222,42 @@ private fun SettingsSidePanel(
     onBackToHome: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(34.dp),
-        color = SettingsPanelPink,
-        shadowElevation = 8.dp,
-        border = BorderStroke(
-            width = 4.dp,
-            color = SettingsPanelDarkPink
-        )
+    Box(
+        modifier = modifier
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(18.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BackButton(
-                    onClick = onBackToHome,
-                    modifier = Modifier.weight(0.85f)
-                )
-
-                SettingsTabButton(
-                    title = "Volumen",
-                    selected = selectedTab == SettingsTab.VOLUME,
-                    onClick = {
-                        onTabSelected(SettingsTab.VOLUME)
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-
-                SettingsTabButton(
-                    title = "Perfil",
-                    selected = selectedTab == SettingsTab.PROFILE,
-                    onClick = {
-                        onTabSelected(SettingsTab.PROFILE)
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                shape = RoundedCornerShape(26.dp),
-                color = SettingsCream,
-                border = BorderStroke(
+                .clip(SettingsPanelShape)
+                .background(SettingsPanelPink)
+                .border(
                     width = 3.dp,
-                    color = SettingsCreamDark
+                    color = SettingsPanelDarkPink,
+                    shape = SettingsPanelShape
                 )
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(
+                        color = SettingsPanelLightPink,
+                        shape = RoundedCornerShape(
+                            topEnd = 34.dp,
+                            bottomEnd = 34.dp
+                        )
+                    )
+                    .padding(start = 18.dp, top = 14.dp, end = 14.dp, bottom = 14.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(18.dp)
-                ) {
-                    when (selectedTab) {
+                SettingsHeader()
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                AnimatedContent(
+                    targetState = selectedTab,
+                    label = "SettingsContentAnimation"
+                ) { tab ->
+                    when (tab) {
                         SettingsTab.VOLUME -> {
                             SettingsVolumeContent(
                                 musicEnabled = musicEnabled,
@@ -362,72 +281,146 @@ private fun SettingsSidePanel(
                     }
                 }
             }
-        }
-    }
-}
 
-@Composable
-private fun BackButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(42.dp),
-        shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = CheeseYellow,
-            contentColor = DarkText
-        ),
-        contentPadding = PaddingValues(horizontal = 8.dp)
-    ) {
-        Text(
-            text = "Volver",
-            style = MaterialTheme.typography.labelMedium,
-            color = DarkText,
-            textAlign = TextAlign.Center
+            SettingsVerticalTabs(
+                selectedTab = selectedTab,
+                onTabSelected = onTabSelected,
+                onBackToHome = onBackToHome,
+                modifier = Modifier
+                    .width(56.dp)
+                    .fillMaxHeight()
+                    .padding(top = 48.dp, bottom = 46.dp)
+            )
+        }
+
+        Image(
+            painter = painterResource(id = R.drawable.boton_volver),
+            contentDescription = "Volver",
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 20.dp, y = (-16).dp)
+                .size(52.dp)
+                .clickableWithoutRipple {
+                    onBackToHome()
+                },
+            contentScale = ContentScale.Fit
         )
     }
 }
 
 @Composable
-private fun SettingsTabButton(
-    title: String,
-    selected: Boolean,
-    onClick: () -> Unit,
+private fun SettingsHeader() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(82.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.configuracion_rosa),
+            contentDescription = "Decoración de configuración",
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .size(74.dp)
+                .alpha(0.95f),
+            contentScale = ContentScale.Fit
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(38.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(SettingsTabPink)
+                .border(
+                    width = 2.dp,
+                    color = SettingsPanelDarkPink.copy(alpha = 0.55f),
+                    shape = RoundedCornerShape(18.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Configuraciones",
+                style = MaterialTheme.typography.headlineSmall,
+                color = SmokeWhite,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsVerticalTabs(
+    selectedTab: SettingsTab,
+    onTabSelected: (SettingsTab) -> Unit,
+    onBackToHome: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val containerColor = if (selected) {
-        SettingsCream
-    } else {
-        SettingsTabPink
-    }
-
-    val borderColor = if (selected) {
-        CheeseYellow
-    } else {
-        SettingsPanelDarkPink
-    }
-
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(42.dp),
-        shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = SettingsTextDark
-        ),
-        border = BorderStroke(
-            width = 2.dp,
-            color = borderColor
-        ),
-        contentPadding = PaddingValues(horizontal = 8.dp)
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelMedium,
-            color = SettingsTextDark,
-            textAlign = TextAlign.Center
+        SettingsIconTab(
+            icon = Icons.Default.VolumeUp,
+            selected = selectedTab == SettingsTab.VOLUME,
+            contentDescription = "Opciones de volumen",
+            onClick = {
+                onTabSelected(SettingsTab.VOLUME)
+            }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        SettingsIconTab(
+            icon = Icons.Default.Person,
+            selected = selectedTab == SettingsTab.PROFILE,
+            contentDescription = "Perfil",
+            onClick = {
+                onTabSelected(SettingsTab.PROFILE)
+            }
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun SettingsIconTab(
+    icon: ImageVector,
+    selected: Boolean,
+    contentDescription: String,
+    onClick: () -> Unit
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1.08f else 1f,
+        animationSpec = tween(durationMillis = 180),
+        label = "SettingsIconScale"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(10.dp))
+            .background(
+                if (selected) SettingsPanelLightPink else SettingsTabPink
+            )
+            .border(
+                width = 2.dp,
+                color = if (selected) SmokeWhite else SettingsPanelDarkPink.copy(alpha = 0.55f),
+                shape = RoundedCornerShape(10.dp)
+            )
+            .clickableWithoutRipple {
+                onClick()
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = SmokeWhite,
+            modifier = Modifier.size(26.dp)
         )
     }
 }
@@ -443,49 +436,33 @@ private fun SettingsVolumeContent(
     notificationsEnabled: Boolean,
     onNotificationsChange: (Boolean) -> Unit
 ) {
-    Text(
-        text = "Opciones del juego",
-        style = MaterialTheme.typography.titleLarge,
-        color = SettingsTextDark
-    )
+    SettingsDarkCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        SettingsSwitchRow(
+            title = "Música",
+            checked = musicEnabled,
+            onCheckedChange = onMusicChange
+        )
 
-    Spacer(modifier = Modifier.height(6.dp))
+        SettingsSwitchRow(
+            title = "Sonido",
+            checked = soundEnabled,
+            onCheckedChange = onSoundChange
+        )
 
-    Text(
-        text = "Activa o desactiva los efectos principales de NightBite.",
-        style = MaterialTheme.typography.bodyMedium,
-        color = SettingsTextDark.copy(alpha = 0.75f)
-    )
+        SettingsSwitchRow(
+            title = "Vibración",
+            checked = vibrationEnabled,
+            onCheckedChange = onVibrationChange
+        )
 
-    Spacer(modifier = Modifier.height(18.dp))
-
-    SettingsSwitchItem(
-        title = "Música",
-        description = "Música ambiental durante el juego.",
-        checked = musicEnabled,
-        onCheckedChange = onMusicChange
-    )
-
-    SettingsSwitchItem(
-        title = "Sonido",
-        description = "Efectos de pasos, pedidos y enemigos.",
-        checked = soundEnabled,
-        onCheckedChange = onSoundChange
-    )
-
-    SettingsSwitchItem(
-        title = "Vibración",
-        description = "Respuesta háptica en acciones importantes.",
-        checked = vibrationEnabled,
-        onCheckedChange = onVibrationChange
-    )
-
-    SettingsSwitchItem(
-        title = "Notificaciones",
-        description = "Avisos del juego y recordatorios.",
-        checked = notificationsEnabled,
-        onCheckedChange = onNotificationsChange
-    )
+        SettingsSwitchRow(
+            title = "Notificaciones",
+            checked = notificationsEnabled,
+            onCheckedChange = onNotificationsChange
+        )
+    }
 }
 
 @Composable
@@ -501,82 +478,107 @@ private fun SettingsProfileContent(
         )
     } ?: "NB-0000-L0"
 
-    Text(
-        text = "Datos de la cuenta",
-        style = MaterialTheme.typography.titleLarge,
-        color = SettingsTextDark
-    )
-
-    Spacer(modifier = Modifier.height(6.dp))
-
-    Text(
-        text = "Esta información sirve para identificar tu cuenta dentro del juego.",
-        style = MaterialTheme.typography.bodyMedium,
-        color = SettingsTextDark.copy(alpha = 0.75f)
-    )
-
-    Spacer(modifier = Modifier.height(16.dp))
-
-    AccountInfoBox(
-        label = "ID de jugador",
-        value = displayId
-    )
-
-    AccountInfoBox(
-        label = "Usuario",
-        value = userSession.username.ifBlank {
-            "Sin usuario"
-        }
-    )
-
-    AccountInfoBox(
-        label = "Correo",
-        value = userSession.email.ifBlank {
-            "Sin correo registrado"
-        }
-    )
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-    Button(
-        onClick = onNavigateToAccount,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(44.dp),
-        shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = CheeseYellow,
-            contentColor = DarkText
-        )
+    SettingsDarkCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Icon(
-            imageVector = Icons.Default.Edit,
-            contentDescription = "Actualizar credenciales"
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) {
+            Text(
+                text = "Datos de la cuenta",
+                style = MaterialTheme.typography.titleSmall,
+                color = SmokeWhite,
+                modifier = Modifier.weight(1f)
+            )
 
-        Text(
-            text = "  Editar datos",
-            style = MaterialTheme.typography.labelLarge,
-            color = DarkText
-        )
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Editar datos de cuenta",
+                tint = SmokeWhite,
+                modifier = Modifier
+                    .size(30.dp)
+                    .clickableWithoutRipple {
+                        onNavigateToAccount()
+                    }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Button(
+                onClick = onLogoutClick,
+                modifier = Modifier
+                    .fillMaxWidth(0.82f)
+                    .height(34.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SettingsDangerPink,
+                    contentColor = SettingsPanelDarkPink
+                ),
+                border = BorderStroke(1.5.dp, SettingsPanelDarkPink.copy(alpha = 0.45f)),
+                contentPadding = PaddingValues(horizontal = 8.dp)
+            ) {
+                Text(
+                    text = "Cerrar sesión",
+                    style = MaterialTheme.typography.labelMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 
-    Spacer(modifier = Modifier.height(10.dp))
+    Spacer(modifier = Modifier.height(14.dp))
 
-    Row(
+    Box(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        contentAlignment = Alignment.Center
+    ) {
+        Button(
+            onClick = {
+                // Pendiente: implementar eliminación de cuenta.
+                // Por ahora este botón queda solo como elemento visual.
+            },
+            modifier = Modifier
+                .fillMaxWidth(0.74f)
+                .height(30.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = SettingsPanelDarkPink
+            ),
+            border = BorderStroke(1.5.dp, SettingsPanelDarkPink.copy(alpha = 0.65f)),
+            contentPadding = PaddingValues(horizontal = 8.dp)
+        ) {
+            Text(
+                text = "Eliminar cuenta",
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
         Button(
             onClick = onLogoutClick,
             modifier = Modifier
-                .weight(1f)
-                .height(44.dp),
-            shape = RoundedCornerShape(18.dp),
+                .fillMaxWidth(0.82f)
+                .height(34.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = SettingsPanelDarkPink,
-                contentColor = SmokeWhite
+                containerColor = SettingsDangerPink,
+                contentColor = SettingsPanelDarkPink
             ),
+            border = BorderStroke(1.5.dp, SettingsPanelDarkPink.copy(alpha = 0.45f)),
             contentPadding = PaddingValues(horizontal = 8.dp)
         ) {
             Text(
@@ -585,129 +587,145 @@ private fun SettingsProfileContent(
                 textAlign = TextAlign.Center
             )
         }
+    }
+}
 
-        Button(
-            onClick = {
-                // Pendiente: implementar eliminación de cuenta.
-                // Por ahora este botón queda solo como elemento visual.
-            },
+@Composable
+private fun SettingsDarkCard(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(18.dp))
+            .background(SettingsCardDark)
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        content = content
+    )
+}
+
+@Composable
+private fun SettingsSwitchRow(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(28.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelSmall,
+            color = SmokeWhite,
+            modifier = Modifier.weight(1f)
+        )
+
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
             modifier = Modifier
-                .weight(1f)
-                .height(44.dp),
-            shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = SettingsDangerRed,
-                contentColor = Color.White
-            ),
-            contentPadding = PaddingValues(horizontal = 8.dp)
+                .width(44.dp)
+                .height(28.dp),
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = SmokeWhite,
+                checkedTrackColor = SettingsCardLight,
+                uncheckedThumbColor = SmokeWhite,
+                uncheckedTrackColor = SettingsPanelDarkPink
+            )
+        )
+    }
+}
+
+@Composable
+private fun AccountLine(
+    label: String,
+    value: String
+) {
+    Text(
+        text = "$label: $value",
+        style = MaterialTheme.typography.labelSmall,
+        color = SettingsTextDark,
+        fontWeight = FontWeight.Bold
+    )
+}
+
+@Composable
+private fun SettingsHomePreview() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 32.dp, top = 18.dp, end = 32.dp, bottom = 18.dp)
+            .alpha(0.45f)
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.boton_configuracion),
+            contentDescription = "Configuración decorativa",
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .size(58.dp),
+            contentScale = ContentScale.Fit
+        )
+
+        Column(
+            modifier = Modifier.align(Alignment.TopEnd),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.boton_planilla),
+                contentDescription = "Plantilla decorativa",
+                modifier = Modifier.size(58.dp),
+                contentScale = ContentScale.Fit
+            )
+
+            Image(
+                painter = painterResource(id = R.drawable.boton_logros),
+                contentDescription = "Logros decorativo",
+                modifier = Modifier.size(58.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(start = 190.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Eliminar cuenta",
-                style = MaterialTheme.typography.labelMedium,
+                text = "NightBite",
+                style = MaterialTheme.typography.headlineLarge,
+                color = SmokeWhite,
+                textAlign = TextAlign.Center
+            )
+
+            Text(
+                text = "Seleccionar noche",
+                style = MaterialTheme.typography.titleLarge,
+                color = SmokeWhite,
                 textAlign = TextAlign.Center
             )
         }
     }
 }
 
-@Composable
-private fun AccountInfoBox(
-    label: String,
-    value: String
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 10.dp)
-            .background(
-                color = Color.White.copy(alpha = 0.55f),
-                shape = RoundedCornerShape(16.dp)
-            )
-            .border(
-                width = 1.5.dp,
-                color = SettingsCreamDark,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(
-                horizontal = 14.dp,
-                vertical = 10.dp
-            )
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = SettingsTextDark.copy(alpha = 0.75f)
-        )
+private val SettingsPanelShape = RoundedCornerShape(
+    topStart = 0.dp,
+    bottomStart = 0.dp,
+    topEnd = 34.dp,
+    bottomEnd = 34.dp
+)
 
-        Spacer(modifier = Modifier.height(2.dp))
-
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = SettingsTextDark,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-private fun SettingsSwitchItem(
-    title: String,
-    description: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 12.dp),
-        shape = RoundedCornerShape(18.dp),
-        color = Color.White.copy(alpha = 0.55f),
-        border = BorderStroke(
-            width = 1.5.dp,
-            color = SettingsCreamDark
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = 14.dp,
-                vertical = 12.dp
-            ),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = SettingsTextDark
-                )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = SettingsTextDark.copy(alpha = 0.75f)
-                )
-            }
-
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = CheeseYellow,
-                    checkedTrackColor = SettingsPanelDarkPink,
-                    uncheckedThumbColor = SettingsCreamDark,
-                    uncheckedTrackColor = SettingsCream
-                )
-            )
-        }
-    }
-
-    HorizontalDivider(
-        color = SettingsCreamDark.copy(alpha = 0.25f)
+private fun Modifier.clickableWithoutRipple(
+    onClick: () -> Unit
+): Modifier {
+    return clickable(
+        interactionSource = MutableInteractionSource(),
+        indication = null,
+        onClick = onClick
     )
 }

@@ -37,10 +37,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import ni.edu.uam.nightbiteapp.data.local.session.UserSession
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.NightLevelButton
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.components.SettingsPanelOverlay
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.viewmodel.HomeViewModel
@@ -48,11 +50,13 @@ import ni.edu.uam.nightbiteapp.viewmodel.HomeViewModel
 @Composable
 fun HomeScreen(
     userId: Long?,
+    userSession: UserSession,
     onNavigateToLevelIntro: (Int) -> Unit,
     onNavigateToPlayerDetail: () -> Unit,
     onNavigateToPlayerCreation: () -> Unit,
     onNavigateToAchievements: () -> Unit,
-    onNavigateToSettings: () -> Unit,
+    onNavigateToAccount: () -> Unit,
+    onLogout: () -> Unit,
     onExitApp: () -> Unit,
     homeViewModel: HomeViewModel = viewModel()
 ) {
@@ -64,11 +68,20 @@ fun HomeScreen(
         mutableStateOf(false)
     }
 
+    var showSettingsPanel by remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(userId) {
         homeViewModel.loadHomeData(userId)
     }
 
     BackHandler {
+        if (showSettingsPanel) {
+            showSettingsPanel = false
+            return@BackHandler
+        }
+
         val currentTime = System.currentTimeMillis()
 
         if (currentTime - lastBackPressTime.longValue < 2000) {
@@ -110,7 +123,9 @@ fun HomeScreen(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .size(58.dp),
-                onClick = onNavigateToSettings
+                onClick = {
+                    showSettingsPanel = true
+                }
             )
 
             Column(
@@ -195,6 +210,17 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+
+        if (showSettingsPanel) {
+            SettingsPanelOverlay(
+                userSession = userSession,
+                onNavigateToAccount = onNavigateToAccount,
+                onLogoutClick = onLogout,
+                onClosed = {
+                    showSettingsPanel = false
+                }
+            )
         }
     }
 
