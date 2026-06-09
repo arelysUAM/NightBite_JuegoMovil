@@ -42,11 +42,6 @@ import androidx.compose.ui.unit.dp
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.material.icons.filled.Warning
-
 @Composable
 fun PlayerCreationScreen(
     viewModel: PlayerCreationViewModel,
