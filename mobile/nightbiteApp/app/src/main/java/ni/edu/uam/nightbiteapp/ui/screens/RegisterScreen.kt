@@ -24,15 +24,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.delay
 import ni.edu.uam.nightbiteapp.R
-import ni.edu.uam.nightbiteapp.ui.components.NightFloatingMessage
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.NightRegisterCard
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.NeonGreen
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
-import ni.edu.uam.nightbiteapp.ui.validation.RegisterValidators
+import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterUiState
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
 import androidx.compose.foundation.layout.imePadding
@@ -57,9 +55,6 @@ fun RegisterScreen(
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
     var confirmPasswordError by remember { mutableStateOf<String?>(null) }
-
-    var floatingMessage by remember { mutableStateOf<String?>(null) }
-    var lastShownError by remember { mutableStateOf<String?>(null) }
 
     var returnToLoginAfterConfirm by remember { mutableStateOf(true) }
     var showCancelRegisterDialog by remember { mutableStateOf(false) }
@@ -90,20 +85,6 @@ fun RegisterScreen(
             }
 
             else -> Unit
-        }
-    }
-
-    LaunchedEffect(floatingMessage) {
-        if (floatingMessage != null) {
-            delay(3000)
-            floatingMessage = null
-        }
-    }
-
-    fun showValidationMessage(error: String?) {
-        if (error != null && error != lastShownError) {
-            floatingMessage = error
-            lastShownError = error
         }
     }
 
@@ -147,67 +128,78 @@ fun RegisterScreen(
                 passwordError = passwordError,
                 confirmPasswordError = confirmPasswordError,
 
-                onUsernameChange = {
-                    username = it
+                onUsernameChange = { value ->
+                    val normalizedUsername = value
+                        .lowercase()
+                        .replace(" ", "")
 
-                    val error = RegisterValidators.validateUsername(it)
-                    usernameError = error
-                    showValidationMessage(error)
+                    username = normalizedUsername
+
+                    usernameError = if (normalizedUsername.isBlank()) {
+                        null
+                    } else {
+                        AccountValidators.validateUsername(normalizedUsername)
+                    }
                 },
 
-                onEmailChange = {
-                    val normalizedEmail = it.lowercase()
+                onEmailChange = { value ->
+                    val normalizedEmail = value
+                        .lowercase()
+                        .replace(" ", "")
+
                     email = normalizedEmail
 
-                    val error = RegisterValidators.validateEmail(normalizedEmail)
-                    emailError = error
-                    showValidationMessage(error)
+                    emailError = if (normalizedEmail.isBlank()) {
+                        null
+                    } else {
+                        AccountValidators.validateEmail(normalizedEmail)
+                    }
                 },
 
-                onPasswordChange = {
-                    password = it
+                onPasswordChange = { value ->
+                    password = value
 
-                    val passwordValidation =
-                        RegisterValidators.validatePassword(it)
+                    passwordError = if (value.isBlank()) {
+                        null
+                    } else {
+                        AccountValidators.validatePassword(value)
+                    }
 
-                    passwordError = passwordValidation
-                    showValidationMessage(passwordValidation)
-
-                    val confirmValidation =
-                        RegisterValidators.validateConfirmPassword(
-                            password = it,
+                    confirmPasswordError = if (confirmPassword.isBlank()) {
+                        null
+                    } else {
+                        AccountValidators.validateConfirmPassword(
+                            password = value,
                             confirmPassword = confirmPassword
                         )
-
-                    confirmPasswordError = confirmValidation
-                    showValidationMessage(confirmValidation)
+                    }
                 },
 
-                onConfirmPasswordChange = {
-                    confirmPassword = it
+                onConfirmPasswordChange = { value ->
+                    confirmPassword = value
 
-                    val error =
-                        RegisterValidators.validateConfirmPassword(
+                    confirmPasswordError = if (value.isBlank()) {
+                        null
+                    } else {
+                        AccountValidators.validateConfirmPassword(
                             password = password,
-                            confirmPassword = it
+                            confirmPassword = value
                         )
-
-                    confirmPasswordError = error
-                    showValidationMessage(error)
+                    }
                 },
 
                 onRegisterClick = {
                     usernameError =
-                        RegisterValidators.validateUsername(username)
+                        AccountValidators.validateUsername(username)
 
                     emailError =
-                        RegisterValidators.validateEmail(email)
+                        AccountValidators.validateEmail(email)
 
                     passwordError =
-                        RegisterValidators.validatePassword(password)
+                        AccountValidators.validatePassword(password)
 
                     confirmPasswordError =
-                        RegisterValidators.validateConfirmPassword(
+                        AccountValidators.validateConfirmPassword(
                             password = password,
                             confirmPassword = confirmPassword
                         )
@@ -219,13 +211,6 @@ fun RegisterScreen(
                                 confirmPasswordError != null
 
                     if (hasErrors) {
-                        showValidationMessage(
-                            usernameError
-                                ?: emailError
-                                ?: passwordError
-                                ?: confirmPasswordError
-                        )
-
                         return@NightRegisterCard
                     }
 
@@ -312,21 +297,6 @@ fun RegisterScreen(
             }
 
             RegisterDialogType.None -> Unit
-        }
-
-        floatingMessage?.let { message ->
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopStart
-            ) {
-                NightFloatingMessage(
-                    message = message,
-                    modifier = Modifier.padding(
-                        start = 20.dp,
-                        top = 8.dp
-                    )
-                )
-            }
         }
     }
 }

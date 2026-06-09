@@ -82,6 +82,14 @@ fun NightRegisterCard(
     val anyPasswordVisible =
         passwordVisible || confirmPasswordVisible
 
+    val isPasswordValid =
+        password.isNotBlank() && passwordError == null
+
+    val isConfirmPasswordValid =
+        confirmPassword.isNotBlank() &&
+                confirmPasswordError == null &&
+                password == confirmPassword
+
     Box(
         modifier = modifier.widthIn(
             min = 720.dp,
@@ -166,6 +174,7 @@ fun NightRegisterCard(
                             passwordVisible = !passwordVisible
                         },
                         isError = passwordError != null,
+                        isSuccess = isPasswordValid,
                         errorMessage = passwordError,
                         reserveErrorSpace = true,
                         fieldHeight = 54.dp,
@@ -196,6 +205,7 @@ fun NightRegisterCard(
                             confirmPasswordVisible = !confirmPasswordVisible
                         },
                         isError = confirmPasswordError != null,
+                        isSuccess = isConfirmPasswordValid,
                         errorMessage = confirmPasswordError,
                         reserveErrorSpace = true,
                         fieldHeight = 54.dp,

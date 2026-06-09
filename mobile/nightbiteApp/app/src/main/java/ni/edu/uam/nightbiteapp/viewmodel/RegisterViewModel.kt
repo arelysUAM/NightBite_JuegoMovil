@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.remote.dto.MessageResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserRegisterRequest
 import ni.edu.uam.nightbiteapp.data.repository.UserRepository
+import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
 
 /**
  * ViewModel encargado de manejar la lógica de registro de cuentas de usuario.
@@ -41,28 +42,31 @@ class RegisterViewModel(
         confirmPassword: String,
         age: Int
     ) {
-        if (username.isBlank()) {
-            uiState = RegisterUiState.Error("El nombre de usuario es obligatorio.")
+
+        val usernameError = AccountValidators.validateUsername(username)
+        if (usernameError != null) {
+            uiState = RegisterUiState.Error(usernameError)
             return
         }
 
-        if (email.isBlank()) {
-            uiState = RegisterUiState.Error("El correo es obligatorio.")
+        val emailError = AccountValidators.validateEmail(email)
+        if (emailError != null) {
+            uiState = RegisterUiState.Error(emailError)
             return
         }
 
-        if (password.isBlank()) {
-            uiState = RegisterUiState.Error("La contraseña es obligatoria.")
+        val passwordError = AccountValidators.validatePassword(password)
+        if (passwordError != null) {
+            uiState = RegisterUiState.Error(passwordError)
             return
         }
 
-        if (password.length < 8) {
-            uiState = RegisterUiState.Error("La contraseña debe tener al menos 8 caracteres.")
-            return
-        }
-
-        if (password != confirmPassword) {
-            uiState = RegisterUiState.Error("Las contraseñas no coinciden.")
+        val confirmPasswordError = AccountValidators.validateConfirmPassword(
+            password = password,
+            confirmPassword = confirmPassword
+        )
+        if (confirmPasswordError != null) {
+            uiState = RegisterUiState.Error(confirmPasswordError)
             return
         }
 
@@ -76,8 +80,8 @@ class RegisterViewModel(
         viewModelScope.launch {
             try {
                 val request = UserRegisterRequest(
-                    username = username.trim(),
-                    email = email.trim(),
+                    username = username.trim().lowercase(),
+                    email = email.trim().lowercase(),
                     password = password,
                     age = age
                 )

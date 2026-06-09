@@ -10,6 +10,7 @@ import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.remote.dto.UpdatePasswordRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UpdateUsernameRequest
 import ni.edu.uam.nightbiteapp.data.repository.UserRepository
+import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
 
 class AccountCredentialsViewModel(
     private val userRepository: UserRepository,
@@ -58,23 +59,20 @@ class AccountCredentialsViewModel(
                     state.newPassword.isNotBlank() ||
                     state.confirmNewPassword.isNotBlank()
 
-        if (!wantsToChangeUsername && !wantsToChangePassword) {
-            _uiState.value = state.copy(
-                errorMessage = "Debes ingresar un nuevo usuario o una nueva contraseña."
-            )
-            return
+        if (wantsToChangeUsername) {
+            val usernameError = AccountValidators.validateUsername(state.newUsername)
+
+            if (usernameError != null) {
+                _uiState.value = state.copy(
+                    errorMessage = usernameError
+                )
+                return
+            }
         }
 
         if (state.newUsername.isNotBlank() && state.newUsername == currentUsername) {
             _uiState.value = state.copy(
                 errorMessage = "El nuevo nombre de usuario debe ser diferente al actual."
-            )
-            return
-        }
-
-        if (wantsToChangeUsername && !isValidUsername(state.newUsername)) {
-            _uiState.value = state.copy(
-                errorMessage = "El usuario solo puede usar minúsculas, números y guion bajo. Máximo 16 caracteres."
             )
             return
         }
@@ -91,16 +89,38 @@ class AccountCredentialsViewModel(
                 return
             }
 
-            if (state.newPassword.length < 6) {
+            val currentPasswordError = AccountValidators.validatePassword(
+                password = state.currentPassword,
+                fieldName = "La contraseña actual"
+            )
+
+            if (currentPasswordError != null) {
                 _uiState.value = state.copy(
-                    errorMessage = "La nueva contraseña debe tener al menos 6 caracteres."
+                    errorMessage = currentPasswordError
                 )
                 return
             }
 
-            if (state.newPassword != state.confirmNewPassword) {
+            val newPasswordError = AccountValidators.validatePassword(
+                password = state.newPassword,
+                fieldName = "La nueva contraseña"
+            )
+
+            if (newPasswordError != null) {
                 _uiState.value = state.copy(
-                    errorMessage = "La nueva contraseña y la confirmación no coinciden."
+                    errorMessage = newPasswordError
+                )
+                return
+            }
+
+            val confirmPasswordError = AccountValidators.validateNewPasswordConfirmation(
+                newPassword = state.newPassword,
+                confirmNewPassword = state.confirmNewPassword
+            )
+
+            if (confirmPasswordError != null) {
+                _uiState.value = state.copy(
+                    errorMessage = confirmPasswordError
                 )
                 return
             }
@@ -157,7 +177,7 @@ class AccountCredentialsViewModel(
                     val usernameResponse = userRepository.updateUsername(
                         userId = userId,
                         request = UpdateUsernameRequest(
-                            newUsername = state.newUsername.trim()
+                            newUsername = state.newUsername.trim().lowercase()
                         )
                     )
 
@@ -209,10 +229,5 @@ class AccountCredentialsViewModel(
             sessionManager.clearSession()
             onSessionCleared()
         }
-    }
-
-    private fun isValidUsername(username: String): Boolean {
-        val regex = Regex("^[a-z0-9_]{1,16}$")
-        return regex.matches(username)
     }
 }

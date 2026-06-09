@@ -129,8 +129,10 @@ fun LoginScreen(
             NightLoginCard(
                 username = username,
                 password = password,
-                onUsernameChange = {
-                    username = it
+                onUsernameChange = { value ->
+                    username = value
+                        .lowercase()
+                        .replace(" ", "")
                 },
                 onPasswordChange = {
                     password = it
@@ -161,18 +163,28 @@ fun LoginScreen(
                     NightMessageDialog(
                         title = "Usuario no encontrado",
                         message = message,
-                        confirmText = "REGISTRAR AHORA",
-                        dismissText = "VOLVER",
+                        confirmText = "Registrarse",
+                        dismissText = "Cancelar",
                         icon = Icons.Default.PersonAdd,
                         iconColor = NeonGreen,
                         onConfirm = {
                             loginErrorMessage = null
                             loginErrorType = null
+
+                            username = ""
+                            password = ""
+
+                            loginViewModel.resetState()
                             onNavigateToRegister()
                         },
                         onDismiss = {
                             loginErrorMessage = null
                             loginErrorType = null
+
+                            username = ""
+                            password = ""
+
+                            loginViewModel.resetState()
                         }
                     )
                 }
