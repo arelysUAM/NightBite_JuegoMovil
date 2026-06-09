@@ -42,6 +42,8 @@ import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.mock.NightProgressData
+import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
+import ni.edu.uam.nightbiteapp.viewmodel.StartViewModelFactory
 
 /**
  * Componente principal de navegación de la aplicación.
@@ -84,23 +86,25 @@ fun AppNavigation() {
         startDestination = Routes.START
     ) {
         composable(Routes.START) {
+            val startViewModel: StartViewModel = viewModel(
+                factory = StartViewModelFactory(sessionManager)
+            )
+
             StartScreen(
-                onLoadingFinished  = {
-                    val currentUserId = userSession.userId
-
-                    if (userSession.isLoggedIn && currentUserId != null) {
-                        activeUserId = currentUserId
-
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.START) {
-                                inclusive = true
-                            }
+                viewModel = startViewModel,
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.START) {
+                            inclusive = true
                         }
-                    } else {
-                        navController.navigate(Routes.LOGIN) {
-                            popUpTo(Routes.START) {
-                                inclusive = true
-                            }
+                    }
+                },
+                onNavigateToHome = { user ->
+                    activeUserId = user.id
+
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.START) {
+                            inclusive = true
                         }
                     }
                 }
