@@ -111,16 +111,16 @@ fun AgeCheckScreen(
         Box {
             Card(
                 modifier = Modifier
-                    .width(300.dp)
+                    .width(320.dp)
                     .shadow(
-                        elevation = 12.dp,
+                        elevation = 8.dp,
                         shape = RoundedCornerShape(28.dp)
                     ),
                 shape = RoundedCornerShape(28.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = LoginTabCyan
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -130,9 +130,9 @@ fun AgeCheckScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Verificación de Edad",
+                        text = "VERIFICAR EDAD",
                         color = DarkText,
-                        fontSize = 22.sp,
+                        fontSize = 25.sp,
                         fontFamily = LilitaOne,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.Center,
@@ -144,15 +144,13 @@ fun AgeCheckScreen(
                     Text(
                         text = "Selecciona tu año de nacimiento",
                         color = DarkText.copy(alpha = 0.72f),
-                        fontSize = 9.5.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Menor separación para que el texto quede más cerca
-                    // de la primera línea divisora blanca.
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     YearPicker(
                         years = years,
@@ -189,8 +187,8 @@ fun AgeCheckScreen(
                 contentDescription = "Cerrar",
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .offset(x = 10.dp, y = (-16).dp)
-                    .width(54.dp)
+                    .offset(x = 20.dp, y = (-20).dp)
+                    .width(72.dp)
                     .clickable {
                         onBackToLogin()
                     }
@@ -223,12 +221,12 @@ private fun YearPicker(
 ) {
     Column(
         modifier = Modifier
-            .width(245.dp)
+            .width(280.dp)
             .background(
                 color = Color(0xFF37A9AD),
                 shape = RoundedCornerShape(14.dp)
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         HorizontalDivider(
@@ -265,11 +263,12 @@ private fun YearPicker(
                         } else {
                             SmokeWhite.copy(alpha = 0.38f)
                         },
-                        fontSize = if (isSelected) 24.sp else 15.sp,
+                        fontSize = if (isSelected) 35.sp else 23.sp,
+                        fontFamily = LilitaOne,
                         fontWeight = if (isSelected) {
-                            FontWeight.Black
+                            FontWeight.Normal
                         } else {
-                            FontWeight.Bold
+                            FontWeight.Normal
                         }
                     )
                 }

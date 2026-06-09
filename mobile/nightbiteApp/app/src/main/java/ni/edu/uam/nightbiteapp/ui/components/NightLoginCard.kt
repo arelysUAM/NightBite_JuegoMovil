@@ -68,7 +68,7 @@ fun NightLoginCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
         modifier = modifier.widthIn(
             min = 390.dp,
-            max = 470.dp
+            max = 400.dp
         )
     ) {
         Column(

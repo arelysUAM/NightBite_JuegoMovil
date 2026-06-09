@@ -36,11 +36,13 @@ import ni.edu.uam.nightbiteapp.ui.validation.RegisterValidators
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterUiState
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
 import androidx.compose.foundation.layout.imePadding
+import androidx.activity.compose.BackHandler
 
 @Composable
 fun RegisterScreen(
     age: Int,
     onBackToLogin: () -> Unit,
+    onBackToAgeCheck: () -> Unit,
     registerViewModel: RegisterViewModel = viewModel()
 ) {
     val uiState = registerViewModel.uiState
@@ -59,10 +61,17 @@ fun RegisterScreen(
     var floatingMessage by remember { mutableStateOf<String?>(null) }
     var lastShownError by remember { mutableStateOf<String?>(null) }
 
+    var returnToLoginAfterConfirm by remember { mutableStateOf(true) }
     var showCancelRegisterDialog by remember { mutableStateOf(false) }
     var dialogTitle by remember { mutableStateOf("") }
     var dialogMessage by remember { mutableStateOf("") }
     var dialogType by remember { mutableStateOf(RegisterDialogType.None) }
+
+    val hasRegisterData =
+        username.isNotBlank() ||
+                email.isNotBlank() ||
+                password.isNotBlank() ||
+                confirmPassword.isNotBlank()
 
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -95,6 +104,15 @@ fun RegisterScreen(
         if (error != null && error != lastShownError) {
             floatingMessage = error
             lastShownError = error
+        }
+    }
+
+    BackHandler {
+        if (hasRegisterData) {
+            returnToLoginAfterConfirm = false
+            showCancelRegisterDialog = true
+        } else {
+            onBackToAgeCheck()
         }
     }
 
@@ -221,6 +239,7 @@ fun RegisterScreen(
                 },
 
                 onBackToLoginClick = {
+                    returnToLoginAfterConfirm = true
                     showCancelRegisterDialog = true
                 },
 
@@ -240,14 +259,23 @@ fun RegisterScreen(
         if (showCancelRegisterDialog) {
             NightMessageDialog(
                 title = "Cancelar registro",
-                message = "¿Deseas terminar el registro y volver al inicio de sesión?",
+                message = if (returnToLoginAfterConfirm) {
+                    "¿Deseas terminar el registro y volver al inicio de sesión?"
+                } else {
+                    "¿Seguro quieres volver? Los datos no se guardarán."
+                },
                 confirmText = "SÍ, VOLVER",
                 dismissText = "CONTINUAR",
                 icon = Icons.Default.Warning,
                 iconColor = CheeseYellow,
                 onConfirm = {
                     showCancelRegisterDialog = false
-                    onBackToLogin()
+
+                    if (returnToLoginAfterConfirm) {
+                        onBackToLogin()
+                    } else {
+                        onBackToAgeCheck()
+                    }
                 },
                 onDismiss = {
                     showCancelRegisterDialog = false

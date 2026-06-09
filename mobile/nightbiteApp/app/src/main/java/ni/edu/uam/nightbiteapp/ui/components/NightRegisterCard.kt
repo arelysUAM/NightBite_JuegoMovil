@@ -99,10 +99,7 @@ fun NightRegisterCard(
                 containerColor = SoftPurple
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-            modifier = Modifier.widthIn(
-                min = 720.dp,
-                max = 820.dp
-            )
+            modifier = Modifier.width(630.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -117,11 +114,9 @@ fun NightRegisterCard(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Column(
-                    modifier = Modifier
-                        .width(295.dp)
-                        .height(306.dp),
+                    modifier = Modifier.width(285.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
+                    verticalArrangement = Arrangement.Center
                 ) {
                     NightTextField(
                         value = username,
@@ -132,7 +127,7 @@ fun NightRegisterCard(
                         errorMessage = usernameError,
                         reserveErrorSpace = true,
                         fieldHeight = 54.dp,
-                        modifier = Modifier.width(295.dp)
+                        modifier = Modifier.width(285.dp)
                     )
 
                     NightTextField(
@@ -144,7 +139,7 @@ fun NightRegisterCard(
                         errorMessage = emailError,
                         reserveErrorSpace = true,
                         fieldHeight = 54.dp,
-                        modifier = Modifier.width(295.dp)
+                        modifier = Modifier.width(285.dp)
                     )
 
                     NightTextField(
@@ -174,7 +169,7 @@ fun NightRegisterCard(
                         errorMessage = passwordError,
                         reserveErrorSpace = true,
                         fieldHeight = 54.dp,
-                        modifier = Modifier.width(295.dp)
+                        modifier = Modifier.width(285.dp)
                     )
 
                     NightTextField(
@@ -204,7 +199,7 @@ fun NightRegisterCard(
                         errorMessage = confirmPasswordError,
                         reserveErrorSpace = true,
                         fieldHeight = 54.dp,
-                        modifier = Modifier.width(295.dp)
+                        modifier = Modifier.width(285.dp)
                     )
                 }
 
@@ -217,14 +212,12 @@ fun NightRegisterCard(
                         .background(SmokeWhite.copy(alpha = 0.9f))
                 )
 
-                Spacer(modifier = Modifier.width(34.dp))
+                Spacer(modifier = Modifier.width(50.dp))
 
                 Column(
-                    modifier = Modifier
-                        .width(245.dp)
-                        .height(306.dp),
+                    modifier = Modifier.width(230.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -232,8 +225,9 @@ fun NightRegisterCard(
                         Text(
                             text = "CREAR CUENTA",
                             color = SmokeWhite,
-                            fontSize = 30.sp,
+                            fontSize = 25.sp,
                             fontWeight = FontWeight.Black,
+                            letterSpacing = 2.2.sp,
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.headlineLarge.copy(
                                 shadow = Shadow(
@@ -244,10 +238,12 @@ fun NightRegisterCard(
                             )
                         )
 
+                        Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
                             text = "Regístrate para continuar",
                             color = SmokeWhite,
-                            fontSize = 13.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
@@ -313,6 +309,8 @@ fun NightRegisterCard(
                         )
                     }
 
+                    Spacer(modifier = Modifier.height(14.dp))
+
                     NightPrimaryButton(
                         text = "REGISTRARSE",
                         onClick = onRegisterClick,
@@ -328,9 +326,9 @@ fun NightRegisterCard(
             painter = painterResource(id = R.drawable.boton_volver),
             contentDescription = "Volver",
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .offset(x = (-24).dp, y = 22.dp)
-                .size(62.dp)
+                .align(Alignment.TopStart)
+                .offset(x = (-54).dp, y = (-4).dp)
+                .size(72.dp)
                 .clickable {
                     onBackToLoginClick()
                 },
