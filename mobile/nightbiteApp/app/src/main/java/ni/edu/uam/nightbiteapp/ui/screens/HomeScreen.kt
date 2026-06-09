@@ -3,26 +3,22 @@ package ni.edu.uam.nightbiteapp.ui.screens
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -45,14 +42,9 @@ import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.NightLevelButton
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
+import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.viewmodel.HomeViewModel
 
-/**
- * Menú principal del juego.
- *
- * Muestra los accesos principales y la selección de noches
- * sin requerir desplazamiento vertical.
- */
 @Composable
 fun HomeScreen(
     userId: Long?,
@@ -66,7 +58,6 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val lastBackPressTime = remember { mutableLongStateOf(0L) }
-
     val uiState by homeViewModel.uiState.collectAsState()
 
     var showMissingPlayerDialog by remember {
@@ -106,24 +97,31 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp)
-        ) {
-            IconButton(
-                onClick = onNavigateToSettings,
-                modifier = Modifier.align(Alignment.TopStart)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Configuración",
-                    tint = SmokeWhite
+                .padding(
+                    start = 32.dp,
+                    top = 18.dp,
+                    end = 32.dp,
+                    bottom = 18.dp
                 )
-            }
+        ) {
+            HomeImageButton(
+                drawableId = R.drawable.boton_configuracion,
+                contentDescription = "Configuración",
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .size(58.dp),
+                onClick = onNavigateToSettings
+            )
 
             Column(
                 modifier = Modifier.align(Alignment.TopEnd),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                IconButton(
+                HomeImageButton(
+                    drawableId = R.drawable.boton_planilla,
+                    contentDescription = "Plantilla del repartidor",
+                    modifier = Modifier.size(58.dp),
                     onClick = {
                         if (uiState.hasPlayer) {
                             onNavigateToPlayerDetail()
@@ -131,29 +129,21 @@ fun HomeScreen(
                             showMissingPlayerDialog = true
                         }
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Badge,
-                        contentDescription = "Plantilla del repartidor",
-                        tint = SmokeWhite
-                    )
-                }
+                )
 
-                IconButton(
+                HomeImageButton(
+                    drawableId = R.drawable.boton_logros,
+                    contentDescription = "Libro de logros",
+                    modifier = Modifier.size(58.dp),
                     onClick = onNavigateToAchievements
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.EmojiEvents,
-                        contentDescription = "Libro de logros",
-                        tint = SmokeWhite
-                    )
-                }
+                )
             }
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.Center),
+                    .align(Alignment.Center)
+                    .padding(horizontal = 64.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -161,19 +151,21 @@ fun HomeScreen(
                     text = "NightBite",
                     style = MaterialTheme.typography.headlineLarge,
                     color = SmokeWhite,
+                    fontWeight = FontWeight.ExtraBold,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
                     text = "Seleccionar noche",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     color = SmokeWhite,
+                    fontWeight = FontWeight.ExtraBold,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
@@ -183,7 +175,7 @@ fun HomeScreen(
                     LazyRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(
-                            space = 12.dp,
+                            space = 20.dp,
                             alignment = Alignment.CenterHorizontally
                         ),
                         contentPadding = PaddingValues(horizontal = 8.dp)
@@ -223,4 +215,21 @@ fun HomeScreen(
             }
         )
     }
+}
+
+@Composable
+private fun HomeImageButton(
+    drawableId: Int,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Image(
+        painter = painterResource(id = drawableId),
+        contentDescription = contentDescription,
+        modifier = modifier.clickable {
+            onClick()
+        },
+        contentScale = ContentScale.Fit
+    )
 }
