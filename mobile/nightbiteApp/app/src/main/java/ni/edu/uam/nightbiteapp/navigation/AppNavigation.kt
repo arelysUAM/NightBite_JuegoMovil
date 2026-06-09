@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -16,8 +17,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.mock.GameResultsData
 import ni.edu.uam.nightbiteapp.data.local.mock.NightLevelsData
+import ni.edu.uam.nightbiteapp.data.local.mock.NightProgressData
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
@@ -32,16 +35,12 @@ import ni.edu.uam.nightbiteapp.ui.screens.LoginScreen
 import ni.edu.uam.nightbiteapp.ui.screens.PlayerCreationScreen
 import ni.edu.uam.nightbiteapp.ui.screens.PlayerDetailScreen
 import ni.edu.uam.nightbiteapp.ui.screens.RegisterScreen
-import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
 import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModelFactory
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-import ni.edu.uam.nightbiteapp.data.local.mock.NightProgressData
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModelFactory
 
@@ -393,40 +392,6 @@ fun AppNavigation() {
                 },
                 onBackToHome = {
                     navigateBackToHome()
-                }
-            )
-        }
-
-        composable(Routes.SETTINGS) {
-            SettingsScreen(
-                userSession = userSession,
-
-                onNavigateToAccount = {
-                    navController.navigate(Routes.ACCOUNT)
-                },
-
-                onLogout = {
-                    activeUserId = null
-
-                    coroutineScope.launch {
-                        sessionManager.clearSession()
-
-                        navController.navigate(Routes.LOGIN) {
-                            popUpTo(Routes.HOME) {
-                                inclusive = true
-                            }
-
-                            launchSingleTop = true
-                        }
-                    }
-                },
-
-                onDeleteAccount = {
-                    // Pendiente: conectar endpoint para eliminar cuenta.
-                },
-
-                onBackToHome = {
-                    navController.popBackStack()
                 }
             )
         }

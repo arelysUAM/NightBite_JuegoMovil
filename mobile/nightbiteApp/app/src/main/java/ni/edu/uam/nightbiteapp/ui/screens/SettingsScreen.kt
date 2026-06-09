@@ -73,20 +73,7 @@ import ni.edu.uam.nightbiteapp.ui.theme.SettingsTabPink
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsTextDark
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.ui.utils.UserDisplayIdGenerator
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material.icons.filled.Edit
 
