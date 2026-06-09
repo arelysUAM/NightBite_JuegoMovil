@@ -2,7 +2,6 @@ package ni.edu.uam.nightbiteapp.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -25,9 +24,6 @@ import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 
 /**
  * Botón principal reutilizable para acciones importantes.
- *
- * Mantiene altura fija para consistencia visual.
- * El ancho se controla desde el lugar donde se usa.
  */
 @Composable
 fun NightPrimaryButton(
@@ -43,11 +39,11 @@ fun NightPrimaryButton(
             containerColor = CheeseYellow,
             contentColor = DarkText
         ),
-        contentPadding = PaddingValues(
-            horizontal = 22.dp,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            horizontal = 14.dp,
             vertical = 0.dp
         ),
-        modifier = modifier.height(44.dp)
+        modifier = modifier.height(34.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -57,7 +53,7 @@ fun NightPrimaryButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = text,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
 
@@ -73,8 +69,6 @@ fun NightPrimaryButton(
 
 /**
  * Botón secundario reutilizable para acciones alternativas.
- *
- * Mantiene la misma altura que el botón principal.
  */
 @Composable
 fun NightSecondaryButton(
@@ -90,11 +84,7 @@ fun NightSecondaryButton(
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = SmokeWhite
         ),
-        contentPadding = PaddingValues(
-            horizontal = 22.dp,
-            vertical = 0.dp
-        ),
-        modifier = modifier.height(44.dp)
+        modifier = modifier.height(38.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -110,9 +100,7 @@ fun NightSecondaryButton(
 
             Text(
                 text = if (icon != null) "  $text" else text,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.8.sp
+                fontWeight = FontWeight.Bold
             )
         }
     }

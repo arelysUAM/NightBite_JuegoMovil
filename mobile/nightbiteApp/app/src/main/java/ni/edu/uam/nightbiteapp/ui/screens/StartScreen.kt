@@ -26,8 +26,8 @@ import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
  * Pantalla inicial tipo Splash / Loading Screen.
  *
  * Muestra el fondo oficial, logo del juego y texto de carga animado.
- * Si no hay conexión con el servidor, muestra un diálogo consistente
- * con el resto de mensajes de la aplicación.
+ * Si no se logra conectar con el servidor, muestra un mensaje
+ * usando el mismo diálogo visual del resto de la aplicación.
  */
 @Composable
 fun StartScreen(
@@ -66,25 +66,29 @@ fun StartScreen(
                 .widthIn(max = 420.dp)
         )
 
-        if (uiState is StartUiState.Loading) {
-            AnimatedLoadingText(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 34.dp)
-            )
-        }
+        when (uiState) {
+            is StartUiState.Loading -> {
+                AnimatedLoadingText(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 34.dp)
+                )
+            }
 
-        if (uiState is StartUiState.ServerError) {
-            NightMessageDialog(
-                title = "Error de conexión",
-                message = "No se pudo conectar al servidor.",
-                confirmText = "REINTENTAR",
-                icon = Icons.Default.Warning,
-                iconColor = CheeseYellow,
-                onConfirm = {
-                    viewModel.retry()
-                }
-            )
+            is StartUiState.ServerError -> {
+                NightMessageDialog(
+                    title = "Error de conexión",
+                    message = "No se pudo conectar con el servidor.",
+                    confirmText = "Reintentar",
+                    icon = Icons.Default.Warning,
+                    iconColor = CheeseYellow,
+                    onConfirm = {
+                        viewModel.retry()
+                    }
+                )
+            }
+
+            else -> Unit
         }
     }
 }
