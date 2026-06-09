@@ -41,6 +41,7 @@ import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import ni.edu.uam.nightbiteapp.data.local.mock.NightProgressData
 
 /**
  * Componente principal de navegación de la aplicación.
@@ -151,6 +152,9 @@ fun AppNavigation() {
                 age = age,
                 onBackToLogin = {
                     navController.popBackStack(Routes.LOGIN, false)
+                },
+                onBackToAgeCheck = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -289,6 +293,11 @@ fun AppNavigation() {
                     resultType = resultType
                 )
 
+                val shouldUnlockNextLevel =
+                    resultType == GameResultType.TUTORIAL_THREE_STARS ||
+                            resultType == GameResultType.VICTORY ||
+                            resultType == GameResultType.FINAL_VICTORY
+
                 GameResultScreen(
                     resultType = resultType,
                     content = resultContent,
@@ -302,9 +311,16 @@ fun AppNavigation() {
                     },
 
                     onContinue = {
+                        if (shouldUnlockNextLevel) {
+                            NightProgressData.unlockNextLevel(
+                                userId = activeUserId ?: userSession.userId,
+                                completedLevelId = levelId
+                            )
+                        }
+
                         if (resultType == GameResultType.FINAL_VICTORY) {
                             navigateBackToHome()
-                        } else {
+                        } else if (shouldUnlockNextLevel) {
                             val nextLevelId = levelId + 1
 
                             navController.navigate(
@@ -314,6 +330,8 @@ fun AppNavigation() {
                                     inclusive = false
                                 }
                             }
+                        } else {
+                            navigateBackToHome()
                         }
                     },
 

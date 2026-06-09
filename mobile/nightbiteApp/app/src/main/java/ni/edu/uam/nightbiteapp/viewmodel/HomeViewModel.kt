@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.mock.NightLevelsData
 import ni.edu.uam.nightbiteapp.data.repository.UserRepository
+import ni.edu.uam.nightbiteapp.data.local.mock.NightProgressData
 
 class HomeViewModel(
     private val userRepository: UserRepository = UserRepository()
@@ -22,12 +23,15 @@ class HomeViewModel(
     val uiState: StateFlow<HomeUiState> = _uiState
 
     fun loadHomeData(userId: Long?) {
+        val maxUnlockedLevelId = NightProgressData.getMaxUnlockedLevel(userId)
+        val levelsByProgress = NightLevelsData.getLevelsByProgress(maxUnlockedLevelId)
+
         if (userId == null) {
             _uiState.update {
                 it.copy(
                     isLoading = false,
                     user = null,
-                    levels = NightLevelsData.levels,
+                    levels = levelsByProgress,
                     errorMessage = "No hay una sesión activa."
                 )
             }
@@ -40,7 +44,7 @@ class HomeViewModel(
                     it.copy(
                         isLoading = true,
                         errorMessage = null,
-                        levels = NightLevelsData.levels
+                        levels = levelsByProgress
                     )
                 }
 
@@ -51,7 +55,7 @@ class HomeViewModel(
                         it.copy(
                             isLoading = false,
                             user = response.body(),
-                            levels = NightLevelsData.levels,
+                            levels = levelsByProgress,
                             errorMessage = null
                         )
                     }
@@ -60,7 +64,7 @@ class HomeViewModel(
                         it.copy(
                             isLoading = false,
                             user = null,
-                            levels = NightLevelsData.levels,
+                            levels = levelsByProgress,
                             errorMessage = "No se pudo cargar la información del usuario."
                         )
                     }
@@ -70,7 +74,7 @@ class HomeViewModel(
                     it.copy(
                         isLoading = false,
                         user = null,
-                        levels = NightLevelsData.levels,
+                        levels = levelsByProgress,
                         errorMessage = "Error de conexión con la API."
                     )
                 }
