@@ -2,6 +2,7 @@ package ni.edu.uam.nightbiteapp.data.repository
 
 import ni.edu.uam.nightbiteapp.data.remote.ApiService
 import ni.edu.uam.nightbiteapp.data.remote.RetrofitClient
+import ni.edu.uam.nightbiteapp.data.remote.dto.MessageResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserLoginRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserRegisterRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
@@ -78,5 +79,9 @@ class UserRepository(
         request: UpdatePasswordRequest
     ): Response<UserResponse> {
         return apiService.updatePassword(userId, request)
+    }
+
+    suspend fun checkHealth(): Response<MessageResponse> {
+        return apiService.checkHealth()
     }
 }

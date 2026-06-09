@@ -13,6 +13,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import ni.edu.uam.nightbiteapp.data.remote.dto.MessageResponse
 
 /**
  * Define los endpoints remotos que Android consumirá desde la API de Spring Boot.
@@ -44,6 +45,9 @@ interface ApiService {
     suspend fun getUserById(
         @Path("id") id: Long
     ): Response<UserResponse>
+
+    @GET("api/health")
+    suspend fun checkHealth(): Response<MessageResponse>
 
     @POST("api/users/register")
     suspend fun registerUser(
