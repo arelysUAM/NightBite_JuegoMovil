@@ -118,4 +118,25 @@ public class UserAccountController {
                     .body(new MessageResponse(e.getMessage()));
         }
     }
+
+    /**
+     * Endpoint para eliminar una cuenta de usuario.
+     *
+     * Método HTTP: DELETE
+     * URL: /api/users/{id}
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<MessageResponse> deleteUser(@PathVariable Long id) {
+        boolean deleted = userAccountService.deleteUser(id);
+
+        if (!deleted) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("Cuenta de usuario no encontrada"));
+        }
+
+        return ResponseEntity.ok(
+                new MessageResponse("Cuenta de usuario eliminada correctamente")
+        );
+    }
 }

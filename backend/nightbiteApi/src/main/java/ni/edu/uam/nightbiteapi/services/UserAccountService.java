@@ -148,6 +148,20 @@ public class UserAccountService {
         userAccountRepository.save(user);
     }
 
+    public boolean deleteUser(Long id) {
+        Optional<UserAccount> optionalUser = userAccountRepository.findById(id);
+
+        if (optionalUser.isEmpty()) {
+            return false;
+        }
+
+        UserAccount user = optionalUser.get();
+
+        userAccountRepository.delete(user);
+
+        return true;
+    }
+
     private void validateUsername(String username) {
         if (username == null || username.isBlank()) {
             throw new RuntimeException("El nombre de usuario es obligatorio");
