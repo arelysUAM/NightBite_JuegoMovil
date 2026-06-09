@@ -91,6 +91,34 @@ public class PlayerService {
         request.setMotorcycleType(request.getMotorcycleType().trim());
     }
 
+    private void validateLengths(PlayerRequest request) {
+        if (request.getNickname().length() > 30) {
+            throw new IllegalArgumentException("El apodo no debe superar los 30 caracteres");
+        }
+
+        if (request.getDriverName().length() > 80) {
+            throw new IllegalArgumentException("El nombre del repartidor no debe superar los 80 caracteres");
+        }
+
+        if (request.getHelmetColor().length() > 30) {
+            throw new IllegalArgumentException("El color del casco no debe superar los 30 caracteres");
+        }
+
+        if (request.getMotorcycleType().length() > 30) {
+            throw new IllegalArgumentException("El tipo de moto no debe superar los 30 caracteres");
+        }
+    }
+
+    private void validateNicknameFormat(String nickname) {
+        if (nickname.contains(" ")) {
+            throw new IllegalArgumentException("El apodo no debe contener espacios");
+        }
+
+        if (!nickname.matches("^[a-z0-9_]+$")) {
+            throw new IllegalArgumentException("El apodo solo puede contener letras minúsculas, números y guion bajo");
+        }
+    }
+
     private void validatePlayerOptions(PlayerRequest request) {
         if (!ALLOWED_HELMET_COLORS.contains(request.getHelmetColor())) {
             throw new IllegalArgumentException(
@@ -108,6 +136,8 @@ public class PlayerService {
     private void validatePlayerRequest(PlayerRequest request) {
         validateRequiredFields(request);
         normalizeRequest(request);
+        validateLengths(request);
+        validateNicknameFormat(request.getNickname());
         validatePlayerOptions(request);
     }
 
