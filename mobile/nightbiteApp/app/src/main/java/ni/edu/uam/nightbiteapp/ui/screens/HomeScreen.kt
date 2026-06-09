@@ -77,11 +77,6 @@ fun HomeScreen(
     }
 
     BackHandler {
-        if (showSettingsPanel) {
-            showSettingsPanel = false
-            return@BackHandler
-        }
-
         val currentTime = System.currentTimeMillis()
 
         if (currentTime - lastBackPressTime.longValue < 2000) {

@@ -1,5 +1,6 @@
 package ni.edu.uam.nightbiteapp.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -31,6 +32,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -39,8 +41,7 @@ import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,9 +62,9 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
-import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsCardDark
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsCardLight
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsDangerPink
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsOverlay
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsPanelDarkPink
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsPanelLightPink
@@ -80,9 +81,8 @@ fun SettingsPanelOverlay(
     onLogoutClick: () -> Unit,
     onClosed: () -> Unit
 ) {
-    var visible by remember {
-        mutableStateOf(false)
-    }
+    var visible by remember { mutableStateOf(false) }
+    var logoutAfterClose by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         visible = true
@@ -92,10 +92,24 @@ fun SettingsPanelOverlay(
         visible = false
     }
 
+    fun closePanelAndLogout() {
+        logoutAfterClose = true
+        visible = false
+    }
+
+    BackHandler(enabled = visible) {
+        closePanel()
+    }
+
     LaunchedEffect(visible) {
         if (!visible) {
             delay(330)
+
             onClosed()
+
+            if (logoutAfterClose) {
+                onLogoutClick()
+            }
         }
     }
 
@@ -121,11 +135,10 @@ fun SettingsPanelOverlay(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.CenterStart
         ) {
-            val panelWidth = if (maxWidth < 760.dp) {
-                270.dp
-            } else {
-                285.dp
-            }
+            val panelWidth = (maxWidth * 0.43f).coerceIn(
+                minimumValue = 440.dp,
+                maximumValue = 560.dp
+            )
 
             AnimatedVisibility(
                 visible = visible,
@@ -134,22 +147,24 @@ fun SettingsPanelOverlay(
                     animationSpec = tween(360)
                 ) + fadeIn(animationSpec = tween(220)),
                 exit = slideOutHorizontally(
-                    targetOffsetX = { it },
+                    targetOffsetX = { -it },
                     animationSpec = tween(330)
                 ) + fadeOut(animationSpec = tween(220))
             ) {
                 SettingsSidePanel(
                     userSession = userSession,
                     onNavigateToAccount = onNavigateToAccount,
-                    onLogoutClick = onLogoutClick,
+                    onLogoutClick = {
+                        closePanelAndLogout()
+                    },
                     onBack = {
                         closePanel()
                     },
                     modifier = Modifier
                         .width(panelWidth)
-                        .fillMaxHeight()
+                        .fillMaxHeight(0.92f)
                         .clickableWithoutRipple {
-                            // Evita que los toques dentro del panel cierren el overlay.
+                            // Evita cerrar el overlay al tocar dentro del panel.
                         }
                 )
             }
@@ -165,9 +180,7 @@ fun SettingsSidePanel(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedTab by remember {
-        mutableStateOf(SettingsTab.VOLUME)
-    }
+    var selectedTab by remember { mutableStateOf(SettingsTab.VOLUME) }
 
     var musicEnabled by remember { mutableStateOf(true) }
     var soundEnabled by remember { mutableStateOf(true) }
@@ -182,10 +195,9 @@ fun SettingsSidePanel(
                 .fillMaxSize()
                 .clip(SettingsPanelShape)
                 .background(SettingsPanelPink)
-                .border(
-                    width = 2.dp,
-                    color = SettingsPanelDarkPink,
-                    shape = SettingsPanelShape
+                .padding(
+                    top = 18.dp,
+                    bottom = 18.dp
                 )
         ) {
             Column(
@@ -194,21 +206,21 @@ fun SettingsSidePanel(
                     .fillMaxHeight()
                     .clip(
                         RoundedCornerShape(
-                            topEnd = 32.dp,
-                            bottomEnd = 32.dp
+                            topEnd = 54.dp,
+                            bottomEnd = 54.dp
                         )
                     )
                     .background(SettingsPanelLightPink)
                     .padding(
-                        start = 16.dp,
-                        top = 12.dp,
-                        end = 12.dp,
-                        bottom = 18.dp
+                        start = 28.dp,
+                        top = 0.dp,
+                        end = 24.dp,
+                        bottom = 12.dp
                     )
             ) {
                 SettingsHeader()
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(15.dp))
 
                 AnimatedContent(
                     targetState = selectedTab,
@@ -241,15 +253,6 @@ fun SettingsSidePanel(
                 Spacer(modifier = Modifier.weight(1f))
 
                 if (selectedTab == SettingsTab.VOLUME) {
-                    Text(
-                        text = "Soporte",
-                        color = SettingsTextDark,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 2.dp)
-                    )
                 }
             }
 
@@ -259,9 +262,13 @@ fun SettingsSidePanel(
                     selectedTab = it
                 },
                 modifier = Modifier
-                    .width(48.dp)
+                    .width(72.dp)
                     .fillMaxHeight()
-                    .padding(top = 66.dp)
+                    .padding(
+                        top = 52.dp,
+                        start = 10.dp,
+                        end = 10.dp
+                    )
             )
         }
 
@@ -270,8 +277,8 @@ fun SettingsSidePanel(
             contentDescription = "Volver",
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .offset(x = 28.dp, y = (-28).dp)
-                .size(60.dp)
+                .offset(x = 31.dp, y = (-14).dp)
+                .size(62.dp)
                 .clickableWithoutRipple {
                     onBack()
                 },
@@ -290,7 +297,7 @@ private fun SettingsHeader() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(82.dp),
+            .height(78.dp),
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -298,29 +305,37 @@ private fun SettingsHeader() {
             contentDescription = "Decoración de configuración",
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .size(72.dp),
+                .offset(y = (-8).dp)
+                .size(70.dp),
             contentScale = ContentScale.Fit
         )
 
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
+                .offset(y = 5.dp)
                 .fillMaxWidth()
-                .height(36.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(SettingsTabPink)
-                .border(
-                    width = 1.6.dp,
-                    color = SettingsPanelDarkPink.copy(alpha = 0.55f),
-                    shape = RoundedCornerShape(18.dp)
-                ),
+                .height(42.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(SettingsPanelDarkPink.copy(alpha = 0.82f))
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .offset(y = (-2).dp)
+                .fillMaxWidth()
+                .height(42.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(SettingsTabPink),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "Configuraciones",
                 color = SmokeWhite,
                 fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleMedium
             )
         }
     }
@@ -347,11 +362,11 @@ private fun SettingsTabsColumn(
                 imageVector = Icons.Default.VolumeUp,
                 contentDescription = null,
                 tint = SmokeWhite,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(27.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         SettingsIconTab(
             selected = selectedTab == SettingsTab.PROFILE,
@@ -364,7 +379,7 @@ private fun SettingsTabsColumn(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
                 tint = SmokeWhite,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(27.dp)
             )
         }
     }
@@ -378,35 +393,25 @@ private fun SettingsIconTab(
     content: @Composable () -> Unit
 ) {
     val scale by animateFloatAsState(
-        targetValue = if (selected) 1.08f else 1f,
+        targetValue = if (selected) 1.04f else 0.96f,
         animationSpec = tween(180),
         label = "SettingsIconTabScale"
     )
 
     Box(
         modifier = Modifier
-            .size(44.dp)
+            .size(52.dp)
             .scale(scale)
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(
                 if (selected) SettingsPanelLightPink else SettingsTabPink
-            )
-            .border(
-                width = 2.dp,
-                color = if (selected) SmokeWhite else SettingsPanelDarkPink.copy(alpha = 0.45f),
-                shape = RoundedCornerShape(10.dp)
             )
             .clickableWithoutRipple {
                 onClick()
             },
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier,
-            contentAlignment = Alignment.Center
-        ) {
-            content()
-        }
+        content()
     }
 }
 
@@ -421,37 +426,55 @@ private fun SettingsVolumeContent(
     notificationsEnabled: Boolean,
     onNotificationsChange: (Boolean) -> Unit
 ) {
-    SettingsDarkCard {
+    SettingsDarkCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Text(
-            text = "Opciones del Juego",
+            text = "Opciones del juego",
             color = SmokeWhite,
             fontWeight = FontWeight.ExtraBold,
-            modifier = Modifier.padding(bottom = 4.dp)
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(bottom = 2.dp)
         )
 
-        SettingsSwitchRow(
-            title = "Música",
-            checked = musicEnabled,
-            onCheckedChange = onMusicChange
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(SettingsCardLight)
+                .padding(
+                    horizontal = 22.dp,
+                    vertical = 10.dp
+                )
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                SettingsSwitchRow(
+                    title = "Música",
+                    checked = musicEnabled,
+                    onCheckedChange = onMusicChange
+                )
 
-        SettingsSwitchRow(
-            title = "Sonido",
-            checked = soundEnabled,
-            onCheckedChange = onSoundChange
-        )
+                SettingsSwitchRow(
+                    title = "Sonido",
+                    checked = soundEnabled,
+                    onCheckedChange = onSoundChange
+                )
 
-        SettingsSwitchRow(
-            title = "Vibración",
-            checked = vibrationEnabled,
-            onCheckedChange = onVibrationChange
-        )
+                SettingsSwitchRow(
+                    title = "Vibración",
+                    checked = vibrationEnabled,
+                    onCheckedChange = onVibrationChange
+                )
 
-        SettingsSwitchRow(
-            title = "Notificaciones",
-            checked = notificationsEnabled,
-            onCheckedChange = onNotificationsChange
-        )
+                SettingsSwitchRow(
+                    title = "Notificaciones",
+                    checked = notificationsEnabled,
+                    onCheckedChange = onNotificationsChange
+                )
+            }
+        }
     }
 }
 
@@ -468,95 +491,102 @@ private fun SettingsProfileContent(
         )
     } ?: "NB-0000-L0"
 
-    SettingsDarkCard {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        SettingsDarkCard(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Datos de la cuenta",
-                color = SmokeWhite,
-                fontWeight = FontWeight.ExtraBold,
-                modifier = Modifier.weight(1f)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Datos de la cuenta",
+                    color = SmokeWhite,
+                    fontWeight = FontWeight.ExtraBold,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(7.dp))
+                        .border(
+                            width = 2.2.dp,
+                            color = SmokeWhite,
+                            shape = RoundedCornerShape(7.dp)
+                        )
+                        .clickableWithoutRipple {
+                            onNavigateToAccount()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar datos de cuenta",
+                        tint = SmokeWhite,
+                        modifier = Modifier.size(23.dp)
+                    )
+                }
+            }
 
             Box(
                 modifier = Modifier
-                    .size(28.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(
-                        width = 1.4.dp,
-                        color = SmokeWhite,
-                        shape = RoundedCornerShape(6.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(SettingsCardLight)
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    AccountLine(
+                        label = "Nombre",
+                        value = userSession.username.ifBlank { "Sin usuario" }
                     )
-                    .clickableWithoutRipple {
-                        onNavigateToAccount()
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Editar datos de cuenta",
-                    tint = SmokeWhite,
-                    modifier = Modifier.size(18.dp)
-                )
+
+                    AccountLine(
+                        label = "ID",
+                        value = displayId
+                    )
+
+                    AccountLine(
+                        label = "Correo",
+                        value = userSession.email.ifBlank { "Sin correo" }
+                    )
+                }
             }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(7.dp))
-                .background(SettingsCardLight)
-                .padding(horizontal = 8.dp, vertical = 7.dp)
-        ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                AccountLine(
-                    label = "Nombre",
-                    value = userSession.username.ifBlank { "Sin usuario" }
-                )
+        Spacer(modifier = Modifier.height(12.dp))
 
-                AccountLine(
-                    label = "ID",
-                    value = displayId
-                )
+        CenteredPanelButton(
+            text = "Cerrar sesión",
+            fillFraction = 0.82f,
+            height = 34.dp,
+            containerColor = SettingsDangerPink.copy(alpha = 0.48f),
+            contentColor = SettingsPanelDarkPink,
+            borderColor = SettingsPanelDarkPink.copy(alpha = 0.75f),
+            onClick = onLogoutClick
+        )
 
-                AccountLine(
-                    label = "Correo",
-                    value = userSession.email.ifBlank { "Sin correo" }
-                )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        CenteredPanelButton(
+            text = "Eliminar cuenta",
+            fillFraction = 0.68f,
+            height = 30.dp,
+            containerColor = Color.Transparent,
+            contentColor = SettingsPanelDarkPink,
+            borderColor = SettingsPanelDarkPink.copy(alpha = 0.80f),
+            onClick = {
+                // Pendiente: implementar eliminación de cuenta.
             }
-        }
+        )
     }
-
-    Spacer(modifier = Modifier.height(14.dp))
-
-    CenteredPanelButton(
-        text = "Cerrar sesión",
-        fillFraction = 0.80f,
-        height = 32.dp,
-        containerColor = SettingsDangerPink,
-        contentColor = SettingsPanelDarkPink,
-        borderColor = SettingsPanelDarkPink.copy(alpha = 0.45f),
-        onClick = onLogoutClick
-    )
-
-    Spacer(modifier = Modifier.height(7.dp))
-
-    CenteredPanelButton(
-        text = "Eliminar cuenta",
-        fillFraction = 0.68f,
-        height = 28.dp,
-        containerColor = Color.Transparent,
-        contentColor = SettingsPanelDarkPink,
-        borderColor = SettingsPanelDarkPink.copy(alpha = 0.65f),
-        onClick = {
-            // Pendiente: implementar eliminación de cuenta.
-            // Por ahora queda solo como botón visual.
-        }
-    )
 }
 
 @Composable
@@ -567,10 +597,10 @@ private fun SettingsDarkCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(24.dp))
             .background(SettingsCardDark)
-            .padding(horizontal = 12.dp, vertical = 11.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = 20.dp, vertical = 15.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
         content = content
     )
 }
@@ -584,28 +614,46 @@ private fun SettingsSwitchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(25.dp),
+            .height(31.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = title,
-            color = SmokeWhite,
+            color = SettingsTextDark,
             fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.weight(1f)
         )
 
-        Switch(
+        MiniSettingsSwitch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = onCheckedChange
+        )
+    }
+}
+
+@Composable
+private fun MiniSettingsSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .width(64.dp)
+            .height(34.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(SettingsCardDark)
+            .clickableWithoutRipple {
+                onCheckedChange(!checked)
+            }
+            .padding(4.dp),
+        contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
+    ) {
+        Box(
             modifier = Modifier
-                .width(42.dp)
-                .height(24.dp),
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = SmokeWhite,
-                checkedTrackColor = SettingsCardLight,
-                uncheckedThumbColor = SmokeWhite,
-                uncheckedTrackColor = SettingsPanelDarkPink
-            )
+                .size(26.dp)
+                .clip(CircleShape)
+                .background(SmokeWhite)
         )
     }
 }
@@ -618,7 +666,8 @@ private fun AccountLine(
     Text(
         text = "$label: $value",
         color = SettingsTextDark,
-        fontWeight = FontWeight.Bold
+        fontWeight = FontWeight.Bold,
+        style = MaterialTheme.typography.labelMedium
     )
 }
 
@@ -642,18 +691,22 @@ private fun CenteredPanelButton(
                 .fillMaxWidth(fillFraction)
                 .height(height)
                 .defaultMinSize(minHeight = 1.dp),
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(24.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = containerColor,
                 contentColor = contentColor
             ),
-            border = BorderStroke(1.5.dp, borderColor),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+            border = BorderStroke(2.dp, borderColor),
+            contentPadding = PaddingValues(
+                horizontal = 8.dp,
+                vertical = 0.dp
+            )
         ) {
             Text(
                 text = text,
                 fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.labelLarge
             )
         }
     }
@@ -662,8 +715,8 @@ private fun CenteredPanelButton(
 private val SettingsPanelShape = RoundedCornerShape(
     topStart = 0.dp,
     bottomStart = 0.dp,
-    topEnd = 28.dp,
-    bottomEnd = 28.dp
+    topEnd = 58.dp,
+    bottomEnd = 58.dp
 )
 
 private fun Modifier.clickableWithoutRipple(
