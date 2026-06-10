@@ -10,7 +10,6 @@ import ni.edu.uam.nightbiteapp.ui.model.GameResultType
  * del gameplay y progreso guardado con Room.
  */
 object GameResultsData {
-
     fun getResultContent(
         levelId: Int,
         resultType: GameResultType

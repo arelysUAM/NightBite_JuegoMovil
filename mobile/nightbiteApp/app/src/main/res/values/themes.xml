@@ -4,8 +4,8 @@
     <style name="Theme.NightbiteApp" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/night_icon_background</item>
 
-        <item name="android:statusBarColor">@color/night_icon_background</item>
-        <item name="android:navigationBarColor">@color/night_icon_background</item>
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:navigationBarColor">@color/white</item>
 
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
