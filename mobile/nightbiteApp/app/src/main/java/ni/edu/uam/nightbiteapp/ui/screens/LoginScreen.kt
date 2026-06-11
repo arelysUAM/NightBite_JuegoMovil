@@ -27,13 +27,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.ui.components.NightLoginCard
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.design.NightSizes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.NeonGreen
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
@@ -49,6 +50,7 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = viewModel()
 ) {
     val context = LocalContext.current
+
     val sessionManager = remember {
         SessionManager(context.applicationContext)
     }
@@ -62,6 +64,16 @@ fun LoginScreen(
 
     var loginErrorMessage by remember { mutableStateOf<String?>(null) }
     var loginErrorType by remember { mutableStateOf<LoginErrorType?>(null) }
+
+    fun clearLoginError() {
+        loginErrorMessage = null
+        loginErrorType = null
+    }
+
+    fun clearCredentials() {
+        username = ""
+        password = ""
+    }
 
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -83,7 +95,6 @@ fun LoginScreen(
             is LoginUiState.Error -> {
                 loginErrorMessage = uiState.message
                 loginErrorType = uiState.type
-
                 loginViewModel.resetState()
             }
 
@@ -94,10 +105,11 @@ fun LoginScreen(
     BackHandler {
         val currentTime = System.currentTimeMillis()
 
-        if (currentTime - lastBackPressTime < 2000) {
+        if (currentTime - lastBackPressTime < EXIT_PRESS_INTERVAL) {
             onExitApp()
         } else {
             lastBackPressTime = currentTime
+
             Toast.makeText(
                 context,
                 "Presiona nuevamente para salir",
@@ -112,18 +124,16 @@ fun LoginScreen(
             .imePadding(),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.fondo_estampado_morado),
-            contentDescription = "Fondo de inicio de sesión",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        LoginBackground()
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 32.dp, vertical = 24.dp),
+                .padding(
+                    horizontal = NightSpacing.screenHorizontal,
+                    vertical = NightSpacing.extraLarge
+                ),
             contentAlignment = Alignment.Center
         ) {
             NightLoginCard(
@@ -134,8 +144,8 @@ fun LoginScreen(
                         .lowercase()
                         .replace(" ", "")
                 },
-                onPasswordChange = {
-                    password = it
+                onPasswordChange = { value ->
+                    password = value
                 },
                 onLoginClick = {
                     loginViewModel.loginUser(
@@ -145,8 +155,7 @@ fun LoginScreen(
                 },
                 onRegisterClick = onNavigateToRegister,
                 modifier = Modifier.widthIn(
-                    min = 390.dp,
-                    max = 470.dp
+                    max = NightSizes.loginCardWidth
                 )
             )
         }
@@ -157,82 +166,98 @@ fun LoginScreen(
             )
         }
 
-        loginErrorMessage?.let { message ->
-            when (loginErrorType) {
-                LoginErrorType.UserNotFound -> {
-                    NightMessageDialog(
-                        title = "Usuario no encontrado",
-                        message = message,
-                        confirmText = "Registrarse",
-                        dismissText = "Cancelar",
-                        icon = Icons.Default.PersonAdd,
-                        iconColor = NeonGreen,
-                        onConfirm = {
-                            loginErrorMessage = null
-                            loginErrorType = null
-
-                            username = ""
-                            password = ""
-
-                            loginViewModel.resetState()
-                            onNavigateToRegister()
-                        },
-                        onDismiss = {
-                            loginErrorMessage = null
-                            loginErrorType = null
-
-                            username = ""
-                            password = ""
-
-                            loginViewModel.resetState()
-                        }
-                    )
-                }
-
-                LoginErrorType.InvalidCredentials -> {
-                    NightMessageDialog(
-                        title = "Credenciales incorrectas",
-                        message = message,
-                        confirmText = "VOLVER A INTENTAR",
-                        icon = Icons.Default.Error,
-                        iconColor = PizzaRed,
-                        onConfirm = {
-                            loginErrorMessage = null
-                            loginErrorType = null
-                        }
-                    )
-                }
-
-                LoginErrorType.IncompleteFields -> {
-                    NightMessageDialog(
-                        title = "Campos incompletos",
-                        message = message,
-                        confirmText = "ENTENDIDO",
-                        icon = Icons.Default.Warning,
-                        iconColor = CheeseYellow,
-                        onConfirm = {
-                            loginErrorMessage = null
-                            loginErrorType = null
-                        }
-                    )
-                }
-
-                LoginErrorType.ConnectionError -> {
-                    NightMessageDialog(
-                        title = "Error de conexión",
-                        message = message,
-                        confirmText = "VOLVER A INTENTAR",
-                        icon = Icons.Default.Warning,
-                        iconColor = CheeseYellow,
-                        onConfirm = {
-                            loginErrorMessage = null
-                            loginErrorType = null
-                        }
-                    )
-                }
-
-                null -> Unit
+        LoginErrorDialog(
+            message = loginErrorMessage,
+            errorType = loginErrorType,
+            onRegister = {
+                clearLoginError()
+                clearCredentials()
+                loginViewModel.resetState()
+                onNavigateToRegister()
+            },
+            onDismissUserNotFound = {
+                clearLoginError()
+                clearCredentials()
+                loginViewModel.resetState()
+            },
+            onDismissError = {
+                clearLoginError()
             }
-        }
+        )
     }
 }
+
+@Composable
+private fun LoginBackground() {
+    Image(
+        painter = painterResource(id = R.drawable.fondo_estampado_morado),
+        contentDescription = "Fondo de inicio de sesión",
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop
+    )
+}
+
+@Composable
+private fun LoginErrorDialog(
+    message: String?,
+    errorType: LoginErrorType?,
+    onRegister: () -> Unit,
+    onDismissUserNotFound: () -> Unit,
+    onDismissError: () -> Unit
+) {
+    if (message == null) {
+        return
+    }
+
+    when (errorType) {
+        LoginErrorType.UserNotFound -> {
+            NightMessageDialog(
+                title = "Usuario no encontrado",
+                message = message,
+                confirmText = "Registrarse",
+                dismissText = "Cancelar",
+                icon = Icons.Default.PersonAdd,
+                iconColor = NeonGreen,
+                onConfirm = onRegister,
+                onDismiss = onDismissUserNotFound
+            )
+        }
+
+        LoginErrorType.InvalidCredentials -> {
+            NightMessageDialog(
+                title = "Credenciales incorrectas",
+                message = message,
+                confirmText = "VOLVER A INTENTAR",
+                icon = Icons.Default.Error,
+                iconColor = PizzaRed,
+                onConfirm = onDismissError
+            )
+        }
+
+        LoginErrorType.IncompleteFields -> {
+            NightMessageDialog(
+                title = "Campos incompletos",
+                message = message,
+                confirmText = "ENTENDIDO",
+                icon = Icons.Default.Warning,
+                iconColor = CheeseYellow,
+                onConfirm = onDismissError
+            )
+        }
+
+        LoginErrorType.ConnectionError -> {
+            NightMessageDialog(
+                title = "Error de conexión",
+                message = message,
+                confirmText = "VOLVER A INTENTAR",
+                icon = Icons.Default.Warning,
+                iconColor = CheeseYellow,
+                onConfirm = onDismissError
+            )
+        }
+
+        null -> Unit
+    }
+}
+
+private const val EXIT_PRESS_INTERVAL = 2000L

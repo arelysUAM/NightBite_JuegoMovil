@@ -24,11 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.NightRegisterCard
+import ni.edu.uam.nightbiteapp.ui.design.NightSizes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.NeonGreen
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
@@ -58,6 +59,11 @@ fun RegisterScreen(
 
     var showAllErrors by remember { mutableStateOf(false) }
     var showEmptyFieldsDialog by remember { mutableStateOf(false) }
+    var showCancelRegisterDialog by remember { mutableStateOf(false) }
+
+    var dialogTitle by remember { mutableStateOf("") }
+    var dialogMessage by remember { mutableStateOf("") }
+    var dialogType by remember { mutableStateOf(RegisterDialogType.None) }
 
     val usernameError = if (usernameTouched || showAllErrors) {
         AccountValidators.validateUsername(username)
@@ -86,12 +92,6 @@ fun RegisterScreen(
         null
     }
 
-    var returnToLoginAfterConfirm by remember { mutableStateOf(true) }
-    var showCancelRegisterDialog by remember { mutableStateOf(false) }
-    var dialogTitle by remember { mutableStateOf("") }
-    var dialogMessage by remember { mutableStateOf("") }
-    var dialogType by remember { mutableStateOf(RegisterDialogType.None) }
-
     val hasRegisterData =
         username.isNotBlank() ||
                 email.isNotBlank() ||
@@ -103,6 +103,47 @@ fun RegisterScreen(
                 email.isBlank() &&
                 password.isBlank() &&
                 confirmPassword.isBlank()
+
+    fun requestBack() {
+        if (hasRegisterData) {
+            showCancelRegisterDialog = true
+        } else {
+            onBackToAgeCheck()
+        }
+    }
+
+    fun validateAndRegister() {
+        showAllErrors = true
+
+        if (allFieldsAreEmpty) {
+            showEmptyFieldsDialog = true
+            return
+        }
+
+        val currentUsernameError = AccountValidators.validateUsername(username)
+        val currentEmailError = AccountValidators.validateEmail(email)
+        val currentPasswordError = AccountValidators.validatePassword(password)
+        val currentConfirmPasswordError = AccountValidators.validateConfirmPassword(
+            password = password,
+            confirmPassword = confirmPassword
+        )
+
+        val formIsValid =
+            currentUsernameError == null &&
+                    currentEmailError == null &&
+                    currentPasswordError == null &&
+                    currentConfirmPasswordError == null
+
+        if (formIsValid) {
+            registerViewModel.registerUser(
+                username = username,
+                email = email,
+                password = password,
+                confirmPassword = confirmPassword,
+                age = age
+            )
+        }
+    }
 
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -125,12 +166,7 @@ fun RegisterScreen(
     }
 
     BackHandler {
-        if (hasRegisterData) {
-            returnToLoginAfterConfirm = false
-            showCancelRegisterDialog = true
-        } else {
-            onBackToAgeCheck()
-        }
+        requestBack()
     }
 
     Box(
@@ -139,18 +175,16 @@ fun RegisterScreen(
             .imePadding(),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.fondo_estampado_morado),
-            contentDescription = "Fondo de registro",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        RegisterBackground()
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 32.dp, vertical = 24.dp),
+                .padding(
+                    horizontal = NightSpacing.screenHorizontal,
+                    vertical = NightSpacing.extraLarge
+                ),
             contentAlignment = Alignment.Center
         ) {
             NightRegisterCard(
@@ -158,89 +192,39 @@ fun RegisterScreen(
                 email = email,
                 password = password,
                 confirmPassword = confirmPassword,
-
                 usernameError = usernameError,
                 emailError = emailError,
                 passwordError = passwordError,
                 confirmPasswordError = confirmPasswordError,
-
                 onUsernameChange = { value ->
                     usernameTouched = true
-
                     username = value
                         .lowercase()
                         .replace(" ", "")
                 },
-
                 onEmailChange = { value ->
                     emailTouched = true
-
                     email = value
                         .lowercase()
                         .replace(" ", "")
                 },
-
                 onPasswordChange = { value ->
                     passwordTouched = true
                     password = value
                 },
-
                 onConfirmPasswordChange = { value ->
                     confirmPasswordTouched = true
                     confirmPassword = value
                 },
-
                 onRegisterClick = {
-                    showAllErrors = true
-
-                    if (allFieldsAreEmpty) {
-                        showEmptyFieldsDialog = true
-                    } else {
-                        val currentUsernameError =
-                            AccountValidators.validateUsername(username)
-
-                        val currentEmailError =
-                            AccountValidators.validateEmail(email)
-
-                        val currentPasswordError =
-                            AccountValidators.validatePassword(password)
-
-                        val currentConfirmPasswordError =
-                            AccountValidators.validateConfirmPassword(
-                                password = password,
-                                confirmPassword = confirmPassword
-                            )
-
-                        val formIsValid =
-                            currentUsernameError == null &&
-                                    currentEmailError == null &&
-                                    currentPasswordError == null &&
-                                    currentConfirmPasswordError == null
-
-                        if (formIsValid) {
-                            registerViewModel.registerUser(
-                                username = username,
-                                email = email,
-                                password = password,
-                                confirmPassword = confirmPassword,
-                                age = age
-                            )
-                        }
-                    }
+                    validateAndRegister()
                 },
-
                 onBackToLoginClick = {
-                    if (hasRegisterData) {
-                        returnToLoginAfterConfirm = false
-                        showCancelRegisterDialog = true
-                    } else {
-                        onBackToAgeCheck()
-                    }
+                    requestBack()
                 },
-
                 modifier = Modifier.widthIn(
-                    min = 720.dp,
-                    max = 820.dp
+                    min = NightSizes.registerContainerMinWidth,
+                    max = NightSizes.registerContainerMaxWidth
                 )
             )
         }
@@ -251,67 +235,104 @@ fun RegisterScreen(
             )
         }
 
-        if (showCancelRegisterDialog) {
-            NightMessageDialog(
-                title = "Cancelar registro",
-                message = "¿Seguro quieres volver? Los datos no se guardarán.",
-                confirmText = "SÍ, VOLVER",
-                dismissText = "CONTINUAR",
-                icon = Icons.Default.Warning,
-                iconColor = CheeseYellow,
-                onConfirm = {
-                    showCancelRegisterDialog = false
-                    onBackToAgeCheck()
-                },
-                onDismiss = {
-                    showCancelRegisterDialog = false
-                }
-            )
-        }
+        RegisterDialogs(
+            showCancelRegisterDialog = showCancelRegisterDialog,
+            onDismissCancelRegisterDialog = {
+                showCancelRegisterDialog = false
+            },
+            onConfirmCancelRegister = {
+                showCancelRegisterDialog = false
+                onBackToAgeCheck()
+            },
+            showEmptyFieldsDialog = showEmptyFieldsDialog,
+            onDismissEmptyFieldsDialog = {
+                showEmptyFieldsDialog = false
+            },
+            dialogType = dialogType,
+            dialogTitle = dialogTitle,
+            dialogMessage = dialogMessage,
+            onSuccessConfirm = {
+                dialogType = RegisterDialogType.None
+                onBackToLogin()
+            },
+            onErrorConfirm = {
+                dialogType = RegisterDialogType.None
+            }
+        )
+    }
+}
 
-        if (showEmptyFieldsDialog) {
+@Composable
+private fun RegisterBackground() {
+    Image(
+        painter = painterResource(id = R.drawable.fondo_estampado_morado),
+        contentDescription = "Fondo de registro",
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop
+    )
+}
+
+@Composable
+private fun RegisterDialogs(
+    showCancelRegisterDialog: Boolean,
+    onDismissCancelRegisterDialog: () -> Unit,
+    onConfirmCancelRegister: () -> Unit,
+    showEmptyFieldsDialog: Boolean,
+    onDismissEmptyFieldsDialog: () -> Unit,
+    dialogType: RegisterDialogType,
+    dialogTitle: String,
+    dialogMessage: String,
+    onSuccessConfirm: () -> Unit,
+    onErrorConfirm: () -> Unit
+) {
+    if (showCancelRegisterDialog) {
+        NightMessageDialog(
+            title = "Cancelar registro",
+            message = "¿Seguro quieres volver? Los datos no se guardarán.",
+            confirmText = "SÍ, VOLVER",
+            dismissText = "CONTINUAR",
+            icon = Icons.Default.Warning,
+            iconColor = CheeseYellow,
+            onConfirm = onConfirmCancelRegister,
+            onDismiss = onDismissCancelRegisterDialog
+        )
+    }
+
+    if (showEmptyFieldsDialog) {
+        NightMessageDialog(
+            title = "Campos incompletos",
+            message = "Debes completar todos los campos para registrarte.",
+            confirmText = "CONTINUAR",
+            icon = Icons.Default.Warning,
+            iconColor = CheeseYellow,
+            onConfirm = onDismissEmptyFieldsDialog
+        )
+    }
+
+    when (dialogType) {
+        RegisterDialogType.Success -> {
             NightMessageDialog(
-                title = "Campos incompletos",
-                message = "Debes completar todos los campos para registrarte.",
+                title = dialogTitle,
+                message = dialogMessage,
                 confirmText = "CONTINUAR",
-                icon = Icons.Default.Warning,
-                iconColor = CheeseYellow,
-                onConfirm = {
-                    showEmptyFieldsDialog = false
-                }
+                icon = Icons.Default.CheckCircle,
+                iconColor = NeonGreen,
+                onConfirm = onSuccessConfirm
             )
         }
 
-        when (dialogType) {
-            RegisterDialogType.Success -> {
-                NightMessageDialog(
-                    title = dialogTitle,
-                    message = dialogMessage,
-                    confirmText = "CONTINUAR",
-                    icon = Icons.Default.CheckCircle,
-                    iconColor = NeonGreen,
-                    onConfirm = {
-                        dialogType = RegisterDialogType.None
-                        onBackToLogin()
-                    }
-                )
-            }
-
-            RegisterDialogType.Error -> {
-                NightMessageDialog(
-                    title = dialogTitle,
-                    message = dialogMessage,
-                    confirmText = "ENTENDIDO",
-                    icon = Icons.Default.Error,
-                    iconColor = PizzaRed,
-                    onConfirm = {
-                        dialogType = RegisterDialogType.None
-                    }
-                )
-            }
-
-            RegisterDialogType.None -> Unit
+        RegisterDialogType.Error -> {
+            NightMessageDialog(
+                title = dialogTitle,
+                message = dialogMessage,
+                confirmText = "ENTENDIDO",
+                icon = Icons.Default.Error,
+                iconColor = PizzaRed,
+                onConfirm = onErrorConfirm
+            )
         }
+
+        RegisterDialogType.None -> Unit
     }
 }
 

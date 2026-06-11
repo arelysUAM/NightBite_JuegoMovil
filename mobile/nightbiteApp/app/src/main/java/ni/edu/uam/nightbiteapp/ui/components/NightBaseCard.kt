@@ -62,7 +62,9 @@ fun NightBaseCard(
         )
     ) {
         Column(
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(contentPadding),
             content = content
         )
     }
