@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import ni.edu.uam.nightbiteapp.ui.design.NightShapes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 
 /**
@@ -33,10 +35,13 @@ fun EnemyCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
+        shape = NightShapes.dialog,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(PaddingValues(16.dp))
+            modifier = Modifier.padding(
+                PaddingValues(NightSpacing.large)
+            )
         ) {
             Icon(
                 imageVector = Icons.Default.Warning,
@@ -44,54 +49,47 @@ fun EnemyCard(
                 tint = CheeseYellow
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.small))
 
             Text(
                 text = enemyName,
                 style = MaterialTheme.typography.titleLarge
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Descripción",
-                style = MaterialTheme.typography.titleMedium
+            EnemyInfoSection(
+                title = "Descripción",
+                content = enemyDescription
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = enemyDescription,
-                style = MaterialTheme.typography.bodyMedium
+            EnemyInfoSection(
+                title = "Comportamiento",
+                content = enemyBehavior
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Comportamiento",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = enemyBehavior,
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Consejo de supervivencia",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = survivalTip,
-                style = MaterialTheme.typography.bodyMedium
+            EnemyInfoSection(
+                title = "Consejo de supervivencia",
+                content = survivalTip
             )
         }
     }
+}
+
+@Composable
+private fun EnemyInfoSection(
+    title: String,
+    content: String
+) {
+    Spacer(modifier = Modifier.height(NightSpacing.medium))
+
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium
+    )
+
+    Spacer(modifier = Modifier.height(NightSpacing.extraSmall))
+
+    Text(
+        text = content,
+        style = MaterialTheme.typography.bodyMedium
+    )
 }
