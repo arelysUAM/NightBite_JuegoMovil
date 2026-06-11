@@ -1,6 +1,7 @@
 package ni.edu.uam.nightbiteapp.ui.screens
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -12,12 +13,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.ui.components.AnimatedLoadingText
 import ni.edu.uam.nightbiteapp.ui.components.GameTitle
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.StartBackground
+import ni.edu.uam.nightbiteapp.ui.design.NightSizes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.StartUiState
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
@@ -63,32 +65,52 @@ fun StartScreen(
         GameTitle(
             modifier = Modifier
                 .align(Alignment.Center)
-                .widthIn(max = 420.dp)
+                .widthIn(max = NightSizes.registerCardWidth)
         )
 
-        when (uiState) {
-            is StartUiState.Loading -> {
-                AnimatedLoadingText(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 34.dp)
-                )
+        StartStateContent(
+            uiState = uiState,
+            onRetry = {
+                viewModel.retry()
             }
-
-            is StartUiState.ServerError -> {
-                NightMessageDialog(
-                    title = "Error de conexión",
-                    message = "No se pudo conectar con el servidor.",
-                    confirmText = "Reintentar",
-                    icon = Icons.Default.Warning,
-                    iconColor = CheeseYellow,
-                    onConfirm = {
-                        viewModel.retry()
-                    }
-                )
-            }
-
-            else -> Unit
-        }
+        )
     }
+}
+
+@Composable
+private fun BoxScope.StartStateContent(
+    uiState: StartUiState,
+    onRetry: () -> Unit
+) {
+    when (uiState) {
+        is StartUiState.Loading -> {
+            AnimatedLoadingText(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = NightSpacing.section)
+            )
+        }
+
+        is StartUiState.ServerError -> {
+            StartServerErrorDialog(
+                onRetry = onRetry
+            )
+        }
+
+        else -> Unit
+    }
+}
+
+@Composable
+private fun StartServerErrorDialog(
+    onRetry: () -> Unit
+) {
+    NightMessageDialog(
+        title = "Error de conexión",
+        message = "No se pudo conectar con el servidor.",
+        confirmText = "Reintentar",
+        icon = Icons.Default.Warning,
+        iconColor = CheeseYellow,
+        onConfirm = onRetry
+    )
 }

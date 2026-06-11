@@ -8,25 +8,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
+import ni.edu.uam.nightbiteapp.ui.components.NightBaseCard
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.components.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.NightSecondaryButton
+import ni.edu.uam.nightbiteapp.ui.design.NightSizes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerDetailUiState
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerDetailViewModel
@@ -57,21 +58,22 @@ fun PlayerDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.Top
+            .padding(
+                horizontal = NightSpacing.screenHorizontal,
+                vertical = NightSpacing.screenVertical
+            ),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Ficha del repartidor",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        PlayerDetailHeader()
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
         when {
             userId == null -> {
                 EmptyPlayerDetailContent(
                     message = "No hay una sesión activa.",
-                    buttonText = "Volver al perfil",
+                    buttonText = "Volver al menú principal",
                     onButtonClick = onBackToHome
                 )
             }
@@ -92,7 +94,7 @@ fun PlayerDetailScreen(
             uiState is PlayerDetailUiState.Error -> {
                 EmptyPlayerDetailContent(
                     message = uiState.message,
-                    buttonText = "Volver al perfil",
+                    buttonText = "Volver al menú principal",
                     onButtonClick = onBackToHome
                 )
             }
@@ -101,7 +103,24 @@ fun PlayerDetailScreen(
                 LoadingPlayerDetailContent()
             }
         }
+
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
     }
+}
+
+@Composable
+private fun PlayerDetailHeader() {
+    Text(
+        text = "Ficha del repartidor",
+        style = MaterialTheme.typography.headlineMedium
+    )
+
+    Spacer(modifier = Modifier.height(NightSpacing.small))
+
+    Text(
+        text = "Consulta los datos de tu contratación nocturna.",
+        style = MaterialTheme.typography.bodyMedium
+    )
 }
 
 @Composable
@@ -109,14 +128,14 @@ private fun LoadingPlayerDetailContent() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 40.dp),
+            .padding(top = NightSpacing.section),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
             color = CheeseYellow
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.medium))
 
         Text(text = "Cargando ficha del repartidor...")
     }
@@ -128,23 +147,26 @@ private fun EmptyPlayerDetailContent(
     buttonText: String,
     onButtonClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    Column(
+        modifier = Modifier.widthIn(
+            max = NightSizes.settingsPanelMaxWidth
+        ),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = message,
-            modifier = Modifier.padding(16.dp)
+        NightBaseCard {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+
+        NightPrimaryButton(
+            text = buttonText,
+            onClick = onButtonClick,
+            modifier = Modifier.fillMaxWidth()
         )
-    }
-
-    Spacer(modifier = Modifier.height(20.dp))
-
-    Button(
-        onClick = onButtonClick,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(text = buttonText)
     }
 }
 
@@ -172,87 +194,129 @@ private fun PlayerDetailContent(
         return
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    Column(
+        modifier = Modifier.widthIn(
+            max = NightSizes.settingsPanelMaxWidth
+        )
     ) {
-        Column(
-            modifier = Modifier.padding(PaddingValues(16.dp))
-        ) {
-            Text(
-                text = "Contrato NightBite",
-                style = MaterialTheme.typography.titleLarge
-            )
+        ContractCard(
+            playerId = player.id,
+            nickname = player.nickname
+        )
 
-            Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
-            Text(text = "ID de jugador: #${player.id}")
-            Text(text = "Apodo: ${player.nickname}")
-            Text(text = "Noche máxima alcanzada: Nivel 0")
-        }
+        DriverDataCard(
+            driverName = player.driverName,
+            gender = player.gender,
+            helmetColor = player.helmetColor,
+            motorcycleType = player.motorcycleType
+        )
+
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+
+        WorkDataCard()
+
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+
+        NightPrimaryButton(
+            text = "Editar ficha",
+            onClick = onEditPlayer,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(NightSpacing.medium))
+
+        NightSecondaryButton(
+            text = "Volver al menú principal",
+            onClick = onBackToHome,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
+}
 
-    Spacer(modifier = Modifier.height(20.dp))
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+@Composable
+private fun ContractCard(
+    playerId: Long,
+    nickname: String
+) {
+    NightBaseCard(
+        contentPadding = PaddingValues(
+            horizontal = NightSpacing.extraLarge,
+            vertical = NightSpacing.extraLarge
+        )
     ) {
-        Column(
-            modifier = Modifier.padding(PaddingValues(16.dp))
-        ) {
-            Text(
-                text = "Datos del repartidor",
-                style = MaterialTheme.typography.titleMedium
-            )
+        Text(
+            text = "Contrato NightBite",
+            style = MaterialTheme.typography.titleLarge
+        )
 
-            Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.medium))
 
-            Text(text = "Nombre del repartidor: ${player.driverName}")
-            Text(text = "Género: ${player.gender}")
-            Text(text = "Color de casco: ${player.helmetColor}")
-            Text(text = "Tipo de moto: ${player.motorcycleType}")
-        }
+        DetailText(label = "ID de jugador", value = "#$playerId")
+        DetailText(label = "Apodo", value = nickname)
+        DetailText(label = "Noche máxima alcanzada", value = "Nivel 0")
     }
+}
 
-    Spacer(modifier = Modifier.height(20.dp))
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+@Composable
+private fun DriverDataCard(
+    driverName: String,
+    gender: String,
+    helmetColor: String,
+    motorcycleType: String
+) {
+    NightBaseCard(
+        contentPadding = PaddingValues(
+            horizontal = NightSpacing.extraLarge,
+            vertical = NightSpacing.extraLarge
+        )
     ) {
-        Column(
-            modifier = Modifier.padding(PaddingValues(16.dp))
-        ) {
-            Text(
-                text = "Datos laborales",
-                style = MaterialTheme.typography.titleMedium
-            )
+        Text(
+            text = "Datos del repartidor",
+            style = MaterialTheme.typography.titleMedium
+        )
 
-            Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.medium))
 
-            Text(text = "Puesto: Repartidor")
-            Text(text = "Jornada laboral: 12:00 a.m. - 3:00 a.m.")
-            Text(text = "Restaurante: NightBite Pizza")
-            Text(text = "Estado: Contratado")
-        }
+        DetailText(label = "Nombre del repartidor", value = driverName)
+        DetailText(label = "Género", value = gender)
+        DetailText(label = "Color de casco", value = helmetColor)
+        DetailText(label = "Tipo de moto", value = motorcycleType)
     }
+}
 
-    Spacer(modifier = Modifier.height(24.dp))
-
-    Button(
-        onClick = onEditPlayer,
-        modifier = Modifier.fillMaxWidth()
+@Composable
+private fun WorkDataCard() {
+    NightBaseCard(
+        contentPadding = PaddingValues(
+            horizontal = NightSpacing.extraLarge,
+            vertical = NightSpacing.extraLarge
+        )
     ) {
-        Text(text = "Editar ficha")
-    }
+        Text(
+            text = "Datos laborales",
+            style = MaterialTheme.typography.titleMedium
+        )
 
-    Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.medium))
 
-    OutlinedButton(
-        onClick = onBackToHome,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(text = "Volver al menú principal")
+        DetailText(label = "Puesto", value = "Repartidor")
+        DetailText(label = "Jornada laboral", value = "12:00 a.m. - 3:00 a.m.")
+        DetailText(label = "Restaurante", value = "NightBite Pizza")
+        DetailText(label = "Estado", value = "Contratado")
     }
+}
+
+@Composable
+private fun DetailText(
+    label: String,
+    value: String
+) {
+    Text(
+        text = "$label: $value",
+        style = MaterialTheme.typography.bodyMedium
+    )
+
+    Spacer(modifier = Modifier.height(NightSpacing.extraSmall))
 }

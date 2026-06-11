@@ -1,4 +1,4 @@
-package ni.edu.uam.nightbiteapp.ui.components.sidepanels
+package ni.edu.uam.nightbiteapp.ui.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent

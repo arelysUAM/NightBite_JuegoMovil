@@ -2,7 +2,6 @@ package ni.edu.uam.nightbiteapp.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,17 +11,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import ni.edu.uam.nightbiteapp.ui.components.EnemyCard
+import ni.edu.uam.nightbiteapp.ui.components.NightBaseCard
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.components.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.NightSecondaryButton
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.model.NightLevel
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 
@@ -38,17 +36,9 @@ fun LevelIntroScreen(
     onBackToHome: () -> Unit
 ) {
     if (level == null) {
-        NightMessageDialog(
-            title = "Nivel no encontrado",
-            message = "No se pudo cargar la información de esta noche.",
-            confirmText = "Volver",
-            dismissText = null,
-            icon = Icons.Default.Warning,
-            iconColor = CheeseYellow,
-            onConfirm = onBackToHome,
-            onDismiss = onBackToHome
+        LevelNotFoundDialog(
+            onBackToHome = onBackToHome
         )
-
         return
     }
 
@@ -56,45 +46,24 @@ fun LevelIntroScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+            .padding(
+                horizontal = NightSpacing.screenHorizontal,
+                vertical = NightSpacing.screenVertical
+            ),
         verticalArrangement = Arrangement.Top
     ) {
-        Text(
-            text = level.title,
-            style = MaterialTheme.typography.headlineMedium
+        LevelIntroHeader(
+            title = level.title,
+            subtitle = level.subtitle
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
-        Text(
-            text = level.subtitle,
-            style = MaterialTheme.typography.titleMedium
+        NarrativeMessageCard(
+            message = level.narrativeMessage
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(PaddingValues(16.dp))
-            ) {
-                Text(
-                    text = "Mensaje recibido",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = level.narrativeMessage,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
         EnemyCard(
             enemyName = level.enemyName,
@@ -103,22 +72,84 @@ fun LevelIntroScreen(
             survivalTip = level.survivalTip
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
-        Button(
-            onClick = onStartLevel,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Iniciar")
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedButton(
-            onClick = onBackToHome,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Volver")
-        }
+        LevelIntroActions(
+            onStartLevel = onStartLevel,
+            onBackToHome = onBackToHome
+        )
     }
+}
+
+@Composable
+private fun LevelIntroHeader(
+    title: String,
+    subtitle: String
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.headlineMedium
+    )
+
+    Spacer(modifier = Modifier.height(NightSpacing.extraSmall))
+
+    Text(
+        text = subtitle,
+        style = MaterialTheme.typography.titleMedium
+    )
+}
+
+@Composable
+private fun NarrativeMessageCard(
+    message: String
+) {
+    NightBaseCard {
+        Text(
+            text = "Mensaje recibido",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(NightSpacing.small))
+
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+private fun LevelIntroActions(
+    onStartLevel: () -> Unit,
+    onBackToHome: () -> Unit
+) {
+    NightPrimaryButton(
+        text = "Iniciar",
+        onClick = onStartLevel,
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(modifier = Modifier.height(NightSpacing.medium))
+
+    NightSecondaryButton(
+        text = "Volver",
+        onClick = onBackToHome,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun LevelNotFoundDialog(
+    onBackToHome: () -> Unit
+) {
+    NightMessageDialog(
+        title = "Nivel no encontrado",
+        message = "No se pudo cargar la información de esta noche.",
+        confirmText = "Volver",
+        dismissText = null,
+        icon = Icons.Default.Warning,
+        iconColor = CheeseYellow,
+        onConfirm = onBackToHome,
+        onDismiss = onBackToHome
+    )
 }

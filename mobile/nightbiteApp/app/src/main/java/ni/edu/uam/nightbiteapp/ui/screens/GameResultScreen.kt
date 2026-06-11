@@ -2,7 +2,6 @@ package ni.edu.uam.nightbiteapp.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,18 +14,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import ni.edu.uam.nightbiteapp.ui.components.NightBaseCard
+import ni.edu.uam.nightbiteapp.ui.components.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.NightSecondaryButton
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.model.GameResultContent
 import ni.edu.uam.nightbiteapp.ui.model.GameResultType
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
@@ -51,7 +49,10 @@ fun GameResultScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+            .padding(
+                horizontal = NightSpacing.screenHorizontal,
+                vertical = NightSpacing.screenVertical
+            ),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -60,64 +61,44 @@ fun GameResultScreen(
             content = content
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
         content.stars?.let { stars ->
             StarRating(stars = stars)
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
         }
 
         ResultMessageCard(content = content)
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
         ResultDetailsCard(content = content)
 
         content.rewardMessage?.let { reward ->
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
             RewardCard(message = reward)
         }
 
         content.illustrationDescription?.let { description ->
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
             IllustrationPlaceholder(description = description)
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.section))
 
-        if (showContinueButton) {
-            Button(
-                onClick = onContinue,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = continueButtonText(resultType))
-            }
+        ResultActions(
+            resultType = resultType,
+            showContinueButton = showContinueButton,
+            showRetryButton = showRetryButton,
+            onContinue = onContinue,
+            onRetryLevel = onRetryLevel,
+            onBackToHome = onBackToHome
+        )
 
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        if (showRetryButton) {
-            Button(
-                onClick = onRetryLevel,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Intentar nuevamente")
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        OutlinedButton(
-            onClick = onBackToHome,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Volver al mapa")
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
     }
 }
 
@@ -142,7 +123,7 @@ private fun ResultHeader(
         tint = CheeseYellow
     )
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(NightSpacing.medium))
 
     Text(
         text = content.title,
@@ -150,7 +131,7 @@ private fun ResultHeader(
         textAlign = TextAlign.Center
     )
 
-    Spacer(modifier = Modifier.height(6.dp))
+    Spacer(modifier = Modifier.height(NightSpacing.small))
 
     Text(
         text = content.subtitle,
@@ -185,15 +166,12 @@ private fun StarRating(
 private fun ResultMessageCard(
     content: GameResultContent
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
+    NightBaseCard {
         Text(
             text = content.message,
-            modifier = Modifier.padding(PaddingValues(16.dp)),
             style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -206,28 +184,21 @@ private fun ResultDetailsCard(
         return
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(PaddingValues(16.dp))
-        ) {
+    NightBaseCard {
+        Text(
+            text = "Resumen de la jornada",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(NightSpacing.medium))
+
+        content.details.forEach { detail ->
             Text(
-                text = "Resumen de la jornada",
-                style = MaterialTheme.typography.titleMedium
+                text = "• $detail",
+                style = MaterialTheme.typography.bodyMedium
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            content.details.forEach { detail ->
-                Text(
-                    text = "• $detail",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-            }
+            Spacer(modifier = Modifier.height(NightSpacing.extraSmall))
         }
     }
 }
@@ -236,12 +207,8 @@ private fun ResultDetailsCard(
 private fun RewardCard(
     message: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
+    NightBaseCard {
         Row(
-            modifier = Modifier.padding(PaddingValues(16.dp)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -250,7 +217,7 @@ private fun RewardCard(
                 tint = CheeseYellow
             )
 
-            Spacer(modifier = Modifier.padding(horizontal = 6.dp))
+            Spacer(modifier = Modifier.padding(horizontal = NightSpacing.small))
 
             Text(
                 text = message,
@@ -264,14 +231,9 @@ private fun RewardCard(
 private fun IllustrationPlaceholder(
     description: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
+    NightBaseCard {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(PaddingValues(20.dp)),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -279,7 +241,7 @@ private fun IllustrationPlaceholder(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.small))
 
             Text(
                 text = description,
@@ -288,6 +250,42 @@ private fun IllustrationPlaceholder(
             )
         }
     }
+}
+
+@Composable
+private fun ResultActions(
+    resultType: GameResultType,
+    showContinueButton: Boolean,
+    showRetryButton: Boolean,
+    onContinue: () -> Unit,
+    onRetryLevel: () -> Unit,
+    onBackToHome: () -> Unit
+) {
+    if (showContinueButton) {
+        NightPrimaryButton(
+            text = continueButtonText(resultType),
+            onClick = onContinue,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(NightSpacing.medium))
+    }
+
+    if (showRetryButton) {
+        NightPrimaryButton(
+            text = "Intentar nuevamente",
+            onClick = onRetryLevel,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(NightSpacing.medium))
+    }
+
+    NightSecondaryButton(
+        text = "Volver al mapa",
+        onClick = onBackToHome,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 private fun shouldShowContinueButton(

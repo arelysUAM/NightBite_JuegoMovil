@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -36,9 +37,13 @@ fun NightTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    icon: ImageVector,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    leadingIcon: ImageVector? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    isPassword: Boolean = false,
+    enabled: Boolean = true,
+    singleLine: Boolean = true,
     isError: Boolean = false,
     isSuccess: Boolean = false,
     errorMessage: String? = null,
@@ -48,6 +53,14 @@ fun NightTextField(
     reserveErrorSpace: Boolean = false,
     fieldHeight: Dp = NightSizes.textFieldHeight
 ) {
+    val finalLeadingIcon = leadingIcon ?: icon
+
+    val finalVisualTransformation = if (isPassword) {
+        PasswordVisualTransformation()
+    } else {
+        visualTransformation
+    }
+
     val indicatorColor = when {
         isError -> PizzaRed
         isSuccess -> NeonGreen
@@ -55,12 +68,14 @@ fun NightTextField(
     }
 
     val leadingIconColor = when {
+        !enabled -> LavenderGray
         isError -> PizzaRed
         isSuccess -> NeonGreen
         else -> NightSurface
     }
 
     val trailingIconColor = when {
+        !enabled -> LavenderGray
         isError -> PizzaRed
         isSuccess -> NeonGreen
         else -> NightSurface
@@ -72,6 +87,7 @@ fun NightTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
+            enabled = enabled,
             isError = isError,
             placeholder = {
                 Text(
@@ -79,17 +95,20 @@ fun NightTextField(
                     fontSize = 14.sp
                 )
             },
-            leadingIcon = {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    modifier = Modifier.size(NightSizes.iconMedium)
-                )
+            leadingIcon = finalLeadingIcon?.let { iconValue ->
+                {
+                    Icon(
+                        imageVector = iconValue,
+                        contentDescription = label,
+                        modifier = Modifier.size(NightSizes.iconMedium)
+                    )
+                }
             },
             trailingIcon = {
                 if (trailingIcon != null && onTrailingIconClick != null) {
                     IconButton(
-                        onClick = onTrailingIconClick
+                        onClick = onTrailingIconClick,
+                        enabled = enabled
                     ) {
                         Icon(
                             imageVector = trailingIcon,
@@ -99,8 +118,8 @@ fun NightTextField(
                     }
                 }
             },
-            singleLine = true,
-            visualTransformation = visualTransformation,
+            singleLine = singleLine,
+            visualTransformation = finalVisualTransformation,
             shape = NightShapes.textField,
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = FieldBackground,
@@ -110,22 +129,27 @@ fun NightTextField(
 
                 focusedIndicatorColor = indicatorColor,
                 unfocusedIndicatorColor = indicatorColor,
+                disabledIndicatorColor = LavenderGray,
                 errorIndicatorColor = PizzaRed,
 
                 focusedTextColor = DarkText,
                 unfocusedTextColor = DarkText,
+                disabledTextColor = DarkText.copy(alpha = 0.55f),
                 errorTextColor = DarkText,
 
                 focusedLeadingIconColor = leadingIconColor,
                 unfocusedLeadingIconColor = leadingIconColor,
+                disabledLeadingIconColor = LavenderGray,
                 errorLeadingIconColor = PizzaRed,
 
                 focusedTrailingIconColor = trailingIconColor,
                 unfocusedTrailingIconColor = trailingIconColor,
+                disabledTrailingIconColor = LavenderGray,
                 errorTrailingIconColor = PizzaRed,
 
                 focusedPlaceholderColor = LavenderGray,
                 unfocusedPlaceholderColor = LavenderGray,
+                disabledPlaceholderColor = LavenderGray.copy(alpha = 0.65f),
                 errorPlaceholderColor = LavenderGray,
 
                 cursorColor = CheeseYellow,

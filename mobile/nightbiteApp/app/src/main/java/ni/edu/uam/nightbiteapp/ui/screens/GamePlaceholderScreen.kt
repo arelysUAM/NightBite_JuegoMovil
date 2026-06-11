@@ -9,18 +9,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,14 +29,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import ni.edu.uam.nightbiteapp.data.local.mock.NightLevelsData
+import ni.edu.uam.nightbiteapp.ui.components.NightBaseCard
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.components.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.NightSecondaryButton
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.model.GameResultType
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.unit.dp
 
 /**
  * Simulador temporal de una partida.
@@ -69,64 +69,35 @@ fun GamePlaceholderScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp)
+            .padding(
+                horizontal = NightSpacing.screenHorizontal,
+                vertical = NightSpacing.screenVertical
+            )
     ) {
-        IconButton(
+        PauseButton(
             onClick = {
                 showPauseMenu = true
             },
             modifier = Modifier.align(Alignment.TopEnd)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Pause,
-                contentDescription = "Pausar nivel"
-            )
-        }
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 44.dp),
+                .padding(top = NightSpacing.section),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = level?.title ?: "Noche desconocida",
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center
+            GamePlaceholderHeader(
+                title = level?.title ?: "Noche desconocida",
+                subtitle = level?.subtitle ?: "Nivel no encontrado"
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
-            Text(
-                text = level?.subtitle ?: "Nivel no encontrado",
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center
-            )
+            SimulatorInfoCard()
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(PaddingValues(16.dp))
-                ) {
-                    Text(
-                        text = "Simulador temporal",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Selecciona un resultado para probar el flujo de navegación mientras se desarrolla el gameplay real."
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
             when (levelId) {
                 0 -> TutorialResultButtons(
@@ -144,55 +115,88 @@ fun GamePlaceholderScreen(
         }
     }
 
-    if (showPauseMenu) {
-        PauseMenuDialog(
-            onContinue = {
-                showPauseMenu = false
-            },
-            onRestart = {
-                showPauseMenu = false
-                showRestartConfirmation = true
-            },
-            onBackToHome = {
-                showPauseMenu = false
-                showExitConfirmation = true
-            }
+    GamePlaceholderDialogs(
+        showPauseMenu = showPauseMenu,
+        showRestartConfirmation = showRestartConfirmation,
+        showExitConfirmation = showExitConfirmation,
+        onContinue = {
+            showPauseMenu = false
+        },
+        onRestartRequest = {
+            showPauseMenu = false
+            showRestartConfirmation = true
+        },
+        onExitRequest = {
+            showPauseMenu = false
+            showExitConfirmation = true
+        },
+        onConfirmRestart = {
+            showRestartConfirmation = false
+            onRestartLevel()
+        },
+        onDismissRestart = {
+            showRestartConfirmation = false
+        },
+        onConfirmExit = {
+            showExitConfirmation = false
+            onBackToHome()
+        },
+        onDismissExit = {
+            showExitConfirmation = false
+        }
+    )
+}
+
+@Composable
+private fun PauseButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier
+    ) {
+        Icon(
+            imageVector = Icons.Default.Pause,
+            contentDescription = "Pausar nivel",
+            tint = CheeseYellow
         )
     }
+}
 
-    if (showRestartConfirmation) {
-        NightMessageDialog(
-            title = "Reiniciar nivel",
-            message = "¿Deseas reiniciar esta noche? Se perderá el progreso actual del nivel.",
-            confirmText = "Reiniciar",
-            dismissText = "Cancelar",
-            icon = Icons.Default.Refresh,
-            iconColor = CheeseYellow,
-            onConfirm = {
-                showRestartConfirmation = false
-                onRestartLevel()
-            },
-            onDismiss = {
-                showRestartConfirmation = false
-            }
+@Composable
+private fun GamePlaceholderHeader(
+    title: String,
+    subtitle: String
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.headlineMedium,
+        textAlign = TextAlign.Center
+    )
+
+    Spacer(modifier = Modifier.height(NightSpacing.extraSmall))
+
+    Text(
+        text = subtitle,
+        style = MaterialTheme.typography.titleMedium,
+        textAlign = TextAlign.Center
+    )
+}
+
+@Composable
+private fun SimulatorInfoCard() {
+    NightBaseCard {
+        Text(
+            text = "Simulador temporal",
+            style = MaterialTheme.typography.titleMedium
         )
-    }
 
-    if (showExitConfirmation) {
-        NightMessageDialog(
-            title = "Volver al mapa",
-            message = "¿Deseas abandonar esta noche y volver al mapa principal? Se perderá el progreso actual.",
-            confirmText = "Volver al mapa",
-            dismissText = "Cancelar",
-            icon = Icons.Default.Warning,
-            iconColor = CheeseYellow,
-            onConfirm = {
-                showExitConfirmation = false
-                onBackToHome()
-            },
-            onDismiss = {
-                showExitConfirmation = false
-            }
+        Spacer(modifier = Modifier.height(NightSpacing.small))
+
+        Text(
+            text = "Selecciona un resultado para probar el flujo de navegación mientras se desarrolla el gameplay real.",
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }
@@ -257,18 +261,19 @@ private fun ResultButtonsRow(
 ) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleMedium
+        style = MaterialTheme.typography.titleMedium,
+        textAlign = TextAlign.Center
     )
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(NightSpacing.medium))
 
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(
-            space = 12.dp,
+            space = NightSpacing.medium,
             alignment = Alignment.CenterHorizontally
         ),
-        contentPadding = PaddingValues(horizontal = 8.dp)
+        contentPadding = PaddingValues(horizontal = NightSpacing.small)
     ) {
         items(results) { result ->
             ResultButton(
@@ -286,17 +291,57 @@ private fun ResultButton(
     text: String,
     onClick: () -> Unit
 ) {
-    Button(
+    NightPrimaryButton(
+        text = text,
         onClick = onClick,
-        modifier = Modifier.width(190.dp),
-        contentPadding = PaddingValues(
-            horizontal = 12.dp,
-            vertical = 12.dp
+        modifier = Modifier.width(190.dp)
+    )
+}
+
+@Composable
+private fun GamePlaceholderDialogs(
+    showPauseMenu: Boolean,
+    showRestartConfirmation: Boolean,
+    showExitConfirmation: Boolean,
+    onContinue: () -> Unit,
+    onRestartRequest: () -> Unit,
+    onExitRequest: () -> Unit,
+    onConfirmRestart: () -> Unit,
+    onDismissRestart: () -> Unit,
+    onConfirmExit: () -> Unit,
+    onDismissExit: () -> Unit
+) {
+    if (showPauseMenu) {
+        PauseMenuDialog(
+            onContinue = onContinue,
+            onRestart = onRestartRequest,
+            onBackToHome = onExitRequest
         )
-    ) {
-        Text(
-            text = text,
-            textAlign = TextAlign.Center
+    }
+
+    if (showRestartConfirmation) {
+        NightMessageDialog(
+            title = "Reiniciar nivel",
+            message = "¿Deseas reiniciar esta noche? Se perderá el progreso actual del nivel.",
+            confirmText = "Reiniciar",
+            dismissText = "Cancelar",
+            icon = Icons.Default.Refresh,
+            iconColor = CheeseYellow,
+            onConfirm = onConfirmRestart,
+            onDismiss = onDismissRestart
+        )
+    }
+
+    if (showExitConfirmation) {
+        NightMessageDialog(
+            title = "Volver al mapa",
+            message = "¿Deseas abandonar esta noche y volver al mapa principal? Se perderá el progreso actual.",
+            confirmText = "Volver al mapa",
+            dismissText = "Cancelar",
+            icon = Icons.Default.Warning,
+            iconColor = CheeseYellow,
+            onConfirm = onConfirmExit,
+            onDismiss = onDismissExit
         )
     }
 }
@@ -317,33 +362,21 @@ private fun PauseMenuDialog(
         onConfirm = onContinue,
         onDismiss = onContinue,
         additionalContent = {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.small))
 
-            OutlinedButton(
+            NightSecondaryButton(
+                text = "Reiniciar nivel",
                 onClick = onRestart,
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Reiniciar nivel"
-                )
+            )
 
-                Text(text = " Reiniciar nivel")
-            }
+            Spacer(modifier = Modifier.height(NightSpacing.small))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedButton(
+            NightSecondaryButton(
+                text = "Volver al mapa",
                 onClick = onBackToHome,
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Volver al mapa"
-                )
-
-                Text(text = " Volver al mapa")
-            }
+            )
         }
     )
 }
