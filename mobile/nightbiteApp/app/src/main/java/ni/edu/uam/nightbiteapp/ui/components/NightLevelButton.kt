@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
@@ -19,6 +18,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import ni.edu.uam.nightbiteapp.ui.design.NightShapes
+import ni.edu.uam.nightbiteapp.ui.design.NightSizes
 import ni.edu.uam.nightbiteapp.ui.model.NightLevel
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.DarkText
@@ -31,9 +32,6 @@ fun NightLevelButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val buttonSize = 88.dp
-    val cornerShape = RoundedCornerShape(22.dp)
-
     val mainColor = if (level.isUnlocked) {
         CheeseYellow
     } else {
@@ -49,29 +47,29 @@ fun NightLevelButton(
     val levelNumber = level.id + 1
 
     Box(
-        modifier = modifier.size(108.dp),
+        modifier = modifier.size(NightSizes.levelButtonContainer),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
-                .size(buttonSize)
+                .size(NightSizes.levelButton)
                 .offset(x = 10.dp, y = 10.dp)
                 .background(
                     color = shadowColor,
-                    shape = cornerShape
+                    shape = NightShapes.levelButton
                 )
         )
 
         Box(
             modifier = Modifier
-                .size(buttonSize)
+                .size(NightSizes.levelButton)
                 .shadow(
                     elevation = 6.dp,
-                    shape = cornerShape
+                    shape = NightShapes.levelButton
                 )
                 .background(
                     color = mainColor,
-                    shape = cornerShape
+                    shape = NightShapes.levelButton
                 )
                 .then(
                     if (level.isUnlocked) {
@@ -91,37 +89,45 @@ fun NightLevelButton(
         }
 
         if (!level.isUnlocked) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .size(44.dp)
-                    .background(
-                        color = Color(0xFF17345A),
-                        shape = CircleShape
-                    )
-                    .shadow(
-                        elevation = 4.dp,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(
-                            color = NeonCyan,
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = "Nivel bloqueado",
-                        tint = DarkText,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
+            LockedLevelBadge(
+                modifier = Modifier.align(Alignment.BottomEnd)
+            )
+        }
+    }
+}
+
+@Composable
+private fun LockedLevelBadge(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(44.dp)
+            .background(
+                color = Color(0xFF17345A),
+                shape = CircleShape
+            )
+            .shadow(
+                elevation = 4.dp,
+                shape = CircleShape
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(
+                    color = NeonCyan,
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = "Nivel bloqueado",
+                tint = DarkText,
+                modifier = Modifier.size(22.dp)
+            )
         }
     }
 }
