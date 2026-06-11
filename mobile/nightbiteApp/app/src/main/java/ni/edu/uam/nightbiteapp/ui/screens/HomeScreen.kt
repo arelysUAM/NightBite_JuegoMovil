@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,10 @@ import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.viewmodel.HomeViewModel
 import ni.edu.uam.nightbiteapp.ui.model.NightLevel
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.widthIn
+import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
+import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 
 @Composable
 fun HomeScreen(
@@ -101,7 +106,6 @@ fun HomeScreen(
 
         HomeContent(
             isLoading = uiState.isLoading,
-            hasPlayer = uiState.hasPlayer,
             levels = uiState.levels,
             onOpenSettings = {
                 showSettingsPanel = true
@@ -161,43 +165,54 @@ private fun HomeBackground() {
 @Composable
 private fun HomeContent(
     isLoading: Boolean,
-    hasPlayer: Boolean,
     levels: List<NightLevel>,
     onOpenSettings: () -> Unit,
     onOpenPlayer: () -> Unit,
     onOpenAchievements: () -> Unit,
     onOpenLevel: (Int) -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start = NightSpacing.screenHorizontal,
-                top = NightSpacing.screenVertical,
-                end = NightSpacing.screenHorizontal,
-                bottom = NightSpacing.screenVertical
-            )
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize()
     ) {
-        HomeTopActions(
-            onOpenSettings = onOpenSettings,
-            onOpenPlayer = onOpenPlayer,
-            onOpenAchievements = onOpenAchievements
-        )
+        val windowSize = getNightWindowSize(maxWidth)
+        val dimensions = nightDimensionsFor(windowSize)
 
-        HomeLevelSelector(
-            isLoading = isLoading,
-            levels = levels,
-            onOpenLevel = onOpenLevel,
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.Center)
-                .padding(horizontal = NightSpacing.section)
-        )
+                .fillMaxSize()
+                .padding(
+                    start = dimensions.screenHorizontalPadding,
+                    top = dimensions.screenVerticalPadding,
+                    end = dimensions.screenHorizontalPadding,
+                    bottom = dimensions.screenVerticalPadding
+                )
+        ) {
+            HomeTopActions(
+                iconSize = dimensions.iconButtonSize,
+                itemSpacing = dimensions.itemSpacing,
+                onOpenSettings = onOpenSettings,
+                onOpenPlayer = onOpenPlayer,
+                onOpenAchievements = onOpenAchievements
+            )
+
+            HomeLevelSelector(
+                isLoading = isLoading,
+                levels = levels,
+                onOpenLevel = onOpenLevel,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = dimensions.contentMaxWidth)
+                    .align(Alignment.Center)
+                    .padding(horizontal = dimensions.sectionSpacing)
+            )
+        }
     }
 }
 
 @Composable
 private fun HomeTopActions(
+    iconSize: Dp,
+    itemSpacing: Dp,
     onOpenSettings: () -> Unit,
     onOpenPlayer: () -> Unit,
     onOpenAchievements: () -> Unit
@@ -210,26 +225,26 @@ private fun HomeTopActions(
             contentDescription = "Configuración",
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .size(NightSizes.iconLarge),
+                .size(iconSize),
             onClick = onOpenSettings
         )
 
         Column(
             modifier = Modifier.align(Alignment.TopEnd),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(NightSpacing.medium)
+            verticalArrangement = Arrangement.spacedBy(itemSpacing)
         ) {
             HomeImageButton(
                 drawableId = R.drawable.boton_planilla,
                 contentDescription = "Plantilla del repartidor",
-                modifier = Modifier.size(NightSizes.iconLarge),
+                modifier = Modifier.size(iconSize),
                 onClick = onOpenPlayer
             )
 
             HomeImageButton(
                 drawableId = R.drawable.boton_logros,
                 contentDescription = "Libro de logros",
-                modifier = Modifier.size(NightSizes.iconLarge),
+                modifier = Modifier.size(iconSize),
                 onClick = onOpenAchievements
             )
         }

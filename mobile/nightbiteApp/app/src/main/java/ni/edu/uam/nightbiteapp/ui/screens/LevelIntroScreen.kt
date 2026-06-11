@@ -23,6 +23,12 @@ import ni.edu.uam.nightbiteapp.ui.components.NightSecondaryButton
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.model.NightLevel
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.Dp
+import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
+import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 
 /**
  * Pantalla previa antes de iniciar una noche.
@@ -42,43 +48,80 @@ fun LevelIntroScreen(
         return
     }
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(
-                horizontal = NightSpacing.screenHorizontal,
-                vertical = NightSpacing.screenVertical
-            ),
-        verticalArrangement = Arrangement.Top
     ) {
-        LevelIntroHeader(
-            title = level.title,
-            subtitle = level.subtitle
-        )
+        val windowSize = getNightWindowSize(maxWidth)
+        val dimensions = nightDimensionsFor(windowSize)
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal = dimensions.screenHorizontalPadding,
+                    vertical = dimensions.screenVerticalPadding
+                ),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Column(
+                modifier = Modifier.widthIn(
+                    max = dimensions.cardMaxWidth
+                )
+            ) {
+                LevelIntroHeader(
+                    title = level.title,
+                    subtitle = level.subtitle
+                )
 
-        NarrativeMessageCard(
-            message = level.narrativeMessage
-        )
+                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+                NarrativeMessageCard(
+                    message = level.narrativeMessage
+                )
 
-        EnemyCard(
-            enemyName = level.enemyName,
-            enemyDescription = level.enemyDescription,
-            enemyBehavior = level.enemyBehavior,
-            survivalTip = level.survivalTip
-        )
+                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+                EnemyCard(
+                    enemyName = level.enemyName,
+                    enemyDescription = level.enemyDescription,
+                    enemyBehavior = level.enemyBehavior,
+                    survivalTip = level.survivalTip
+                )
 
-        LevelIntroActions(
-            onStartLevel = onStartLevel,
-            onBackToHome = onBackToHome
-        )
+                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
+
+                LevelIntroActions(
+                    itemSpacing = dimensions.itemSpacing,
+                    onStartLevel = onStartLevel,
+                    onBackToHome = onBackToHome
+                )
+            }
+        }
     }
+}
+
+@Composable
+private fun LevelIntroActions(
+    itemSpacing: Dp,
+    onStartLevel: () -> Unit,
+    onBackToHome: () -> Unit
+) {
+    NightPrimaryButton(
+        text = "Iniciar",
+        onClick = onStartLevel,
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(modifier = Modifier.height(itemSpacing))
+
+    NightSecondaryButton(
+        text = "Volver",
+        onClick = onBackToHome,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable
@@ -116,26 +159,6 @@ private fun NarrativeMessageCard(
             style = MaterialTheme.typography.bodyMedium
         )
     }
-}
-
-@Composable
-private fun LevelIntroActions(
-    onStartLevel: () -> Unit,
-    onBackToHome: () -> Unit
-) {
-    NightPrimaryButton(
-        text = "Iniciar",
-        onClick = onStartLevel,
-        modifier = Modifier.fillMaxWidth()
-    )
-
-    Spacer(modifier = Modifier.height(NightSpacing.medium))
-
-    NightSecondaryButton(
-        text = "Volver",
-        onClick = onBackToHome,
-        modifier = Modifier.fillMaxWidth()
-    )
 }
 
 @Composable

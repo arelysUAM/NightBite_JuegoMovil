@@ -31,6 +31,10 @@ import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerDetailUiState
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerDetailViewModel
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.unit.Dp
+import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
+import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 
 /**
  * Pantalla que muestra la ficha completa del repartidor.
@@ -54,62 +58,89 @@ fun PlayerDetailScreen(
         }
     }
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(
-                horizontal = NightSpacing.screenHorizontal,
-                vertical = NightSpacing.screenVertical
-            ),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        PlayerDetailHeader()
+        val windowSize = getNightWindowSize(maxWidth)
+        val dimensions = nightDimensionsFor(windowSize)
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
-
-        when {
-            userId == null -> {
-                EmptyPlayerDetailContent(
-                    message = "No hay una sesión activa.",
-                    buttonText = "Volver al menú principal",
-                    onButtonClick = onBackToHome
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal = dimensions.screenHorizontalPadding,
+                    vertical = dimensions.screenVerticalPadding
+                ),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            PlayerDetailHeader(
+                modifier = Modifier.widthIn(
+                    max = dimensions.cardMaxWidth
                 )
+            )
+
+            Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
+
+            when {
+                userId == null -> {
+                    EmptyPlayerDetailContent(
+                        message = "No hay una sesión activa.",
+                        buttonText = "Volver al menú principal",
+                        cardMaxWidth = dimensions.cardMaxWidth,
+                        sectionSpacing = dimensions.sectionSpacing,
+                        onButtonClick = onBackToHome
+                    )
+                }
+
+                uiState is PlayerDetailUiState.Loading -> {
+                    LoadingPlayerDetailContent(
+                        sectionSpacing = dimensions.sectionSpacing,
+                        itemSpacing = dimensions.itemSpacing
+                    )
+                }
+
+                uiState is PlayerDetailUiState.Success -> {
+                    PlayerDetailContent(
+                        user = uiState.user,
+                        cardMaxWidth = dimensions.cardMaxWidth,
+                        sectionSpacing = dimensions.sectionSpacing,
+                        itemSpacing = dimensions.itemSpacing,
+                        onBackToHome = onBackToHome,
+                        onNavigateToPlayerCreation = onNavigateToPlayerCreation,
+                        onEditPlayer = onEditPlayer
+                    )
+                }
+
+                uiState is PlayerDetailUiState.Error -> {
+                    EmptyPlayerDetailContent(
+                        message = uiState.message,
+                        buttonText = "Volver al menú principal",
+                        cardMaxWidth = dimensions.cardMaxWidth,
+                        sectionSpacing = dimensions.sectionSpacing,
+                        onButtonClick = onBackToHome
+                    )
+                }
+
+                else -> {
+                    LoadingPlayerDetailContent(
+                        sectionSpacing = dimensions.sectionSpacing,
+                        itemSpacing = dimensions.itemSpacing
+                    )
+                }
             }
 
-            uiState is PlayerDetailUiState.Loading -> {
-                LoadingPlayerDetailContent()
-            }
-
-            uiState is PlayerDetailUiState.Success -> {
-                PlayerDetailContent(
-                    user = uiState.user,
-                    onBackToHome = onBackToHome,
-                    onNavigateToPlayerCreation = onNavigateToPlayerCreation,
-                    onEditPlayer = onEditPlayer
-                )
-            }
-
-            uiState is PlayerDetailUiState.Error -> {
-                EmptyPlayerDetailContent(
-                    message = uiState.message,
-                    buttonText = "Volver al menú principal",
-                    onButtonClick = onBackToHome
-                )
-            }
-
-            else -> {
-                LoadingPlayerDetailContent()
-            }
+            Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
         }
-
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
     }
 }
 
 @Composable
-private fun PlayerDetailHeader() {
+private fun PlayerDetailHeader(
+    modifier: Modifier = Modifier
+) {
     Text(
         text = "Ficha del repartidor",
         style = MaterialTheme.typography.headlineMedium
@@ -119,23 +150,27 @@ private fun PlayerDetailHeader() {
 
     Text(
         text = "Consulta los datos de tu contratación nocturna.",
-        style = MaterialTheme.typography.bodyMedium
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = modifier
     )
 }
 
 @Composable
-private fun LoadingPlayerDetailContent() {
+private fun LoadingPlayerDetailContent(
+    sectionSpacing: Dp,
+    itemSpacing: Dp
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = NightSpacing.section),
+            .padding(top = sectionSpacing),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
             color = CheeseYellow
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.medium))
+        Spacer(modifier = Modifier.height(itemSpacing))
 
         Text(text = "Cargando ficha del repartidor...")
     }
@@ -145,11 +180,13 @@ private fun LoadingPlayerDetailContent() {
 private fun EmptyPlayerDetailContent(
     message: String,
     buttonText: String,
+    cardMaxWidth: Dp,
+    sectionSpacing: Dp,
     onButtonClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.widthIn(
-            max = NightSizes.settingsPanelMaxWidth
+            max = cardMaxWidth
         ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -160,7 +197,7 @@ private fun EmptyPlayerDetailContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Spacer(modifier = Modifier.height(sectionSpacing))
 
         NightPrimaryButton(
             text = buttonText,
@@ -173,6 +210,9 @@ private fun EmptyPlayerDetailContent(
 @Composable
 private fun PlayerDetailContent(
     user: UserResponse,
+    cardMaxWidth: Dp,
+    sectionSpacing: Dp,
+    itemSpacing: Dp,
     onBackToHome: () -> Unit,
     onNavigateToPlayerCreation: () -> Unit,
     onEditPlayer: () -> Unit
@@ -196,15 +236,15 @@ private fun PlayerDetailContent(
 
     Column(
         modifier = Modifier.widthIn(
-            max = NightSizes.settingsPanelMaxWidth
+            max = cardMaxWidth
         )
-    ) {
+    ){
         ContractCard(
             playerId = player.id,
             nickname = player.nickname
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Spacer(modifier = Modifier.height(sectionSpacing))
 
         DriverDataCard(
             driverName = player.driverName,
@@ -213,11 +253,11 @@ private fun PlayerDetailContent(
             motorcycleType = player.motorcycleType
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Spacer(modifier = Modifier.height(sectionSpacing))
 
         WorkDataCard()
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Spacer(modifier = Modifier.height(sectionSpacing))
 
         NightPrimaryButton(
             text = "Editar ficha",
@@ -225,7 +265,7 @@ private fun PlayerDetailContent(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.medium))
+        Spacer(modifier = Modifier.height(itemSpacing))
 
         NightSecondaryButton(
             text = "Volver al menú principal",

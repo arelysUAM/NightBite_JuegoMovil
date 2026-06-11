@@ -28,6 +28,11 @@ import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.model.GameResultContent
 import ni.edu.uam.nightbiteapp.ui.model.GameResultType
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.unit.Dp
+import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
+import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 
 /**
  * Pantalla reutilizable para mostrar los resultados de una noche.
@@ -45,67 +50,85 @@ fun GameResultScreen(
     val showContinueButton = shouldShowContinueButton(resultType)
     val showRetryButton = shouldShowRetryButton(resultType)
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(
-                horizontal = NightSpacing.screenHorizontal,
-                vertical = NightSpacing.screenVertical
-            ),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ResultHeader(
-            resultType = resultType,
-            content = content
-        )
+        val windowSize = getNightWindowSize(maxWidth)
+        val dimensions = nightDimensionsFor(windowSize)
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal = dimensions.screenHorizontalPadding,
+                    vertical = dimensions.screenVerticalPadding
+                ),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Column(
+                modifier = Modifier.widthIn(
+                    max = dimensions.cardMaxWidth
+                ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                ResultHeader(
+                    resultType = resultType,
+                    content = content,
+                    itemSpacing = dimensions.itemSpacing
+                )
 
-        content.stars?.let { stars ->
-            StarRating(stars = stars)
+                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
 
-            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+                content.stars?.let { stars ->
+                    StarRating(stars = stars)
+
+                    Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
+                }
+
+                ResultMessageCard(content = content)
+
+                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
+
+                ResultDetailsCard(content = content)
+
+                content.rewardMessage?.let { reward ->
+                    Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
+
+                    RewardCard(message = reward)
+                }
+
+                content.illustrationDescription?.let { description ->
+                    Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
+
+                    IllustrationPlaceholder(description = description)
+                }
+
+                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
+
+                ResultActions(
+                    resultType = resultType,
+                    showContinueButton = showContinueButton,
+                    showRetryButton = showRetryButton,
+                    itemSpacing = dimensions.itemSpacing,
+                    onContinue = onContinue,
+                    onRetryLevel = onRetryLevel,
+                    onBackToHome = onBackToHome
+                )
+
+                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
+            }
         }
-
-        ResultMessageCard(content = content)
-
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
-
-        ResultDetailsCard(content = content)
-
-        content.rewardMessage?.let { reward ->
-            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
-
-            RewardCard(message = reward)
-        }
-
-        content.illustrationDescription?.let { description ->
-            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
-
-            IllustrationPlaceholder(description = description)
-        }
-
-        Spacer(modifier = Modifier.height(NightSpacing.section))
-
-        ResultActions(
-            resultType = resultType,
-            showContinueButton = showContinueButton,
-            showRetryButton = showRetryButton,
-            onContinue = onContinue,
-            onRetryLevel = onRetryLevel,
-            onBackToHome = onBackToHome
-        )
-
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
     }
 }
 
 @Composable
 private fun ResultHeader(
     resultType: GameResultType,
-    content: GameResultContent
+    content: GameResultContent,
+    itemSpacing: Dp
 ) {
     val icon = when (resultType) {
         GameResultType.TUTORIAL_THREE_STARS,
@@ -123,7 +146,7 @@ private fun ResultHeader(
         tint = CheeseYellow
     )
 
-    Spacer(modifier = Modifier.height(NightSpacing.medium))
+    Spacer(modifier = Modifier.height(itemSpacing))
 
     Text(
         text = content.title,
@@ -131,7 +154,7 @@ private fun ResultHeader(
         textAlign = TextAlign.Center
     )
 
-    Spacer(modifier = Modifier.height(NightSpacing.small))
+    Spacer(modifier = Modifier.height(itemSpacing))
 
     Text(
         text = content.subtitle,
@@ -257,6 +280,7 @@ private fun ResultActions(
     resultType: GameResultType,
     showContinueButton: Boolean,
     showRetryButton: Boolean,
+    itemSpacing: Dp,
     onContinue: () -> Unit,
     onRetryLevel: () -> Unit,
     onBackToHome: () -> Unit
@@ -268,7 +292,7 @@ private fun ResultActions(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.medium))
+        Spacer(modifier = Modifier.height(itemSpacing))
     }
 
     if (showRetryButton) {
@@ -278,7 +302,7 @@ private fun ResultActions(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.medium))
+        Spacer(modifier = Modifier.height(itemSpacing))
     }
 
     NightSecondaryButton(

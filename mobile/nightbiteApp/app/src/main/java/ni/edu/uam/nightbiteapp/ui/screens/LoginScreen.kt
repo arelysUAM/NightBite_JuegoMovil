@@ -41,6 +41,9 @@ import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.viewmodel.LoginErrorType
 import ni.edu.uam.nightbiteapp.viewmodel.LoginUiState
 import ni.edu.uam.nightbiteapp.viewmodel.LoginViewModel
+import androidx.compose.foundation.layout.BoxWithConstraints
+import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
+import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 
 @Composable
 fun LoginScreen(
@@ -126,38 +129,47 @@ fun LoginScreen(
     ) {
         LoginBackground()
 
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(
-                    horizontal = NightSpacing.screenHorizontal,
-                    vertical = NightSpacing.extraLarge
-                ),
+                .verticalScroll(scrollState),
             contentAlignment = Alignment.Center
         ) {
-            NightLoginCard(
-                username = username,
-                password = password,
-                onUsernameChange = { value ->
-                    username = value
-                        .lowercase()
-                        .replace(" ", "")
-                },
-                onPasswordChange = { value ->
-                    password = value
-                },
-                onLoginClick = {
-                    loginViewModel.loginUser(
-                        usernameOrEmail = username,
-                        password = password
+            val windowSize = getNightWindowSize(maxWidth)
+            val dimensions = nightDimensionsFor(windowSize)
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        horizontal = dimensions.screenHorizontalPadding,
+                        vertical = dimensions.screenVerticalPadding
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                NightLoginCard(
+                    username = username,
+                    password = password,
+                    onUsernameChange = { value ->
+                        username = value
+                            .lowercase()
+                            .replace(" ", "")
+                    },
+                    onPasswordChange = { value ->
+                        password = value
+                    },
+                    onLoginClick = {
+                        loginViewModel.loginUser(
+                            usernameOrEmail = username,
+                            password = password
+                        )
+                    },
+                    onRegisterClick = onNavigateToRegister,
+                    modifier = Modifier.widthIn(
+                        max = dimensions.cardMaxWidth
                     )
-                },
-                onRegisterClick = onNavigateToRegister,
-                modifier = Modifier.widthIn(
-                    max = NightSizes.loginCardWidth
                 )
-            )
+            }
         }
 
         if (uiState is LoginUiState.Loading) {

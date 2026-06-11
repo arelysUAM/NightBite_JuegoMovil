@@ -58,6 +58,10 @@ import ni.edu.uam.nightbiteapp.ui.theme.NeonGreen
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
+import androidx.compose.foundation.layout.BoxWithConstraints
+import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
+import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
+import androidx.compose.ui.unit.Dp
 
 @Composable
 fun PlayerCreationScreen(
@@ -87,41 +91,56 @@ fun PlayerCreationScreen(
         requestExit()
     }
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(
-                horizontal = NightSpacing.screenHorizontal,
-                vertical = NightSpacing.screenVertical
-            ),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        PlayerCreationHeader()
+        val windowSize = getNightWindowSize(maxWidth)
+        val dimensions = nightDimensionsFor(windowSize)
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal = dimensions.screenHorizontalPadding,
+                    vertical = dimensions.screenVerticalPadding
+                ),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            PlayerCreationHeader(
+                modifier = Modifier.widthIn(
+                    max = dimensions.cardMaxWidth
+                )
+            )
 
-        PlayerCreationForm(
-            nickname = uiState.nickname,
-            driverName = uiState.driverName,
-            gender = uiState.gender,
-            genderOptions = viewModel.genderOptions,
-            helmetColor = uiState.helmetColor,
-            helmetColorOptions = viewModel.helmetColorOptions,
-            motorcycleType = uiState.motorcycleType,
-            motorcycleTypeOptions = viewModel.motorcycleTypeOptions,
-            isLoading = uiState.isLoading,
-            onNicknameChange = viewModel::onNicknameChange,
-            onDriverNameChange = viewModel::onDriverNameChange,
-            onGenderSelected = viewModel::onGenderSelected,
-            onHelmetColorSelected = viewModel::onHelmetColorSelected,
-            onMotorcycleTypeSelected = viewModel::onMotorcycleTypeSelected,
-            onCreatePlayer = viewModel::createPlayer,
-            onBack = {
-                requestExit()
-            }
-        )
+            Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
+
+            PlayerCreationForm(
+                nickname = uiState.nickname,
+                driverName = uiState.driverName,
+                gender = uiState.gender,
+                genderOptions = viewModel.genderOptions,
+                helmetColor = uiState.helmetColor,
+                helmetColorOptions = viewModel.helmetColorOptions,
+                motorcycleType = uiState.motorcycleType,
+                motorcycleTypeOptions = viewModel.motorcycleTypeOptions,
+                isLoading = uiState.isLoading,
+                cardMaxWidth = dimensions.cardMaxWidth,
+                sectionSpacing = dimensions.sectionSpacing,
+                itemSpacing = dimensions.itemSpacing,
+                onNicknameChange = viewModel::onNicknameChange,
+                onDriverNameChange = viewModel::onDriverNameChange,
+                onGenderSelected = viewModel::onGenderSelected,
+                onHelmetColorSelected = viewModel::onHelmetColorSelected,
+                onMotorcycleTypeSelected = viewModel::onMotorcycleTypeSelected,
+                onCreatePlayer = viewModel::createPlayer,
+                onBack = {
+                    requestExit()
+                }
+            )
+        }
     }
 
     PlayerCreationDialogs(
@@ -141,7 +160,9 @@ fun PlayerCreationScreen(
 }
 
 @Composable
-private fun PlayerCreationHeader() {
+private fun PlayerCreationHeader(
+    modifier: Modifier = Modifier
+) {
     Text(
         text = "Ficha de Contratación",
         style = MaterialTheme.typography.headlineSmall
@@ -151,7 +172,8 @@ private fun PlayerCreationHeader() {
 
     Text(
         text = "Antes de iniciar tu jornada, completa los datos básicos del repartidor asignado.",
-        style = MaterialTheme.typography.bodyMedium
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = modifier
     )
 }
 
@@ -166,6 +188,9 @@ private fun PlayerCreationForm(
     motorcycleType: String,
     motorcycleTypeOptions: List<String>,
     isLoading: Boolean,
+    cardMaxWidth: Dp,
+    sectionSpacing: Dp,
+    itemSpacing: Dp,
     onNicknameChange: (String) -> Unit,
     onDriverNameChange: (String) -> Unit,
     onGenderSelected: (String) -> Unit,
@@ -176,7 +201,7 @@ private fun PlayerCreationForm(
 ) {
     NightBaseCard(
         modifier = Modifier.widthIn(
-            max = NightSizes.settingsPanelMaxWidth
+            max = cardMaxWidth
         ),
         contentPadding = PaddingValues(
             horizontal = NightSpacing.extraLarge,
@@ -185,7 +210,7 @@ private fun PlayerCreationForm(
     ) {
         ContractSummaryCard()
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Spacer(modifier = Modifier.height(sectionSpacing))
 
         NightTextField(
             value = nickname,
@@ -197,7 +222,7 @@ private fun PlayerCreationForm(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.medium))
+        Spacer(modifier = Modifier.height(itemSpacing))
 
         NightTextField(
             value = driverName,
@@ -209,7 +234,7 @@ private fun PlayerCreationForm(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Spacer(modifier = Modifier.height(sectionSpacing))
 
         GenderSelector(
             selectedGender = gender,
@@ -218,7 +243,7 @@ private fun PlayerCreationForm(
             onGenderSelected = onGenderSelected
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Spacer(modifier = Modifier.height(sectionSpacing))
 
         PlayerDropdownField(
             label = "Color de casco",
@@ -228,7 +253,7 @@ private fun PlayerCreationForm(
             onOptionSelected = onHelmetColorSelected
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.medium))
+        Spacer(modifier = Modifier.height(itemSpacing))
 
         PlayerDropdownField(
             label = "Tipo de moto",
@@ -248,7 +273,7 @@ private fun PlayerCreationForm(
         )
 
         if (isLoading) {
-            Spacer(modifier = Modifier.height(NightSpacing.medium))
+            Spacer(modifier = Modifier.height(itemSpacing))
 
             CircularProgressIndicator(
                 color = CheeseYellow,
@@ -256,7 +281,7 @@ private fun PlayerCreationForm(
             )
         }
 
-        Spacer(modifier = Modifier.height(NightSpacing.medium))
+        Spacer(modifier = Modifier.height(itemSpacing))
 
         NightSecondaryButton(
             text = "Volver",

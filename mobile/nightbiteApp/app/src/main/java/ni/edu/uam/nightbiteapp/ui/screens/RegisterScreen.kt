@@ -36,6 +36,9 @@ import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterUiState
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
+import androidx.compose.foundation.layout.BoxWithConstraints
+import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
+import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 
 @Composable
 fun RegisterScreen(
@@ -177,56 +180,64 @@ fun RegisterScreen(
     ) {
         RegisterBackground()
 
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(
-                    horizontal = NightSpacing.screenHorizontal,
-                    vertical = NightSpacing.extraLarge
-                ),
+                .verticalScroll(scrollState),
             contentAlignment = Alignment.Center
         ) {
-            NightRegisterCard(
-                username = username,
-                email = email,
-                password = password,
-                confirmPassword = confirmPassword,
-                usernameError = usernameError,
-                emailError = emailError,
-                passwordError = passwordError,
-                confirmPasswordError = confirmPasswordError,
-                onUsernameChange = { value ->
-                    usernameTouched = true
-                    username = value
-                        .lowercase()
-                        .replace(" ", "")
-                },
-                onEmailChange = { value ->
-                    emailTouched = true
-                    email = value
-                        .lowercase()
-                        .replace(" ", "")
-                },
-                onPasswordChange = { value ->
-                    passwordTouched = true
-                    password = value
-                },
-                onConfirmPasswordChange = { value ->
-                    confirmPasswordTouched = true
-                    confirmPassword = value
-                },
-                onRegisterClick = {
-                    validateAndRegister()
-                },
-                onBackToLoginClick = {
-                    requestBack()
-                },
-                modifier = Modifier.widthIn(
-                    min = NightSizes.registerContainerMinWidth,
-                    max = NightSizes.registerContainerMaxWidth
+            val windowSize = getNightWindowSize(maxWidth)
+            val dimensions = nightDimensionsFor(windowSize)
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        horizontal = dimensions.screenHorizontalPadding,
+                        vertical = dimensions.screenVerticalPadding
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                NightRegisterCard(
+                    username = username,
+                    email = email,
+                    password = password,
+                    confirmPassword = confirmPassword,
+                    usernameError = usernameError,
+                    emailError = emailError,
+                    passwordError = passwordError,
+                    confirmPasswordError = confirmPasswordError,
+                    onUsernameChange = { value ->
+                        usernameTouched = true
+                        username = value
+                            .lowercase()
+                            .replace(" ", "")
+                    },
+                    onEmailChange = { value ->
+                        emailTouched = true
+                        email = value
+                            .lowercase()
+                            .replace(" ", "")
+                    },
+                    onPasswordChange = { value ->
+                        passwordTouched = true
+                        password = value
+                    },
+                    onConfirmPasswordChange = { value ->
+                        confirmPasswordTouched = true
+                        confirmPassword = value
+                    },
+                    onRegisterClick = {
+                        validateAndRegister()
+                    },
+                    onBackToLoginClick = {
+                        requestBack()
+                    },
+                    modifier = Modifier.widthIn(
+                        max = dimensions.contentMaxWidth
+                    )
                 )
-            )
+            }
         }
 
         if (uiState is RegisterUiState.Loading) {
