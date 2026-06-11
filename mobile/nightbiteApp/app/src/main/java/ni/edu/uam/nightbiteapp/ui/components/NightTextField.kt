@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -21,6 +20,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ni.edu.uam.nightbiteapp.ui.design.NightShapes
+import ni.edu.uam.nightbiteapp.ui.design.NightSizes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.DarkText
 import ni.edu.uam.nightbiteapp.ui.theme.FieldBackground
@@ -44,7 +46,7 @@ fun NightTextField(
     trailingIconDescription: String? = null,
     onTrailingIconClick: (() -> Unit)? = null,
     reserveErrorSpace: Boolean = false,
-    fieldHeight: Dp = 60.dp
+    fieldHeight: Dp = NightSizes.textFieldHeight
 ) {
     val indicatorColor = when {
         isError -> PizzaRed
@@ -81,7 +83,7 @@ fun NightTextField(
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(NightSizes.iconMedium)
                 )
             },
             trailingIcon = {
@@ -92,14 +94,14 @@ fun NightTextField(
                         Icon(
                             imageVector = trailingIcon,
                             contentDescription = trailingIconDescription,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(NightSizes.iconMedium)
                         )
                     }
                 }
             },
             singleLine = true,
             visualTransformation = visualTransformation,
-            shape = RoundedCornerShape(26.dp),
+            shape = NightShapes.textField,
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = FieldBackground,
                 unfocusedContainerColor = FieldBackground,
@@ -146,13 +148,13 @@ fun NightTextField(
                         text = errorMessage,
                         color = PizzaRed,
                         fontSize = 10.sp,
-                        modifier = Modifier.padding(start = 22.dp)
+                        modifier = Modifier.padding(start = NightSizes.iconMedium)
                     )
                 }
             }
         } else {
             if (isError && !errorMessage.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(NightSpacing.extraSmall))
 
                 Text(
                     text = errorMessage,
@@ -160,7 +162,7 @@ fun NightTextField(
                     fontSize = 10.sp,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 36.dp)
+                        .padding(start = NightSpacing.section)
                 )
             }
         }
