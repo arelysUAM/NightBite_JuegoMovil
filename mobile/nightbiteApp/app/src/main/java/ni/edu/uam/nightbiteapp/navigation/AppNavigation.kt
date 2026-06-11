@@ -43,6 +43,7 @@ import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModelFactory
+import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
 
 /**
  * Componente principal de navegación de la aplicación.
@@ -178,8 +179,8 @@ fun AppNavigation() {
                 onNavigateToAchievements = {
                     // Pendiente: crear pantalla de libro de logros.
                 },
-                onNavigateToAccount = {
-                    navController.navigate(Routes.ACCOUNT)
+                onNavigateToSettings = {
+                    navController.navigate(Routes.SETTINGS)
                 },
                 onLogout = {
                     activeUserId = null
@@ -392,6 +393,33 @@ fun AppNavigation() {
                 },
                 onBackToHome = {
                     navigateBackToHome()
+                }
+            )
+        }
+
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                userSession = userSession,
+                onBackToHome = {
+                    navController.popBackStack()
+                },
+                onNavigateToAccount = {
+                    navController.navigate(Routes.ACCOUNT)
+                },
+                onLogout = {
+                    activeUserId = null
+
+                    coroutineScope.launch {
+                        sessionManager.clearSession()
+
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.HOME) {
+                                inclusive = true
+                            }
+
+                            launchSingleTop = true
+                        }
+                    }
                 }
             )
         }

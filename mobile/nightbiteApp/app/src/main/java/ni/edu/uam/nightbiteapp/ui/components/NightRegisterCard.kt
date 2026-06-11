@@ -5,10 +5,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -38,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ni.edu.uam.nightbiteapp.R
@@ -84,78 +87,86 @@ fun NightRegisterCard(
                 confirmPasswordError == null &&
                 password == confirmPassword
 
-    Box(
-        modifier = modifier.widthIn(
-            min = NightSizes.registerContainerMinWidth,
-            max = NightSizes.registerContainerMaxWidth
-        ),
+    BoxWithConstraints(
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        NightBaseCard(
-            modifier = Modifier.width(NightSizes.registerCardWidth),
-            fillMaxWidth = false,
-            containerColor = SoftPurple,
-            borderColor = DarkPurple,
-            elevation = 10.dp,
-            contentPadding = PaddingValues(
-                start = 42.dp,
-                end = 42.dp,
-                top = NightSpacing.extraLarge,
-                bottom = NightSpacing.extraLarge
-            )
-        ) {
-            Row(
-                modifier = Modifier.widthIn(
-                    min = NightSizes.registerContainerMinWidth,
-                    max = NightSizes.registerContainerMaxWidth
-                ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                RegisterFieldsColumn(
-                    username = username,
-                    email = email,
-                    password = password,
-                    confirmPassword = confirmPassword,
-                    usernameError = usernameError,
-                    emailError = emailError,
-                    passwordError = passwordError,
-                    confirmPasswordError = confirmPasswordError,
-                    passwordVisible = passwordVisible,
-                    confirmPasswordVisible = confirmPasswordVisible,
-                    isPasswordValid = isPasswordValid,
-                    isConfirmPasswordValid = isConfirmPasswordValid,
-                    onUsernameChange = onUsernameChange,
-                    onEmailChange = onEmailChange,
-                    onPasswordChange = onPasswordChange,
-                    onConfirmPasswordChange = onConfirmPasswordChange,
-                    onTogglePasswordVisibility = {
-                        passwordVisible = !passwordVisible
-                    },
-                    onToggleConfirmPasswordVisibility = {
-                        confirmPasswordVisible = !confirmPasswordVisible
-                    }
-                )
+        val compact = maxWidth < CompactRegisterBreakpoint
 
-                Spacer(modifier = Modifier.width(34.dp))
-
-                RegisterDivider()
-
-                Spacer(modifier = Modifier.width(50.dp))
-
-                RegisterActionColumn(
-                    anyPasswordVisible = anyPasswordVisible,
-                    onRegisterClick = onRegisterClick
-                )
-            }
+        val layout = if (compact) {
+            RegisterCardLayout.compact()
+        } else {
+            RegisterCardLayout.regular()
         }
 
-        RegisterBackButton(
-            onBackToLoginClick = onBackToLoginClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset(x = (-54).dp, y = (-4).dp)
-        )
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            NightBaseCard(
+                modifier = Modifier.fillMaxWidth(),
+                fillMaxWidth = true,
+                containerColor = SoftPurple,
+                borderColor = DarkPurple,
+                elevation = 10.dp,
+                contentPadding = PaddingValues(
+                    start = layout.horizontalPadding,
+                    end = layout.horizontalPadding,
+                    top = NightSpacing.extraLarge,
+                    bottom = NightSpacing.extraLarge
+                )
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    RegisterFieldsColumn(
+                        username = username,
+                        email = email,
+                        password = password,
+                        confirmPassword = confirmPassword,
+                        usernameError = usernameError,
+                        emailError = emailError,
+                        passwordError = passwordError,
+                        confirmPasswordError = confirmPasswordError,
+                        passwordVisible = passwordVisible,
+                        confirmPasswordVisible = confirmPasswordVisible,
+                        isPasswordValid = isPasswordValid,
+                        isConfirmPasswordValid = isConfirmPasswordValid,
+                        fieldWidth = layout.fieldWidth,
+                        onUsernameChange = onUsernameChange,
+                        onEmailChange = onEmailChange,
+                        onPasswordChange = onPasswordChange,
+                        onConfirmPasswordChange = onConfirmPasswordChange,
+                        onTogglePasswordVisibility = {
+                            passwordVisible = !passwordVisible
+                        },
+                        onToggleConfirmPasswordVisibility = {
+                            confirmPasswordVisible = !confirmPasswordVisible
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.width(layout.leftSpacerWidth))
+
+                    RegisterDivider(
+                        height = layout.dividerHeight
+                    )
+
+                    Spacer(modifier = Modifier.width(layout.rightSpacerWidth))
+
+                    RegisterActionColumn(
+                        anyPasswordVisible = anyPasswordVisible,
+                        actionWidth = layout.actionWidth,
+                        iconContainerSize = layout.iconContainerSize,
+                        iconBackgroundSize = layout.iconBackgroundSize,
+                        iconImageSize = layout.iconImageSize,
+                        buttonWidth = layout.buttonWidth,
+                        onRegisterClick = onRegisterClick
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -173,6 +184,7 @@ private fun RegisterFieldsColumn(
     confirmPasswordVisible: Boolean,
     isPasswordValid: Boolean,
     isConfirmPasswordValid: Boolean,
+    fieldWidth: Dp,
     onUsernameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -181,7 +193,7 @@ private fun RegisterFieldsColumn(
     onToggleConfirmPasswordVisibility: () -> Unit
 ) {
     Column(
-        modifier = Modifier.width(285.dp),
+        modifier = Modifier.width(fieldWidth),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -193,7 +205,7 @@ private fun RegisterFieldsColumn(
             isError = usernameError != null,
             errorMessage = usernameError,
             reserveErrorSpace = true,
-            modifier = Modifier.width(285.dp)
+            modifier = Modifier.width(fieldWidth)
         )
 
         NightTextField(
@@ -204,7 +216,7 @@ private fun RegisterFieldsColumn(
             isError = emailError != null,
             errorMessage = emailError,
             reserveErrorSpace = true,
-            modifier = Modifier.width(285.dp)
+            modifier = Modifier.width(fieldWidth)
         )
 
         NightTextField(
@@ -232,7 +244,7 @@ private fun RegisterFieldsColumn(
             isSuccess = isPasswordValid,
             errorMessage = passwordError,
             reserveErrorSpace = true,
-            modifier = Modifier.width(285.dp)
+            modifier = Modifier.width(fieldWidth)
         )
 
         NightTextField(
@@ -260,17 +272,19 @@ private fun RegisterFieldsColumn(
             isSuccess = isConfirmPasswordValid,
             errorMessage = confirmPasswordError,
             reserveErrorSpace = true,
-            modifier = Modifier.width(285.dp)
+            modifier = Modifier.width(fieldWidth)
         )
     }
 }
 
 @Composable
-private fun RegisterDivider() {
+private fun RegisterDivider(
+    height: Dp
+) {
     Box(
         modifier = Modifier
-            .width(3.dp)
-            .height(306.dp)
+            .width(RegisterDividerWidth)
+            .height(height)
             .background(SmokeWhite.copy(alpha = 0.9f))
     )
 }
@@ -278,17 +292,25 @@ private fun RegisterDivider() {
 @Composable
 private fun RegisterActionColumn(
     anyPasswordVisible: Boolean,
+    actionWidth: Dp,
+    iconContainerSize: Dp,
+    iconBackgroundSize: Dp,
+    iconImageSize: Dp,
+    buttonWidth: Dp,
     onRegisterClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier.width(230.dp),
+        modifier = Modifier.width(actionWidth),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         RegisterTitleBlock()
 
         RegisterIconPreview(
-            anyPasswordVisible = anyPasswordVisible
+            anyPasswordVisible = anyPasswordVisible,
+            iconContainerSize = iconContainerSize,
+            iconBackgroundSize = iconBackgroundSize,
+            iconImageSize = iconImageSize
         )
 
         Spacer(modifier = Modifier.height(NightSpacing.large))
@@ -296,7 +318,7 @@ private fun RegisterActionColumn(
         NightPrimaryButton(
             text = "REGISTRARSE",
             onClick = onRegisterClick,
-            modifier = Modifier.width(170.dp)
+            modifier = Modifier.width(buttonWidth)
         )
     }
 }
@@ -336,15 +358,18 @@ private fun RegisterTitleBlock() {
 
 @Composable
 private fun RegisterIconPreview(
-    anyPasswordVisible: Boolean
+    anyPasswordVisible: Boolean,
+    iconContainerSize: Dp,
+    iconBackgroundSize: Dp,
+    iconImageSize: Dp
 ) {
     Box(
-        modifier = Modifier.size(145.dp),
+        modifier = Modifier.size(iconContainerSize),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
-                .size(136.dp)
+                .size(iconBackgroundSize)
                 .background(
                     color = DarkPurple.copy(alpha = 0.55f),
                     shape = CircleShape
@@ -353,9 +378,9 @@ private fun RegisterIconPreview(
 
         Box(
             modifier = Modifier
-                .size(30.dp)
+                .size(iconContainerSize * 0.20f)
                 .align(Alignment.TopEnd)
-                .offset(x = 0.dp, y = 12.dp)
+                .offset(x = 0.dp, y = iconContainerSize * 0.08f)
                 .background(
                     color = DarkPurple.copy(alpha = 0.7f),
                     shape = CircleShape
@@ -364,9 +389,12 @@ private fun RegisterIconPreview(
 
         Box(
             modifier = Modifier
-                .size(16.dp)
+                .size(iconContainerSize * 0.11f)
                 .align(Alignment.TopEnd)
-                .offset(x = 10.dp, y = 38.dp)
+                .offset(
+                    x = iconContainerSize * 0.07f,
+                    y = iconContainerSize * 0.26f
+                )
                 .background(
                     color = DarkPurple.copy(alpha = 0.7f),
                     shape = CircleShape
@@ -375,9 +403,12 @@ private fun RegisterIconPreview(
 
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .size(iconContainerSize * 0.16f)
                 .align(Alignment.BottomStart)
-                .offset(x = 4.dp, y = (-20).dp)
+                .offset(
+                    x = iconContainerSize * 0.03f,
+                    y = -(iconContainerSize * 0.14f)
+                )
                 .background(
                     color = DarkPurple.copy(alpha = 0.7f),
                     shape = CircleShape
@@ -393,25 +424,62 @@ private fun RegisterIconPreview(
                 }
             ),
             contentDescription = "Icono de registro NightBite",
-            modifier = Modifier.size(104.dp),
+            modifier = Modifier.size(iconImageSize),
             contentScale = ContentScale.Fit
         )
     }
 }
 
-@Composable
-private fun RegisterBackButton(
-    onBackToLoginClick: () -> Unit,
-    modifier: Modifier = Modifier
+private data class RegisterCardLayout(
+    val horizontalPadding: Dp,
+    val fieldWidth: Dp,
+    val actionWidth: Dp,
+    val leftSpacerWidth: Dp,
+    val rightSpacerWidth: Dp,
+    val dividerHeight: Dp,
+    val iconContainerSize: Dp,
+    val iconBackgroundSize: Dp,
+    val iconImageSize: Dp,
+    val buttonWidth: Dp,
+    val backButtonOffsetX: Dp,
+    val backButtonOffsetY: Dp
 ) {
-    Image(
-        painter = painterResource(id = R.drawable.boton_volver),
-        contentDescription = "Volver",
-        modifier = modifier
-            .size(NightSizes.backButton)
-            .clickable {
-                onBackToLoginClick()
-            },
-        contentScale = ContentScale.Fit
-    )
+    companion object {
+        fun compact(): RegisterCardLayout {
+            return RegisterCardLayout(
+                horizontalPadding = 24.dp,
+                fieldWidth = 250.dp,
+                actionWidth = 190.dp,
+                leftSpacerWidth = 20.dp,
+                rightSpacerWidth = 24.dp,
+                dividerHeight = 270.dp,
+                iconContainerSize = 112.dp,
+                iconBackgroundSize = 104.dp,
+                iconImageSize = 82.dp,
+                buttonWidth = 160.dp,
+                backButtonOffsetX = (-42).dp,
+                backButtonOffsetY = (-4).dp
+            )
+        }
+
+        fun regular(): RegisterCardLayout {
+            return RegisterCardLayout(
+                horizontalPadding = 42.dp,
+                fieldWidth = 285.dp,
+                actionWidth = 230.dp,
+                leftSpacerWidth = 34.dp,
+                rightSpacerWidth = 50.dp,
+                dividerHeight = 306.dp,
+                iconContainerSize = 145.dp,
+                iconBackgroundSize = 136.dp,
+                iconImageSize = 104.dp,
+                buttonWidth = 170.dp,
+                backButtonOffsetX = (-54).dp,
+                backButtonOffsetY = (-4).dp
+            )
+        }
+    }
 }
+
+private val CompactRegisterBreakpoint = 700.dp
+private val RegisterDividerWidth = 3.dp

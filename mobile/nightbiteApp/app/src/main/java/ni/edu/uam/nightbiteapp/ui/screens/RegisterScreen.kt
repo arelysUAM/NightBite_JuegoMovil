@@ -28,8 +28,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.NightRegisterCard
-import ni.edu.uam.nightbiteapp.ui.design.NightSizes
-import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.NeonGreen
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
@@ -39,7 +37,8 @@ import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
 import androidx.compose.foundation.layout.BoxWithConstraints
 import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
 import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
-
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
 @Composable
 fun RegisterScreen(
     age: Int,
@@ -195,9 +194,20 @@ fun RegisterScreen(
                     .padding(
                         horizontal = dimensions.screenHorizontalPadding,
                         vertical = dimensions.screenVerticalPadding
-                    ),
-                contentAlignment = Alignment.Center
+                    )
             ) {
+                Image(
+                    painter = painterResource(id = R.drawable.boton_volver),
+                    contentDescription = "Volver",
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .size(dimensions.iconButtonSize)
+                        .clickable {
+                            requestBack()
+                        },
+                    contentScale = ContentScale.Fit
+                )
+
                 NightRegisterCard(
                     username = username,
                     email = email,
@@ -233,9 +243,11 @@ fun RegisterScreen(
                     onBackToLoginClick = {
                         requestBack()
                     },
-                    modifier = Modifier.widthIn(
-                        max = dimensions.contentMaxWidth
-                    )
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .widthIn(
+                            max = dimensions.registerCardWidth
+                        )
                 )
             }
         }

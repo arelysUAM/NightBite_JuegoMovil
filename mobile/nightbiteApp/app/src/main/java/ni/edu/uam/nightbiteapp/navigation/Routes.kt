@@ -14,6 +14,8 @@ object Routes {
     const val REGISTER_WITH_AGE = "register/{age}"
 
     const val HOME = "home"
+
+    const val SETTINGS = "settings"
     const val ACCOUNT = "account"
 
     const val PLAYER_CREATION = "player_creation"

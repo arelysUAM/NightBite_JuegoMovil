@@ -83,7 +83,7 @@ fun AgeCheckScreen(
         (currentYear downTo MIN_YEAR).toList()
     }
 
-    val itemHeight = 36.dp
+    val itemHeight = 34.dp
 
     val itemHeightPx = with(LocalDensity.current) {
         itemHeight.toPx()
@@ -134,7 +134,8 @@ fun AgeCheckScreen(
                 selectedYear = selectedYear,
                 listState = listState,
                 itemHeight = itemHeight,
-                cardSize = dimensions.ageCheckCardSize,
+                cardWidth = dimensions.ageCheckCardWidth,
+                cardHeight = dimensions.ageCheckCardHeight,
                 pickerWidth = dimensions.agePickerWidth,
                 iconButtonSize = dimensions.iconButtonSize,
                 onYearClick = { index ->
@@ -172,17 +173,21 @@ private fun AgeCheckCard(
     selectedYear: Int,
     listState: LazyListState,
     itemHeight: Dp,
-    cardSize: Dp,
+    cardWidth: Dp,
+    cardHeight: Dp,
     pickerWidth: Dp,
     iconButtonSize: Dp,
     onYearClick: (Int) -> Unit,
     onContinueClick: () -> Unit,
     onBackToLogin: () -> Unit
-) {
+){
     Box {
         Card(
             modifier = Modifier
-                .size(cardSize)
+                .size(
+                    width = cardWidth,
+                    height = cardHeight
+                )
                 .shadow(
                     elevation = 8.dp,
                     shape = NightShapes.dialog
@@ -201,10 +206,10 @@ private fun AgeCheckCard(
                     .fillMaxSize()
                     .padding(
                         horizontal = NightSpacing.extraLarge,
-                        vertical = NightSpacing.extraLarge
+                        vertical = NightSpacing.large
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
                 AgeCheckTitleBlock()
 
@@ -289,7 +294,7 @@ private fun YearPicker(
             )
             .padding(
                 horizontal = NightSpacing.large,
-                vertical = NightSpacing.large
+                vertical = NightSpacing.medium
             ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -348,9 +353,9 @@ private fun YearItem(
                 SmokeWhite.copy(alpha = 0.38f)
             },
             fontSize = if (isSelected) {
-                35.sp
+                30.sp
             } else {
-                23.sp
+                20.sp
             },
             fontFamily = LilitaOne,
             fontWeight = FontWeight.Normal

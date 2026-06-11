@@ -4,17 +4,16 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -37,22 +36,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
 import ni.edu.uam.nightbiteapp.ui.components.NightLevelButton
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
-import ni.edu.uam.nightbiteapp.ui.components.SettingsPanelOverlay
-import ni.edu.uam.nightbiteapp.ui.design.NightSizes
-import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
+import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
+import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
+import ni.edu.uam.nightbiteapp.ui.model.NightLevel
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.viewmodel.HomeViewModel
-import ni.edu.uam.nightbiteapp.ui.model.NightLevel
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.widthIn
-import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
-import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 
 @Composable
 fun HomeScreen(
@@ -62,7 +57,7 @@ fun HomeScreen(
     onNavigateToPlayerDetail: () -> Unit,
     onNavigateToPlayerCreation: () -> Unit,
     onNavigateToAchievements: () -> Unit,
-    onNavigateToAccount: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     onLogout: () -> Unit,
     onExitApp: () -> Unit,
     homeViewModel: HomeViewModel = viewModel()
@@ -72,10 +67,6 @@ fun HomeScreen(
     val uiState by homeViewModel.uiState.collectAsState()
 
     var showMissingPlayerDialog by remember {
-        mutableStateOf(false)
-    }
-
-    var showSettingsPanel by remember {
         mutableStateOf(false)
     }
 
@@ -107,9 +98,7 @@ fun HomeScreen(
         HomeContent(
             isLoading = uiState.isLoading,
             levels = uiState.levels,
-            onOpenSettings = {
-                showSettingsPanel = true
-            },
+            onOpenSettings = onNavigateToSettings,
             onOpenPlayer = {
                 if (uiState.hasPlayer) {
                     onNavigateToPlayerDetail()
@@ -126,17 +115,6 @@ fun HomeScreen(
                 }
             }
         )
-
-        if (showSettingsPanel) {
-            SettingsPanelOverlay(
-                userSession = userSession,
-                onNavigateToAccount = onNavigateToAccount,
-                onLogoutClick = onLogout,
-                onClosed = {
-                    showSettingsPanel = false
-                }
-            )
-        }
     }
 
     if (showMissingPlayerDialog) {
@@ -180,16 +158,12 @@ private fun HomeContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    start = dimensions.screenHorizontalPadding,
-                    top = dimensions.screenVerticalPadding,
-                    end = dimensions.screenHorizontalPadding,
-                    bottom = dimensions.screenVerticalPadding
-                )
         ) {
             HomeTopActions(
                 iconSize = dimensions.iconButtonSize,
                 itemSpacing = dimensions.itemSpacing,
+                screenHorizontalPadding = dimensions.screenHorizontalPadding,
+                screenVerticalPadding = dimensions.screenVerticalPadding,
                 onOpenSettings = onOpenSettings,
                 onOpenPlayer = onOpenPlayer,
                 onOpenAchievements = onOpenAchievements
@@ -199,11 +173,11 @@ private fun HomeContent(
                 isLoading = isLoading,
                 levels = levels,
                 onOpenLevel = onOpenLevel,
+                sectionSpacing = dimensions.sectionSpacing,
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = dimensions.contentMaxWidth)
                     .align(Alignment.Center)
-                    .padding(horizontal = dimensions.sectionSpacing)
             )
         }
     }
@@ -213,6 +187,8 @@ private fun HomeContent(
 private fun HomeTopActions(
     iconSize: Dp,
     itemSpacing: Dp,
+    screenHorizontalPadding: Dp,
+    screenVerticalPadding: Dp,
     onOpenSettings: () -> Unit,
     onOpenPlayer: () -> Unit,
     onOpenAchievements: () -> Unit
@@ -225,15 +201,44 @@ private fun HomeTopActions(
             contentDescription = "Configuración",
             modifier = Modifier
                 .align(Alignment.TopStart)
+                .clickable { onOpenSettings() }
                 .size(iconSize),
             onClick = onOpenSettings
         )
 
         Column(
-            modifier = Modifier.align(Alignment.TopEnd),
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .fillMaxWidth()
+        ) {
+            Spacer(modifier = Modifier.size(screenVerticalPadding))
+        }
+
+        HomeImageButton(
+            drawableId = R.drawable.boton_configuracion,
+            contentDescription = "Configuración",
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .size(iconSize),
+            onClick = onOpenSettings
+        )
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .fillMaxWidth()
+        ) {
+            Spacer(modifier = Modifier.size(screenHorizontalPadding))
+        }
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopEnd),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(itemSpacing)
         ) {
+            Spacer(modifier = Modifier.size(screenVerticalPadding))
+
             HomeImageButton(
                 drawableId = R.drawable.boton_planilla,
                 contentDescription = "Plantilla del repartidor",
@@ -248,6 +253,15 @@ private fun HomeTopActions(
                 onClick = onOpenAchievements
             )
         }
+
+        HomeImageButton(
+            drawableId = R.drawable.boton_configuracion,
+            contentDescription = "Configuración",
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .size(iconSize),
+            onClick = onOpenSettings
+        )
     }
 }
 
@@ -256,6 +270,7 @@ private fun HomeLevelSelector(
     isLoading: Boolean,
     levels: List<NightLevel>,
     onOpenLevel: (Int) -> Unit,
+    sectionSpacing: Dp,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -265,7 +280,7 @@ private fun HomeLevelSelector(
     ) {
         HomeTitle()
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        Spacer(modifier = Modifier.size(sectionSpacing))
 
         if (isLoading) {
             CircularProgressIndicator(
@@ -290,8 +305,6 @@ private fun HomeTitle() {
         textAlign = TextAlign.Center
     )
 
-    Spacer(modifier = Modifier.height(NightSpacing.extraSmall))
-
     Text(
         text = "Seleccionar noche",
         style = MaterialTheme.typography.titleLarge,
@@ -308,11 +321,8 @@ private fun LevelsRow(
 ) {
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(
-            space = NightSpacing.extraLarge,
-            alignment = Alignment.CenterHorizontally
-        ),
-        contentPadding = PaddingValues(horizontal = NightSpacing.small)
+        horizontalArrangement = Arrangement.Center,
+        contentPadding = PaddingValues()
     ) {
         items(levels) { level ->
             NightLevelButton(

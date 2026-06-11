@@ -15,8 +15,15 @@ data class NightDimensions(
     val levelButtonContainerSize: Dp,
     val sectionSpacing: Dp,
     val itemSpacing: Dp,
-    val ageCheckCardSize: Dp,
-    val agePickerWidth: Dp
+    val ageCheckCardWidth: Dp,
+    val ageCheckCardHeight: Dp,
+    val agePickerWidth: Dp,
+    val settingsCardWidth: Dp,
+    val settingsCardHeight: Dp,
+    val settingsInnerWidth: Dp,
+    val settingsOptionRowWidth: Dp,
+    val settingsActionButtonWidth: Dp,
+    val registerCardWidth: Dp
 )
 
 fun nightDimensionsFor(windowSize: NightWindowSize): NightDimensions {
@@ -31,8 +38,18 @@ fun nightDimensionsFor(windowSize: NightWindowSize): NightDimensions {
             levelButtonContainerSize = 94.dp,
             sectionSpacing = 20.dp,
             itemSpacing = 8.dp,
-            ageCheckCardSize = 320.dp,
-            agePickerWidth = 210.dp
+
+            // Compact
+            settingsCardWidth = 340.dp,
+            settingsCardHeight = 292.dp,
+            settingsInnerWidth = 250.dp,
+            settingsOptionRowWidth = 220.dp,
+            settingsActionButtonWidth = 130.dp,
+            registerCardWidth = 420.dp,
+
+            ageCheckCardWidth = 220.dp,
+            ageCheckCardHeight = 200.dp,
+            agePickerWidth = 130.dp
         )
 
         NightWindowSize.Medium -> NightDimensions(
@@ -45,8 +62,17 @@ fun nightDimensionsFor(windowSize: NightWindowSize): NightDimensions {
             levelButtonContainerSize = 108.dp,
             sectionSpacing = 32.dp,
             itemSpacing = 12.dp,
-            ageCheckCardSize = 420.dp,
-            agePickerWidth = 280.dp
+            // Medium
+            settingsCardWidth = 390.dp,
+            settingsCardHeight = 300.dp,
+            settingsInnerWidth = 280.dp,
+            settingsOptionRowWidth = 250.dp,
+            settingsActionButtonWidth = 140.dp,
+            registerCardWidth = 530.dp,
+
+            ageCheckCardWidth = 290.dp,
+            ageCheckCardHeight = 250.dp,
+            agePickerWidth = 180.dp
         )
 
         NightWindowSize.Expanded -> NightDimensions(
@@ -59,8 +85,17 @@ fun nightDimensionsFor(windowSize: NightWindowSize): NightDimensions {
             levelButtonContainerSize = 118.dp,
             sectionSpacing = 40.dp,
             itemSpacing = 16.dp,
-            ageCheckCardSize = 500.dp,
-            agePickerWidth = 320.dp
+            // Expanded
+            settingsCardWidth = 430.dp,
+            settingsCardHeight = 320.dp,
+            settingsInnerWidth = 310.dp,
+            settingsOptionRowWidth = 280.dp,
+            settingsActionButtonWidth = 150.dp,
+            registerCardWidth = 580.dp,
+
+            ageCheckCardWidth = 330.dp,
+            ageCheckCardHeight = 270.dp,
+            agePickerWidth = 200.dp
         )
     }
 }
