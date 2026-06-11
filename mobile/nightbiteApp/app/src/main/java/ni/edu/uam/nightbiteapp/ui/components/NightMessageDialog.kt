@@ -2,6 +2,7 @@ package ni.edu.uam.nightbiteapp.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
@@ -29,17 +29,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import ni.edu.uam.nightbiteapp.ui.design.NightShapes
+import ni.edu.uam.nightbiteapp.ui.design.NightSizes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.LavenderGray
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 
 /**
- * Cuadro superpuesto para mostrar mensajes de confirmación,
- * advertencia, éxito o error dentro de la app.
+ * Cuadro superpuesto para mostrar mensajes de confirmación, advertencia,
+ * éxito o error dentro de NightBite.
  *
- * additionalContent permite agregar controles personalizados,
- * como las opciones del menú de pausa.
+ * additionalContent permite agregar controles personalizados, como las
+ * opciones del menú de pausa.
  */
 @Composable
 fun NightMessageDialog(
@@ -52,7 +55,7 @@ fun NightMessageDialog(
     iconColor: Color = CheeseYellow,
     dismissText: String? = null,
     onDismiss: (() -> Unit)? = null,
-    additionalContent: (@Composable () -> Unit)? = null
+    additionalContent: (@Composable ColumnScope.() -> Unit)? = null
 ) {
     Dialog(
         onDismissRequest = {
@@ -65,7 +68,7 @@ fun NightMessageDialog(
         ) {
             Surface(
                 modifier = Modifier
-                    .size(58.dp)
+                    .size(NightSizes.iconLarge)
                     .shadow(
                         elevation = 8.dp,
                         shape = CircleShape
@@ -82,19 +85,19 @@ fun NightMessageDialog(
             }
 
             Card(
-                shape = RoundedCornerShape(24.dp),
+                shape = NightShapes.dialog,
                 colors = CardDefaults.cardColors(
                     containerColor = NightSurface
                 ),
                 elevation = CardDefaults.cardElevation(
                     defaultElevation = 10.dp
                 ),
-                modifier = Modifier.width(360.dp)
+                modifier = Modifier.width(NightSizes.dialogWidth)
             ) {
                 Column(
                     modifier = Modifier.padding(
-                        horizontal = 28.dp,
-                        vertical = 28.dp
+                        horizontal = NightSpacing.dialogHorizontal,
+                        vertical = NightSpacing.dialogVertical
                     ),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -106,7 +109,7 @@ fun NightMessageDialog(
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(NightSpacing.small))
 
                     Text(
                         text = message,
@@ -116,35 +119,24 @@ fun NightMessageDialog(
                     )
 
                     if (additionalContent != null) {
-                        Spacer(modifier = Modifier.height(18.dp))
+                        Spacer(modifier = Modifier.height(NightSpacing.large))
 
                         Column(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            additionalContent()
-                        }
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            content = additionalContent
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(22.dp))
+                    Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
                     if (dismissText != null && onDismiss != null) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            NightSecondaryButton(
-                                text = dismissText,
-                                onClick = onDismiss,
-                                modifier = Modifier.width(135.dp)
-                            )
-
-                            NightPrimaryButton(
-                                text = confirmText,
-                                onClick = onConfirm,
-                                modifier = Modifier.width(135.dp)
-                            )
-                        }
+                        DialogActionsRow(
+                            dismissText = dismissText,
+                            confirmText = confirmText,
+                            onDismiss = onDismiss,
+                            onConfirm = onConfirm
+                        )
                     } else {
                         NightPrimaryButton(
                             text = confirmText,
@@ -155,5 +147,30 @@ fun NightMessageDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DialogActionsRow(
+    dismissText: String,
+    confirmText: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(NightSpacing.medium),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        NightSecondaryButton(
+            text = dismissText,
+            onClick = onDismiss,
+            modifier = Modifier.width(135.dp)
+        )
+
+        NightPrimaryButton(
+            text = confirmText,
+            onClick = onConfirm,
+            modifier = Modifier.width(135.dp)
+        )
     }
 }
