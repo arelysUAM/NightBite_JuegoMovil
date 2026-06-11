@@ -3,14 +3,13 @@ package ni.edu.uam.nightbiteapp.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ni.edu.uam.nightbiteapp.ui.design.NightShapes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 
@@ -32,11 +31,11 @@ fun NightFloatingMessage(
         modifier = modifier
             .background(
                 color = PizzaRed,
-                shape = RoundedCornerShape(18.dp)
+                shape = NightShapes.pill
             )
             .padding(
-                horizontal = 20.dp,
-                vertical = 12.dp
+                horizontal = NightSpacing.extraLarge,
+                vertical = NightSpacing.medium
             )
     ) {
         Text(
