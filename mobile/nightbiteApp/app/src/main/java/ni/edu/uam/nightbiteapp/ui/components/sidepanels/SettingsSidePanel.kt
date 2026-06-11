@@ -1,4 +1,4 @@
-package ni.edu.uam.nightbiteapp.ui.components
+package ni.edu.uam.nightbiteapp.ui.components.sidepanels
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -62,6 +62,9 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
+import ni.edu.uam.nightbiteapp.ui.design.NightShapes
+import ni.edu.uam.nightbiteapp.ui.design.NightSizes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsCardDark
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsCardLight
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsDangerPink
@@ -104,7 +107,6 @@ fun SettingsPanelOverlay(
     LaunchedEffect(visible) {
         if (!visible) {
             delay(330)
-
             onClosed()
 
             if (logoutAfterClose) {
@@ -136,8 +138,8 @@ fun SettingsPanelOverlay(
             contentAlignment = Alignment.CenterStart
         ) {
             val panelWidth = (maxWidth * 0.43f).coerceIn(
-                minimumValue = 440.dp,
-                maximumValue = 560.dp
+                minimumValue = NightSizes.settingsPanelMinWidth,
+                maximumValue = NightSizes.settingsPanelMaxWidth
             )
 
             AnimatedVisibility(
@@ -196,8 +198,8 @@ fun SettingsSidePanel(
                 .clip(SettingsPanelShape)
                 .background(SettingsPanelPink)
                 .padding(
-                    top = 18.dp,
-                    bottom = 18.dp
+                    top = NightSpacing.large,
+                    bottom = NightSpacing.large
                 )
         ) {
             Column(
@@ -212,15 +214,15 @@ fun SettingsSidePanel(
                     )
                     .background(SettingsPanelLightPink)
                     .padding(
-                        start = 28.dp,
-                        top = 0.dp,
-                        end = 24.dp,
-                        bottom = 12.dp
+                        start = NightSpacing.cardHorizontal,
+                        top = NightSpacing.none,
+                        end = NightSpacing.extraLarge,
+                        bottom = NightSpacing.medium
                     )
             ) {
                 SettingsHeader()
 
-                Spacer(modifier = Modifier.height(15.dp))
+                Spacer(modifier = Modifier.height(NightSpacing.large))
 
                 AnimatedContent(
                     targetState = selectedTab,
@@ -251,9 +253,6 @@ fun SettingsSidePanel(
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
-
-                if (selectedTab == SettingsTab.VOLUME) {
-                }
             }
 
             SettingsTabsColumn(
@@ -278,7 +277,7 @@ fun SettingsSidePanel(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .offset(x = 31.dp, y = (-14).dp)
-                .size(62.dp)
+                .size(NightSizes.iconLarge)
                 .clickableWithoutRipple {
                     onBack()
                 },
@@ -316,7 +315,7 @@ private fun SettingsHeader() {
                 .offset(y = 5.dp)
                 .fillMaxWidth()
                 .height(42.dp)
-                .clip(RoundedCornerShape(22.dp))
+                .clip(NightShapes.levelButton)
                 .background(SettingsPanelDarkPink.copy(alpha = 0.82f))
         )
 
@@ -326,7 +325,7 @@ private fun SettingsHeader() {
                 .offset(y = (-2).dp)
                 .fillMaxWidth()
                 .height(42.dp)
-                .clip(RoundedCornerShape(22.dp))
+                .clip(NightShapes.levelButton)
                 .background(SettingsTabPink),
             contentAlignment = Alignment.Center
         ) {
@@ -366,7 +365,7 @@ private fun SettingsTabsColumn(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.medium))
 
         SettingsIconTab(
             selected = selectedTab == SettingsTab.PROFILE,
@@ -402,7 +401,7 @@ private fun SettingsIconTab(
         modifier = Modifier
             .size(52.dp)
             .scale(scale)
-            .clip(RoundedCornerShape(14.dp))
+            .clip(NightShapes.smallCard)
             .background(
                 if (selected) SettingsPanelLightPink else SettingsTabPink
             )
@@ -434,21 +433,21 @@ private fun SettingsVolumeContent(
             color = SmokeWhite,
             fontWeight = FontWeight.ExtraBold,
             style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(bottom = 2.dp)
+            modifier = Modifier.padding(bottom = NightSpacing.extraSmall)
         )
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(NightShapes.smallCard)
                 .background(SettingsCardLight)
                 .padding(
-                    horizontal = 22.dp,
-                    vertical = 10.dp
+                    horizontal = NightSpacing.extraLarge,
+                    vertical = NightSpacing.medium
                 )
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(5.dp)
+                verticalArrangement = Arrangement.spacedBy(NightSpacing.extraSmall)
             ) {
                 SettingsSwitchRow(
                     title = "Música",
@@ -536,12 +535,15 @@ private fun SettingsProfileContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(NightShapes.smallCard)
                     .background(SettingsCardLight)
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                    .padding(
+                        horizontal = NightSpacing.large,
+                        vertical = NightSpacing.medium
+                    )
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                    verticalArrangement = Arrangement.spacedBy(NightSpacing.extraSmall)
                 ) {
                     AccountLine(
                         label = "Nombre",
@@ -561,7 +563,7 @@ private fun SettingsProfileContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.medium))
 
         CenteredPanelButton(
             text = "Cerrar sesión",
@@ -573,7 +575,7 @@ private fun SettingsProfileContent(
             onClick = onLogoutClick
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(NightSpacing.small))
 
         CenteredPanelButton(
             text = "Eliminar cuenta",
@@ -597,10 +599,13 @@ private fun SettingsDarkCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(NightShapes.dialog)
             .background(SettingsCardDark)
-            .padding(horizontal = 20.dp, vertical = 15.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(
+                horizontal = NightSpacing.large,
+                vertical = NightSpacing.large
+            ),
+        verticalArrangement = Arrangement.spacedBy(NightSpacing.medium),
         content = content
     )
 }
@@ -641,12 +646,12 @@ private fun MiniSettingsSwitch(
         modifier = Modifier
             .width(64.dp)
             .height(34.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(NightShapes.button)
             .background(SettingsCardDark)
             .clickableWithoutRipple {
                 onCheckedChange(!checked)
             }
-            .padding(4.dp),
+            .padding(NightSpacing.extraSmall),
         contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         Box(
@@ -691,15 +696,15 @@ private fun CenteredPanelButton(
                 .fillMaxWidth(fillFraction)
                 .height(height)
                 .defaultMinSize(minHeight = 1.dp),
-            shape = RoundedCornerShape(24.dp),
+            shape = NightShapes.button,
             colors = ButtonDefaults.buttonColors(
                 containerColor = containerColor,
                 contentColor = contentColor
             ),
             border = BorderStroke(2.dp, borderColor),
             contentPadding = PaddingValues(
-                horizontal = 8.dp,
-                vertical = 0.dp
+                horizontal = NightSpacing.small,
+                vertical = NightSpacing.none
             )
         ) {
             Text(

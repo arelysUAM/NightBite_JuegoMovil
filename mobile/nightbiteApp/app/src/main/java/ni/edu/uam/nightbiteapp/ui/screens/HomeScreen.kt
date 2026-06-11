@@ -42,7 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.NightLevelButton
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
-import ni.edu.uam.nightbiteapp.ui.components.SettingsPanelOverlay
+import ni.edu.uam.nightbiteapp.ui.components.sidepanels.SettingsPanelOverlay
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.viewmodel.HomeViewModel

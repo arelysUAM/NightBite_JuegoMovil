@@ -1,24 +1,18 @@
 package ni.edu.uam.nightbiteapp.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +31,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ni.edu.uam.nightbiteapp.ui.design.NightSizes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.DarkPurple
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
@@ -56,50 +52,29 @@ fun NightLoginCard(
         mutableStateOf(false)
     }
 
-    Card(
-        shape = RoundedCornerShape(34.dp),
-        border = BorderStroke(
-            width = 7.dp,
-            color = DarkPurple
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = SoftPurple
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+    NightBaseCard(
         modifier = modifier.widthIn(
             min = 390.dp,
-            max = 400.dp
+            max = NightSizes.loginCardWidth
+        ),
+        fillMaxWidth = false,
+        containerColor = SoftPurple,
+        borderColor = DarkPurple,
+        elevation = 10.dp,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            start = NightSpacing.section,
+            end = NightSpacing.section,
+            top = NightSpacing.extraLarge,
+            bottom = NightSpacing.extraLarge
         )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = 34.dp,
-                    end = 34.dp,
-                    top = 22.dp,
-                    bottom = 22.dp
-                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "INICIAR SESIÓN",
-                color = SmokeWhite,
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 2.2.sp,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    shadow = Shadow(
-                        color = NightSurface,
-                        offset = Offset(2f, 2f),
-                        blurRadius = 3f
-                    )
-                )
-            )
+            LoginTitle()
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.small))
 
             Text(
                 text = "Introduce tus credenciales para jugar",
@@ -109,7 +84,7 @@ fun NightLoginCard(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.large))
 
             NightTextField(
                 value = username,
@@ -119,11 +94,10 @@ fun NightLoginCard(
                 isError = false,
                 errorMessage = null,
                 reserveErrorSpace = false,
-                fieldHeight = 54.dp,
                 modifier = Modifier.width(285.dp)
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.medium))
 
             NightTextField(
                 value = password,
@@ -151,44 +125,71 @@ fun NightLoginCard(
                 isError = false,
                 errorMessage = null,
                 reserveErrorSpace = false,
-                fieldHeight = 54.dp,
                 modifier = Modifier.width(285.dp)
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.large))
 
             NightPrimaryButton(
                 text = "INGRESAR",
                 onClick = onLoginClick,
                 modifier = Modifier
                     .width(160.dp)
-                    .height(44.dp)
+                    .height(NightSizes.primaryButtonHeight)
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(NightSpacing.large))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "¿No tienes una cuenta? ",
-                    color = SmokeWhite,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Text(
-                    text = "Regístrate aquí",
-                    color = DarkPurple,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Black,
-                    textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable {
-                        onRegisterClick()
-                    }
-                )
-            }
+            RegisterLinkRow(
+                onRegisterClick = onRegisterClick
+            )
         }
+    }
+}
+
+@Composable
+private fun LoginTitle() {
+    Text(
+        text = "INICIAR SESIÓN",
+        color = SmokeWhite,
+        fontSize = 25.sp,
+        fontWeight = FontWeight.Black,
+        letterSpacing = 2.2.sp,
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.titleLarge.copy(
+            shadow = Shadow(
+                color = NightSurface,
+                offset = Offset(2f, 2f),
+                blurRadius = 3f
+            )
+        )
+    )
+}
+
+@Composable
+private fun RegisterLinkRow(
+    onRegisterClick: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "¿No tienes una cuenta? ",
+            color = SmokeWhite,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = "Regístrate aquí",
+            color = DarkPurple,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Black,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable {
+                onRegisterClick()
+            }
+        )
     }
 }

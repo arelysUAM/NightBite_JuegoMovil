@@ -1,22 +1,14 @@
 package ni.edu.uam.nightbiteapp.ui.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import ni.edu.uam.nightbiteapp.ui.design.NightShapes
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 
@@ -33,44 +25,36 @@ fun EnemyCard(
     survivalTip: String,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = NightShapes.dialog,
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    NightBaseCard(
+        modifier = modifier
     ) {
-        Column(
-            modifier = Modifier.padding(
-                PaddingValues(NightSpacing.large)
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.Warning,
-                contentDescription = "Advertencia de enemigo",
-                tint = CheeseYellow
-            )
+        Icon(
+            imageVector = Icons.Default.Warning,
+            contentDescription = "Advertencia de enemigo",
+            tint = CheeseYellow
+        )
 
-            Spacer(modifier = Modifier.height(NightSpacing.small))
+        Spacer(modifier = Modifier.height(NightSpacing.small))
 
-            Text(
-                text = enemyName,
-                style = MaterialTheme.typography.titleLarge
-            )
+        Text(
+            text = enemyName,
+            style = MaterialTheme.typography.titleLarge
+        )
 
-            EnemyInfoSection(
-                title = "Descripción",
-                content = enemyDescription
-            )
+        EnemyInfoSection(
+            title = "Descripción",
+            content = enemyDescription
+        )
 
-            EnemyInfoSection(
-                title = "Comportamiento",
-                content = enemyBehavior
-            )
+        EnemyInfoSection(
+            title = "Comportamiento",
+            content = enemyBehavior
+        )
 
-            EnemyInfoSection(
-                title = "Consejo de supervivencia",
-                content = survivalTip
-            )
-        }
+        EnemyInfoSection(
+            title = "Consejo de supervivencia",
+            content = survivalTip
+        )
     }
 }
 
