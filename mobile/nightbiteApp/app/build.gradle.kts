@@ -1,3 +1,23 @@
+import java.util.Properties
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { input ->
+            load(input)
+        }
+    }
+}
+
+val debugBaseUrl: String =
+    localProperties.getProperty("NIGHTBITE_DEBUG_BASE_URL")
+        ?: "http://192.168.1.12:8080/"
+
+val releaseBaseUrl: String =
+    localProperties.getProperty("NIGHTBITE_RELEASE_BASE_URL")
+        ?: "https://api-nightbite.com/"
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -23,20 +43,41 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"$debugBaseUrl\""
+            )
+
+            manifestPlaceholders["usesCleartextTraffic"] = "true"
+        }
+
         release {
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"$releaseBaseUrl\""
+            )
+
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
+
             isMinifyEnabled = false
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

@@ -9,6 +9,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.remote.dto.MessageResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserLoginRequest
+import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.data.repository.UserRepository
 
 /**
@@ -48,8 +49,11 @@ class LoginViewModel(
                     response.isSuccessful &&
                     response.body() != null
                 ) {
+                    val authResponse = response.body()!!
+
                     uiState = LoginUiState.Success(
-                        response.body()!!
+                        user = authResponse.user,
+                        token = authResponse.token
                     )
                 } else {
                     val apiMessage = try {

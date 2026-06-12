@@ -82,8 +82,12 @@ fun LoginScreen(
         when (uiState) {
             is LoginUiState.Success -> {
                 val loggedUser = uiState.user
+                val token = uiState.token
 
-                sessionManager.saveSession(loggedUser)
+                sessionManager.saveSession(
+                    user = loggedUser,
+                    token = token
+                )
 
                 Toast.makeText(
                     context,
@@ -94,7 +98,6 @@ fun LoginScreen(
                 loginViewModel.resetState()
                 onNavigateToHome(loggedUser)
             }
-
             is LoginUiState.Error -> {
                 loginErrorMessage = uiState.message
                 loginErrorType = uiState.type

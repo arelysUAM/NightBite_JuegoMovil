@@ -10,7 +10,8 @@ sealed class LoginUiState {
     object Loading : LoginUiState()
 
     data class Success(
-        val user: UserResponse
+        val user: UserResponse,
+        val token: String
     ) : LoginUiState()
 
     data class Error(

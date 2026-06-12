@@ -9,6 +9,7 @@ import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import retrofit2.Response
 import ni.edu.uam.nightbiteapp.data.remote.dto.UpdatePasswordRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UpdateUsernameRequest
+import ni.edu.uam.nightbiteapp.data.remote.dto.AuthResponse
 
 /**
  * Repositorio encargado de gestionar las operaciones relacionadas
@@ -35,7 +36,7 @@ class UserRepository(
      */
     suspend fun loginUser(
         userLoginRequest: UserLoginRequest
-    ): Response<UserResponse> {
+    ): Response<AuthResponse> {
         return apiService.loginUser(userLoginRequest)
     }
 

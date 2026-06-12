@@ -1,15 +1,17 @@
 package ni.edu.uam.nightbiteapi.controllers;
 
+import ni.edu.uam.nightbiteapi.dto.AuthResponse;
 import ni.edu.uam.nightbiteapi.dto.MessageResponse;
+import ni.edu.uam.nightbiteapi.dto.UpdatePasswordRequest;
+import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
 import ni.edu.uam.nightbiteapi.dto.UserLoginRequest;
 import ni.edu.uam.nightbiteapi.dto.UserRegisterRequest;
 import ni.edu.uam.nightbiteapi.dto.UserResponse;
+import ni.edu.uam.nightbiteapi.services.JwtService;
 import ni.edu.uam.nightbiteapi.services.UserAccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ni.edu.uam.nightbiteapi.dto.UpdatePasswordRequest;
-import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
 
 import java.util.List;
 
@@ -21,9 +23,14 @@ import java.util.List;
 public class UserAccountController {
 
     private final UserAccountService userAccountService;
+    private final JwtService jwtService;
 
-    public UserAccountController(UserAccountService userAccountService) {
+    public UserAccountController(
+            UserAccountService userAccountService,
+            JwtService jwtService
+    ) {
         this.userAccountService = userAccountService;
+        this.jwtService = jwtService;
     }
 
     /**
@@ -53,6 +60,12 @@ public class UserAccountController {
                         .body(new MessageResponse("Cuenta de usuario no encontrada")));
     }
 
+    /**
+     * Endpoint para registrar una nueva cuenta de usuario.
+     *
+     * Método HTTP: POST
+     * URL: /api/users/register
+     */
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserRegisterRequest request) {
         try {
@@ -65,11 +78,25 @@ public class UserAccountController {
         }
     }
 
+    /**
+     * Endpoint para iniciar sesión.
+     *
+     * Método HTTP: POST
+     * URL: /api/users/login
+     *
+     * Si las credenciales son correctas, devuelve:
+     * - token JWT
+     * - datos del usuario autenticado
+     */
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserLoginRequest request) {
         try {
-            UserResponse response = userAccountService.loginUser(request);
-            return ResponseEntity.ok(response);
+            UserResponse user = userAccountService.loginUser(request);
+            String token = jwtService.generateToken(user);
+
+            return ResponseEntity.ok(
+                    new AuthResponse(token, user)
+            );
         } catch (RuntimeException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -111,7 +138,9 @@ public class UserAccountController {
     ) {
         try {
             userAccountService.updatePassword(id, request);
-            return ResponseEntity.ok(new MessageResponse("Contraseña actualizada correctamente"));
+            return ResponseEntity.ok(
+                    new MessageResponse("Contraseña actualizada correctamente")
+            );
         } catch (RuntimeException e) {
             return ResponseEntity
                     .badRequest()

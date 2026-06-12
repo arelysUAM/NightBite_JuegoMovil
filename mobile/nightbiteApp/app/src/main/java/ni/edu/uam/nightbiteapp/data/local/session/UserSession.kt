@@ -10,5 +10,6 @@ data class UserSession(
     val userId: Long? = null,
     val username: String = "",
     val email: String = "",
-    val age: Int? = null
+    val age: Int? = null,
+    val token: String = ""
 )

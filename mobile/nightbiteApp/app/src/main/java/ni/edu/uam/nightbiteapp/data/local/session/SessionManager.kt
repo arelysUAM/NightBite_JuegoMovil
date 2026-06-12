@@ -17,7 +17,7 @@ private val Context.sessionDataStore by preferencesDataStore(name = "user_sessio
  * Clase encargada de guardar, leer y limpiar la sesión local del usuario.
  *
  * Usa Preferences DataStore porque solo necesitamos almacenar datos pequeños
- * como el id del usuario, username, email y estado de sesión.
+ * como el id del usuario, username, email, token y estado de sesión.
  */
 class SessionManager(
     private val context: Context
@@ -29,6 +29,7 @@ class SessionManager(
         private val USERNAME = stringPreferencesKey("username")
         private val EMAIL = stringPreferencesKey("email")
         private val AGE = intPreferencesKey("age")
+        private val TOKEN = stringPreferencesKey("token")
     }
 
     val userSessionFlow: Flow<UserSession> = context.sessionDataStore.data
@@ -38,17 +39,22 @@ class SessionManager(
                 userId = preferences[USER_ID],
                 username = preferences[USERNAME] ?: "",
                 email = preferences[EMAIL] ?: "",
-                age = preferences[AGE]
+                age = preferences[AGE],
+                token = preferences[TOKEN] ?: ""
             )
         }
 
-    suspend fun saveSession(user: UserResponse) {
+    suspend fun saveSession(
+        user: UserResponse,
+        token: String
+    ) {
         context.sessionDataStore.edit { preferences ->
             preferences[IS_LOGGED_IN] = true
             preferences[USER_ID] = user.id
             preferences[USERNAME] = user.username
             preferences[EMAIL] = user.email
             preferences[AGE] = user.age
+            preferences[TOKEN] = token
         }
     }
 
