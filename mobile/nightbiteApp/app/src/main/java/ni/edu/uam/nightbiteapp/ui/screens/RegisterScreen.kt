@@ -2,13 +2,11 @@ package ni.edu.uam.nightbiteapp.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
@@ -28,17 +26,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.NightRegisterCard
+import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
+import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.NeonGreen
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterUiState
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
-import androidx.compose.foundation.layout.BoxWithConstraints
-import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
-import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.size
+
+/**
+ * Pantalla de registro de cuenta de NightBite.
+ *
+ * Usa NightScreenContainer para reutilizar el fondo, el scroll,
+ * el ajuste por teclado y las dimensiones responsivas de la app.
+ */
 @Composable
 fun RegisterScreen(
     age: Int,
@@ -47,7 +49,6 @@ fun RegisterScreen(
     registerViewModel: RegisterViewModel = viewModel()
 ) {
     val uiState = registerViewModel.uiState
-    val scrollState = rememberScrollState()
 
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -171,128 +172,102 @@ fun RegisterScreen(
         requestBack()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
-        contentAlignment = Alignment.Center
-    ) {
-        RegisterBackground()
-
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState),
-            contentAlignment = Alignment.Center
+    NightScreenContainer(
+        background = NightBackgroundType.PurplePattern,
+        useScreenPadding = true,
+        scrollable = true,
+        avoidKeyboard = true
+    ) { dimensions ->
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            val windowSize = getNightWindowSize(maxWidth)
-            val dimensions = nightDimensionsFor(windowSize)
-
-            Box(
+            Image(
+                painter = painterResource(id = R.drawable.boton_volver),
+                contentDescription = "Volver",
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = dimensions.screenHorizontalPadding,
-                        vertical = dimensions.screenVerticalPadding
-                    )
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.boton_volver),
-                    contentDescription = "Volver",
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .size(dimensions.iconButtonSize)
-                        .clickable {
-                            requestBack()
-                        },
-                    contentScale = ContentScale.Fit
-                )
-
-                NightRegisterCard(
-                    username = username,
-                    email = email,
-                    password = password,
-                    confirmPassword = confirmPassword,
-                    usernameError = usernameError,
-                    emailError = emailError,
-                    passwordError = passwordError,
-                    confirmPasswordError = confirmPasswordError,
-                    onUsernameChange = { value ->
-                        usernameTouched = true
-                        username = value
-                            .lowercase()
-                            .replace(" ", "")
-                    },
-                    onEmailChange = { value ->
-                        emailTouched = true
-                        email = value
-                            .lowercase()
-                            .replace(" ", "")
-                    },
-                    onPasswordChange = { value ->
-                        passwordTouched = true
-                        password = value
-                    },
-                    onConfirmPasswordChange = { value ->
-                        confirmPasswordTouched = true
-                        confirmPassword = value
-                    },
-                    onRegisterClick = {
-                        validateAndRegister()
-                    },
-                    onBackToLoginClick = {
+                    .align(Alignment.TopStart)
+                    .size(dimensions.iconButtonSize)
+                    .clickable {
                         requestBack()
                     },
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .widthIn(
-                            max = dimensions.registerCardWidth
-                        )
+                contentScale = ContentScale.Fit
+            )
+
+            NightRegisterCard(
+                username = username,
+                email = email,
+                password = password,
+                confirmPassword = confirmPassword,
+                usernameError = usernameError,
+                emailError = emailError,
+                passwordError = passwordError,
+                confirmPasswordError = confirmPasswordError,
+                onUsernameChange = { value ->
+                    usernameTouched = true
+                    username = value
+                        .lowercase()
+                        .replace(" ", "")
+                },
+                onEmailChange = { value ->
+                    emailTouched = true
+                    email = value
+                        .lowercase()
+                        .replace(" ", "")
+                },
+                onPasswordChange = { value ->
+                    passwordTouched = true
+                    password = value
+                },
+                onConfirmPasswordChange = { value ->
+                    confirmPasswordTouched = true
+                    confirmPassword = value
+                },
+                onRegisterClick = {
+                    validateAndRegister()
+                },
+                onBackToLoginClick = {
+                    requestBack()
+                },
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .widthIn(
+                        max = dimensions.registerCardWidth
+                    )
+            )
+
+            if (uiState is RegisterUiState.Loading) {
+                CircularProgressIndicator(
+                    color = CheeseYellow,
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
-        }
 
-        if (uiState is RegisterUiState.Loading) {
-            CircularProgressIndicator(
-                color = CheeseYellow
+            RegisterDialogs(
+                showCancelRegisterDialog = showCancelRegisterDialog,
+                onDismissCancelRegisterDialog = {
+                    showCancelRegisterDialog = false
+                },
+                onConfirmCancelRegister = {
+                    showCancelRegisterDialog = false
+                    onBackToAgeCheck()
+                },
+                showEmptyFieldsDialog = showEmptyFieldsDialog,
+                onDismissEmptyFieldsDialog = {
+                    showEmptyFieldsDialog = false
+                },
+                dialogType = dialogType,
+                dialogTitle = dialogTitle,
+                dialogMessage = dialogMessage,
+                onSuccessConfirm = {
+                    dialogType = RegisterDialogType.None
+                    onBackToLogin()
+                },
+                onErrorConfirm = {
+                    dialogType = RegisterDialogType.None
+                }
             )
         }
-
-        RegisterDialogs(
-            showCancelRegisterDialog = showCancelRegisterDialog,
-            onDismissCancelRegisterDialog = {
-                showCancelRegisterDialog = false
-            },
-            onConfirmCancelRegister = {
-                showCancelRegisterDialog = false
-                onBackToAgeCheck()
-            },
-            showEmptyFieldsDialog = showEmptyFieldsDialog,
-            onDismissEmptyFieldsDialog = {
-                showEmptyFieldsDialog = false
-            },
-            dialogType = dialogType,
-            dialogTitle = dialogTitle,
-            dialogMessage = dialogMessage,
-            onSuccessConfirm = {
-                dialogType = RegisterDialogType.None
-                onBackToLogin()
-            },
-            onErrorConfirm = {
-                dialogType = RegisterDialogType.None
-            }
-        )
     }
-}
-
-@Composable
-private fun RegisterBackground() {
-    Image(
-        painter = painterResource(id = R.drawable.fondo_estampado_morado),
-        contentDescription = "Fondo de registro",
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop
-    )
 }
 
 @Composable

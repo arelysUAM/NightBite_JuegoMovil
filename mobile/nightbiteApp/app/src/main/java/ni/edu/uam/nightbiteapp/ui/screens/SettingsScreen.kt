@@ -15,11 +15,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -60,6 +59,8 @@ import ni.edu.uam.nightbiteapp.ui.theme.SettingsPanelPink
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsHeaderPink
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsTabPink
 import ni.edu.uam.nightbiteapp.ui.theme.SettingsOptionLavender
+import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
+import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
 
 private enum class SettingsTab {
     GAME,
@@ -76,7 +77,7 @@ fun SettingsScreen(
     onSupportClick: () -> Unit = {},
     onTermsClick: () -> Unit = {}
 ) {
-    var selectedTab by remember {
+    var selectedTab by rememberSaveable {
         mutableStateOf(SettingsTab.GAME)
     }
 
@@ -84,68 +85,55 @@ fun SettingsScreen(
         onBackToHome()
     }
 
-    BoxWithConstraints(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        val windowSize = getNightWindowSize(maxWidth)
-        val dimensions = nightDimensionsFor(windowSize)
+    NightScreenContainer(
+        background = NightBackgroundType.PurplePattern,
+        useScreenPadding = true,
+        scrollable = false,
+        avoidKeyboard = true
+    ) { dimensions ->
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val cardWidth = dimensions.settingsCardWidth.coerceAtMost(maxWidth)
+            val cardHeight = dimensions.settingsCardHeight.coerceAtMost(maxHeight)
 
-        val availableWidth =
-            maxWidth - dimensions.screenHorizontalPadding - dimensions.screenHorizontalPadding
+            Image(
+                painter = painterResource(id = R.drawable.boton_volver),
+                contentDescription = "Volver",
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .size(dimensions.iconButtonSize)
+                    .clickable {
+                        onBackToHome()
+                    },
+                contentScale = ContentScale.Fit
+            )
 
-        val availableHeight =
-            maxHeight - dimensions.screenVerticalPadding - dimensions.screenVerticalPadding
-
-        val cardWidth = dimensions.settingsCardWidth.coerceAtMost(availableWidth)
-        val cardHeight = dimensions.settingsCardHeight.coerceAtMost(availableHeight)
-
-        Image(
-            painter = painterResource(id = R.drawable.fondo_estampado_morado),
-            contentDescription = "Fondo de configuración",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        Image(
-            painter = painterResource(id = R.drawable.boton_volver),
-            contentDescription = "Volver",
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(
-                    start = dimensions.screenHorizontalPadding,
-                    top = dimensions.screenVerticalPadding
-                )
-                .size(dimensions.iconButtonSize)
-                .clickable {
-                    onBackToHome()
+            SettingsCard(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(
+                        width = cardWidth,
+                        height = cardHeight
+                    ),
+                selectedTab = selectedTab,
+                userSession = userSession,
+                innerWidth = dimensions.settingsInnerWidth,
+                optionRowWidth = dimensions.settingsOptionRowWidth,
+                actionButtonWidth = dimensions.settingsActionButtonWidth,
+                onGameTabClick = {
+                    selectedTab = SettingsTab.GAME
                 },
-            contentScale = ContentScale.Fit
-        )
-
-        SettingsCard(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(
-                    width = cardWidth,
-                    height = cardHeight
-                ),
-            selectedTab = selectedTab,
-            userSession = userSession,
-            innerWidth = dimensions.settingsInnerWidth,
-            optionRowWidth = dimensions.settingsOptionRowWidth,
-            actionButtonWidth = dimensions.settingsActionButtonWidth,
-            onGameTabClick = {
-                selectedTab = SettingsTab.GAME
-            },
-            onAccountTabClick = {
-                selectedTab = SettingsTab.ACCOUNT
-            },
-            onNavigateToAccount = onNavigateToAccount,
-            onLogout = onLogout,
-            onDeleteAccountClick = onDeleteAccountClick,
-            onSupportClick = onSupportClick,
-            onTermsClick = onTermsClick
-        )
+                onAccountTabClick = {
+                    selectedTab = SettingsTab.ACCOUNT
+                },
+                onNavigateToAccount = onNavigateToAccount,
+                onLogout = onLogout,
+                onDeleteAccountClick = onDeleteAccountClick,
+                onSupportClick = onSupportClick,
+                onTermsClick = onTermsClick
+            )
+        }
     }
 }
 

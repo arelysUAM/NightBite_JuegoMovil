@@ -1,18 +1,14 @@
 package ni.edu.uam.nightbiteapp.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -49,23 +45,23 @@ import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
+import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
 import ni.edu.uam.nightbiteapp.ui.design.NightShapes
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
-import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
-import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 import ni.edu.uam.nightbiteapp.ui.theme.DarkText
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.LoginTabCyan
-import ni.edu.uam.nightbiteapp.ui.theme.NightBackground
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import java.util.Calendar
+import androidx.compose.foundation.background
 
 /**
  * Pantalla para verificar la edad antes de permitir crear una cuenta.
  *
- * El usuario selecciona su año de nacimiento desplazando una lista
- * desde el año actual hasta 1900.
+ * Usa NightScreenContainer para conservar el fondo base, el ajuste por teclado
+ * y las dimensiones responsivas de forma estándar.
  */
 @Composable
 fun AgeCheckScreen(
@@ -110,23 +106,14 @@ fun AgeCheckScreen(
 
     val selectedYear = years[selectedIndex]
 
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(NightBackground)
-            .imePadding(),
-        contentAlignment = Alignment.Center
-    ) {
-        val windowSize = getNightWindowSize(maxWidth)
-        val dimensions = nightDimensionsFor(windowSize)
-
+    NightScreenContainer(
+        background = NightBackgroundType.None,
+        useScreenPadding = true,
+        scrollable = false,
+        avoidKeyboard = true
+    ) { dimensions ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    horizontal = dimensions.screenHorizontalPadding,
-                    vertical = dimensions.screenVerticalPadding
-                ),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             AgeCheckCard(
@@ -180,7 +167,7 @@ private fun AgeCheckCard(
     onYearClick: (Int) -> Unit,
     onContinueClick: () -> Unit,
     onBackToLogin: () -> Unit
-){
+) {
     Box {
         Card(
             modifier = Modifier

@@ -2,23 +2,17 @@ package ni.edu.uam.nightbiteapp.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +30,8 @@ import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.NightPrimaryButton
 import ni.edu.uam.nightbiteapp.ui.components.NightSecondaryButton
 import ni.edu.uam.nightbiteapp.ui.components.NightTextField
+import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
+import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
 import ni.edu.uam.nightbiteapp.ui.design.NightSizes
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
@@ -87,17 +83,14 @@ fun AccountScreen(
         requestExit()
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
+    NightScreenContainer(
+        background = NightBackgroundType.None,
+        useScreenPadding = true,
+        scrollable = true,
+        avoidKeyboard = true
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    horizontal = NightSpacing.screenHorizontal,
-                    vertical = NightSpacing.screenVertical
-                ),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -261,17 +254,8 @@ private fun CredentialsCard(
             text = "Aplicar cambios",
             onClick = onApplyChanges,
             enabled = !isLoading,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         )
-
-        if (isLoading) {
-            Spacer(modifier = Modifier.height(NightSpacing.medium))
-
-            CircularProgressIndicator(
-                color = CheeseYellow,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-        }
     }
 }
 
@@ -430,7 +414,7 @@ private fun AccountDialogs(
     if (showDeleteAccountDialog) {
         NightMessageDialog(
             title = "Eliminar cuenta",
-            message = "Esta acción eliminará tu cuenta de forma irreversible. No podrás recuperar estos datos. ¿Deseas continuar?",
+            message = "Esta acción eliminará tu cuenta y tu ficha de repartidor. No podrás recuperar estos datos. ¿Deseas continuar?",
             confirmText = "Eliminar",
             dismissText = "Cancelar",
             icon = Icons.Default.Warning,
