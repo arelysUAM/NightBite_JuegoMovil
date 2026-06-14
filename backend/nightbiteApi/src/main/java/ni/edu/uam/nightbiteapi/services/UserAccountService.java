@@ -257,11 +257,11 @@ public class UserAccountService {
         validatePassword(request.getCurrentPassword(), "La contraseña actual");
         validatePassword(request.getNewPassword(), "La nueva contraseña");
 
-        if (request.getConfirmPassword() == null || request.getConfirmPassword().isBlank()) {
+        if (request.getConfirmNewPassword() == null || request.getConfirmNewPassword().isBlank()) {
             throw new RuntimeException("La confirmación de contraseña es obligatoria");
         }
 
-        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
             throw new RuntimeException("La nueva contraseña y la confirmación no coinciden");
         }
     }

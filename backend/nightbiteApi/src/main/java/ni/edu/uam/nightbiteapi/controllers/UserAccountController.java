@@ -12,6 +12,7 @@ import ni.edu.uam.nightbiteapi.services.UserAccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class UserAccountController {
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(
-            @RequestBody UserRegisterRequest request
+            @Valid @RequestBody UserRegisterRequest request
     ) {
         UserResponse response = userAccountService.registerUser(request);
 
@@ -61,7 +62,7 @@ public class UserAccountController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> loginUser(
-            @RequestBody UserLoginRequest request
+            @Valid @RequestBody UserLoginRequest request
     ) {
         UserResponse user = userAccountService.loginUser(request);
         String token = jwtService.generateToken(user);
@@ -74,7 +75,7 @@ public class UserAccountController {
     @PutMapping("/{id}/username")
     public ResponseEntity<UserResponse> updateUsername(
             @PathVariable Long id,
-            @RequestBody UpdateUsernameRequest request
+            @Valid @RequestBody UpdateUsernameRequest request
     ) {
         UserResponse response = userAccountService.updateUsername(id, request);
         return ResponseEntity.ok(response);
@@ -83,7 +84,7 @@ public class UserAccountController {
     @PutMapping("/{id}/password")
     public ResponseEntity<MessageResponse> updatePassword(
             @PathVariable Long id,
-            @RequestBody UpdatePasswordRequest request
+            @Valid @RequestBody UpdatePasswordRequest request
     ) {
         userAccountService.updatePassword(id, request);
 

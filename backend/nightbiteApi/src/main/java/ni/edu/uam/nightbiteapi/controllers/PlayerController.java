@@ -7,6 +7,7 @@ import ni.edu.uam.nightbiteapi.services.PlayerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -56,7 +57,7 @@ public class PlayerController {
 
     @PostMapping
     public ResponseEntity<PlayerResponse> savePlayer(
-            @RequestBody PlayerRequest request
+            @Valid @RequestBody PlayerRequest request
     ) {
         PlayerResponse savedPlayer = playerService.savePlayer(request);
 
@@ -68,7 +69,7 @@ public class PlayerController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePlayer(
             @PathVariable Long id,
-            @RequestBody PlayerRequest request
+            @Valid @RequestBody PlayerRequest request
     ) {
         return playerService.updatePlayer(id, request)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
