@@ -12,6 +12,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import ni.edu.uam.nightbiteapi.dto.UpdatePasswordRequest;
 import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,6 +44,8 @@ public class UserAccountService {
     }
 
     public Optional<UserResponse> getUserById(Long id) {
+        validateAuthenticatedUserOwnsAccount(id);
+
         return userAccountRepository.findById(id)
                 .map(this::mapToResponseWithPlayer);
     }
@@ -97,6 +102,8 @@ public class UserAccountService {
     }
 
     public UserResponse updateUsername(Long id, UpdateUsernameRequest request) {
+        validateAuthenticatedUserOwnsAccount(id);
+
         UserAccount user = userAccountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cuenta de usuario no encontrada"));
 
@@ -120,6 +127,8 @@ public class UserAccountService {
     }
 
     public void updatePassword(Long id, UpdatePasswordRequest request) {
+        validateAuthenticatedUserOwnsAccount(id);
+
         UserAccount user = userAccountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cuenta de usuario no encontrada"));
 
@@ -149,6 +158,8 @@ public class UserAccountService {
     }
 
     public boolean deleteUser(Long id) {
+        validateAuthenticatedUserOwnsAccount(id);
+
         Optional<UserAccount> optionalUser = userAccountRepository.findById(id);
 
         if (optionalUser.isEmpty()) {
@@ -260,6 +271,32 @@ public class UserAccountService {
         validateEmail(request.getEmail());
         validatePassword(request.getPassword(), "La contraseña");
         validateAge(request.getAge());
+    }
+
+    private void validateAuthenticatedUserOwnsAccount(Long requestedUserId) {
+        if (requestedUserId == null) {
+            throw new AccessDeniedException("No tienes permiso para acceder a esta cuenta");
+        }
+
+        Authentication authentication = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AccessDeniedException("Debes iniciar sesión para acceder a este recurso");
+        }
+
+        String authenticatedUserIdText = authentication.getName();
+
+        try {
+            Long authenticatedUserId = Long.parseLong(authenticatedUserIdText);
+
+            if (!authenticatedUserId.equals(requestedUserId)) {
+                throw new AccessDeniedException("No tienes permiso para acceder a esta cuenta");
+            }
+        } catch (NumberFormatException e) {
+            throw new AccessDeniedException("Token inválido");
+        }
     }
 
     private UserResponse mapToResponseWithPlayer(UserAccount user) {

@@ -18,7 +18,7 @@ import java.util.Collections;
 /**
  * Filtro que revisa si la petición trae un token JWT válido.
  *
- * Si el token es válido, registra al usuario como autenticado
+ * Si el token es válido, registra al usuario autenticado
  * dentro del contexto de seguridad de Spring.
  */
 @Component
@@ -55,11 +55,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String username = jwtService.extractUsername(token);
+        Long userId = jwtService.extractUserId(token);
+
+        if (userId == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token sin identificador de usuario");
+            return;
+        }
 
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(
-                        username,
+                        String.valueOf(userId),
                         null,
                         Collections.emptyList()
                 );
