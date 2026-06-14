@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.repository.UserRepository
 import android.os.SystemClock
-import kotlinx.coroutines.delay
 
 class StartViewModel(
     private val sessionManager: SessionManager,

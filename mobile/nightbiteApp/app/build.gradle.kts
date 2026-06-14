@@ -12,7 +12,7 @@ val localProperties = Properties().apply {
 
 val debugBaseUrl: String =
     localProperties.getProperty("NIGHTBITE_DEBUG_BASE_URL")
-        ?: "http://192.168.1.12:8080/"
+        ?: "http://10.131.181.86:8080/"
 
 val releaseBaseUrl: String =
     localProperties.getProperty("NIGHTBITE_RELEASE_BASE_URL")

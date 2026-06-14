@@ -44,6 +44,8 @@ import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModelFactory
 import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
+import ni.edu.uam.nightbiteapp.data.remote.RetrofitClient
+import androidx.compose.runtime.LaunchedEffect
 
 /**
  * Componente principal de navegación de la aplicación.
@@ -57,6 +59,10 @@ fun AppNavigation() {
 
     val sessionManager = remember {
         SessionManager(context.applicationContext)
+    }
+
+    LaunchedEffect(sessionManager) {
+        RetrofitClient.initialize(sessionManager)
     }
 
     val userSession by sessionManager.userSessionFlow.collectAsState(

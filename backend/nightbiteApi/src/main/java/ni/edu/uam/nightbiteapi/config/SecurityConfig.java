@@ -9,20 +9,26 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Configuración base de seguridad para la API REST de NightBite.
+ * Configuración de seguridad para la API REST de NightBite.
  *
- * Esta configuración prepara el backend para trabajar como API móvil:
- * - Desactiva CSRF porque no se usan formularios web.
- * - Desactiva sesiones de navegador.
- * - Permite registro y login.
- * - Bloquea el endpoint que lista todos los usuarios.
- * - Mantiene temporalmente accesibles algunos endpoints hasta implementar JWT.
+ * La API funciona sin sesiones de navegador.
+ * El login y el registro son públicos.
+ * Los endpoints de usuario y jugador requieren token JWT.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -38,21 +44,30 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
+                        // Endpoints públicos
                         .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
 
-                        // Evita exponer la lista completa de usuarios.
+                        // No se permite listar todos los usuarios
                         .requestMatchers(HttpMethod.GET, "/api/users").denyAll()
 
-                        // Temporalmente permitido hasta implementar autenticación con token.
-                        .requestMatchers(HttpMethod.GET, "/api/users/{id}").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/users/{id}/username").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/users/{id}/password").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/users/{id}").permitAll()
+                        // Endpoints protegidos de usuarios
+                        .requestMatchers(HttpMethod.GET, "/api/users/*").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*/username").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*/password").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/*").authenticated()
 
-                        .requestMatchers("/api/players/**").permitAll()
+                        // Endpoints protegidos de players
+                        .requestMatchers("/api/players/**").authenticated()
 
-                        .anyRequest().permitAll()
+                        // Cualquier otra petición requiere autenticación
+                        .anyRequest().authenticated()
+                )
+
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
                 )
 
                 .httpBasic(AbstractHttpConfigurer::disable)
