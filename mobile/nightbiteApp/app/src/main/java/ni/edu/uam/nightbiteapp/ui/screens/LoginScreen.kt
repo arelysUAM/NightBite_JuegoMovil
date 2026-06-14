@@ -2,14 +2,7 @@ package ni.edu.uam.nightbiteapp.ui.screens
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.PersonAdd
@@ -24,27 +17,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.ui.components.NightLoginCard
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
-import ni.edu.uam.nightbiteapp.ui.design.NightSizes
-import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
+import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
+import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.NeonGreen
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.viewmodel.LoginErrorType
 import ni.edu.uam.nightbiteapp.viewmodel.LoginUiState
 import ni.edu.uam.nightbiteapp.viewmodel.LoginViewModel
-import androidx.compose.foundation.layout.BoxWithConstraints
-import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
-import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 
+/**
+ * Pantalla de inicio de sesión de NightBite.
+ *
+ * Usa NightScreenContainer para conservar el fondo, el scroll,
+ * el ajuste por teclado y las dimensiones responsivas de forma estándar.
+ */
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
@@ -58,7 +51,6 @@ fun LoginScreen(
         SessionManager(context.applicationContext)
     }
 
-    val scrollState = rememberScrollState()
     val uiState = loginViewModel.uiState
 
     var username by remember { mutableStateOf("") }
@@ -98,6 +90,7 @@ fun LoginScreen(
                 loginViewModel.resetState()
                 onNavigateToHome(loggedUser)
             }
+
             is LoginUiState.Error -> {
                 loginErrorMessage = uiState.message
                 loginErrorType = uiState.type
@@ -124,60 +117,41 @@ fun LoginScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
-        contentAlignment = Alignment.Center
-    ) {
-        LoginBackground()
-
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState),
-            contentAlignment = Alignment.Center
-        ) {
-            val windowSize = getNightWindowSize(maxWidth)
-            val dimensions = nightDimensionsFor(windowSize)
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = dimensions.screenHorizontalPadding,
-                        vertical = dimensions.screenVerticalPadding
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                NightLoginCard(
-                    username = username,
-                    password = password,
-                    onUsernameChange = { value ->
-                        username = value
-                            .lowercase()
-                            .replace(" ", "")
-                    },
-                    onPasswordChange = { value ->
-                        password = value
-                    },
-                    onLoginClick = {
-                        loginViewModel.loginUser(
-                            usernameOrEmail = username,
-                            password = password
-                        )
-                    },
-                    onRegisterClick = onNavigateToRegister,
-                    modifier = Modifier.widthIn(
-                        max = dimensions.cardMaxWidth
-                    )
+    NightScreenContainer(
+        background = NightBackgroundType.PurplePattern,
+        useScreenPadding = true,
+        scrollable = true,
+        avoidKeyboard = true
+    ) { dimensions ->
+        NightLoginCard(
+            username = username,
+            password = password,
+            onUsernameChange = { value ->
+                username = value
+                    .lowercase()
+                    .replace(" ", "")
+            },
+            onPasswordChange = { value ->
+                password = value
+            },
+            onLoginClick = {
+                loginViewModel.loginUser(
+                    usernameOrEmail = username,
+                    password = password
                 )
-            }
-        }
+            },
+            onRegisterClick = onNavigateToRegister,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .widthIn(
+                    max = dimensions.cardMaxWidth
+                )
+        )
 
         if (uiState is LoginUiState.Loading) {
             CircularProgressIndicator(
-                color = CheeseYellow
+                color = CheeseYellow,
+                modifier = Modifier.align(Alignment.Center)
             )
         }
 
@@ -200,16 +174,6 @@ fun LoginScreen(
             }
         )
     }
-}
-
-@Composable
-private fun LoginBackground() {
-    Image(
-        painter = painterResource(id = R.drawable.fondo_estampado_morado),
-        contentDescription = "Fondo de inicio de sesión",
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop
-    )
 }
 
 @Composable
