@@ -1,6 +1,5 @@
 package ni.edu.uam.nightbiteapp.data.remote
 
-import ni.edu.uam.nightbiteapp.BuildConfig
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -9,24 +8,16 @@ import retrofit2.converter.gson.GsonConverterFactory
 /**
  * Cliente de Retrofit para consumir la API de NightBite.
  *
- * La URL base se obtiene desde BuildConfig para separar
- * ambiente local de desarrollo y ambiente de producción.
- *
- * También permite inicializar un AuthInterceptor para enviar
- * automáticamente el token JWT guardado en la sesión local.
+ * En esta etapa del proyecto, la API se ejecuta localmente en la computadora
+ * y la app se conecta usando la IP de la PC dentro de la misma red Wi-Fi.
  */
 object RetrofitClient {
+
+    private const val BASE_URL = "http://192.168.1.12:8080/"
 
     @Volatile
     private var initializedApiService: ApiService? = null
 
-    /**
-     * ApiService usado por los repositorios.
-     *
-     * Si la app ya llamó initialize(sessionManager), usará Retrofit con token.
-     * Si no, crea una versión básica sin interceptor para evitar errores en previews
-     * o pruebas aisladas.
-     */
     val apiService: ApiService
         get() = initializedApiService ?: createApiServiceWithoutAuth()
 
@@ -48,7 +39,7 @@ object RetrofitClient {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
+            .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -57,7 +48,7 @@ object RetrofitClient {
 
     private fun createApiServiceWithoutAuth(): ApiService {
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
+            .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)

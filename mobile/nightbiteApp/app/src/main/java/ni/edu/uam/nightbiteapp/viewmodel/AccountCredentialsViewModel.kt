@@ -230,4 +230,63 @@ class AccountCredentialsViewModel(
             onSessionCleared()
         }
     }
+
+    fun onDeleteAccountClick() {
+        _uiState.value = _uiState.value.copy(
+            showDeleteAccountDialog = true,
+            errorMessage = null
+        )
+    }
+
+    fun dismissDeleteAccountDialog() {
+        _uiState.value = _uiState.value.copy(
+            showDeleteAccountDialog = false
+        )
+    }
+
+    fun deleteAccount(userId: Long?) {
+        if (userId == null) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "No se pudo identificar la cuenta del usuario.",
+                showDeleteAccountDialog = false
+            )
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                errorMessage = null,
+                showDeleteAccountDialog = false
+            )
+
+            try {
+                val response = userRepository.deleteUser(userId)
+
+                if (response.isSuccessful) {
+                    sessionManager.clearSession()
+
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        showAccountDeletedDialog = true
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No se pudo eliminar la cuenta."
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Error de conexión con la API."
+                )
+            }
+        }
+    }
+
+    fun finishAccountDeletedFlow(onNavigateToLogin: () -> Unit) {
+        _uiState.value = AccountCredentialsUiState()
+        onNavigateToLogin()
+    }
 }

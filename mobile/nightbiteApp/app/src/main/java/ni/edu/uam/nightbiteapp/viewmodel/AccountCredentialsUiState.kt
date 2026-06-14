@@ -9,6 +9,8 @@ data class AccountCredentialsUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val successMessage: String? = null,
+    val showDeleteAccountDialog: Boolean = false,
+    val showAccountDeletedDialog: Boolean = false,
 
     val showConfirmDialog: Boolean = false,
     val showSessionExpiredDialog: Boolean = false

@@ -2,6 +2,7 @@ package ni.edu.uam.nightbiteapp.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
 import ni.edu.uam.nightbiteapp.ui.components.NightBaseCard
+import ni.edu.uam.nightbiteapp.ui.components.NightDangerButton
 import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.NightPrimaryButton
 import ni.edu.uam.nightbiteapp.ui.components.NightSecondaryButton
@@ -59,6 +61,10 @@ fun AccountScreen(
         mutableStateOf(false)
     }
 
+    var showDeleteAccountConfirmation by remember {
+        mutableStateOf(false)
+    }
+
     val hasUnsavedChanges =
         uiState.newUsername.isNotEmpty() ||
                 uiState.currentPassword.isNotEmpty() ||
@@ -81,81 +87,112 @@ fun AccountScreen(
         requestExit()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(
-                horizontal = NightSpacing.screenHorizontal,
-                vertical = NightSpacing.screenVertical
-            ),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        AccountHeader()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    horizontal = NightSpacing.screenHorizontal,
+                    vertical = NightSpacing.screenVertical
+                ),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AccountHeader()
 
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
 
-        CredentialsCard(
-            newUsername = uiState.newUsername,
-            currentPassword = uiState.currentPassword,
-            newPassword = uiState.newPassword,
-            confirmNewPassword = uiState.confirmNewPassword,
-            errorMessage = uiState.errorMessage,
-            isLoading = uiState.isLoading,
-            onNewUsernameChange = viewModel::onNewUsernameChange,
-            onCurrentPasswordChange = viewModel::onCurrentPasswordChange,
-            onNewPasswordChange = viewModel::onNewPasswordChange,
-            onConfirmNewPasswordChange = viewModel::onConfirmNewPasswordChange,
-            onApplyChanges = {
-                viewModel.onApplyChangesClick(
+            CredentialsCard(
+                newUsername = uiState.newUsername,
+                currentPassword = uiState.currentPassword,
+                newPassword = uiState.newPassword,
+                confirmNewPassword = uiState.confirmNewPassword,
+                errorMessage = uiState.errorMessage,
+                isLoading = uiState.isLoading,
+                onNewUsernameChange = viewModel::onNewUsernameChange,
+                onCurrentPasswordChange = viewModel::onCurrentPasswordChange,
+                onNewPasswordChange = viewModel::onNewPasswordChange,
+                onConfirmNewPasswordChange = viewModel::onConfirmNewPasswordChange,
+                onApplyChanges = {
+                    viewModel.onApplyChangesClick(
+                        currentUsername = userSession.username
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+
+            NightSecondaryButton(
+                text = "Cancelar",
+                onClick = {
+                    requestExit()
+                },
+                enabled = !uiState.isLoading,
+                modifier = Modifier.widthIn(
+                    max = NightSizes.loginCardWidth
+                )
+            )
+
+            Spacer(modifier = Modifier.height(NightSpacing.medium))
+
+            NightDangerButton(
+                text = "Eliminar cuenta",
+                onClick = {
+                    showDeleteAccountConfirmation = true
+                },
+                enabled = !uiState.isLoading,
+                modifier = Modifier.widthIn(
+                    max = NightSizes.loginCardWidth
+                )
+            )
+
+            Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+        }
+
+        AccountDialogs(
+            showConfirmDialog = uiState.showConfirmDialog,
+            showSessionExpiredDialog = uiState.showSessionExpiredDialog,
+            showExitConfirmation = showExitConfirmation,
+            showDeleteAccountDialog = showDeleteAccountConfirmation,
+            showAccountDeletedDialog = uiState.showAccountDeletedDialog,
+            onConfirmChanges = {
+                viewModel.applyConfirmedChanges(
+                    userId = userSession.userId,
                     currentUsername = userSession.username
                 )
-            }
-        )
-
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
-
-        NightSecondaryButton(
-            text = "Cancelar",
-            onClick = {
-                requestExit()
             },
-            enabled = !uiState.isLoading,
-            modifier = Modifier.widthIn(
-                max = NightSizes.loginCardWidth
-            )
-        )
-
-        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
-    }
-
-    AccountDialogs(
-        showConfirmDialog = uiState.showConfirmDialog,
-        showSessionExpiredDialog = uiState.showSessionExpiredDialog,
-        showExitConfirmation = showExitConfirmation,
-        onConfirmChanges = {
-            viewModel.applyConfirmedChanges(
-                userId = userSession.userId,
-                currentUsername = userSession.username
-            )
-        },
-        onDismissConfirmChanges = {
-            viewModel.dismissConfirmDialog()
-        },
-        onSessionExpiredConfirm = {
-            viewModel.clearSessionAndFinish {
-                onNavigateToLogin()
+            onDismissConfirmChanges = {
+                viewModel.dismissConfirmDialog()
+            },
+            onSessionExpiredConfirm = {
+                viewModel.clearSessionAndFinish {
+                    onNavigateToLogin()
+                }
+            },
+            onConfirmExit = {
+                showExitConfirmation = false
+                onBackToSettings()
+            },
+            onDismissExit = {
+                showExitConfirmation = false
+            },
+            onDeleteAccountConfirm = {
+                showDeleteAccountConfirmation = false
+                viewModel.deleteAccount(userSession.userId)
+            },
+            onDeleteAccountDismiss = {
+                showDeleteAccountConfirmation = false
+            },
+            onAccountDeletedConfirm = {
+                viewModel.finishAccountDeletedFlow {
+                    onNavigateToLogin()
+                }
             }
-        },
-        onConfirmExit = {
-            showExitConfirmation = false
-            onBackToSettings()
-        },
-        onDismissExit = {
-            showExitConfirmation = false
-        }
-    )
+        )
+    }
 }
 
 @Composable
@@ -340,11 +377,16 @@ private fun AccountDialogs(
     showConfirmDialog: Boolean,
     showSessionExpiredDialog: Boolean,
     showExitConfirmation: Boolean,
+    showDeleteAccountDialog: Boolean,
+    showAccountDeletedDialog: Boolean,
     onConfirmChanges: () -> Unit,
     onDismissConfirmChanges: () -> Unit,
     onSessionExpiredConfirm: () -> Unit,
     onConfirmExit: () -> Unit,
-    onDismissExit: () -> Unit
+    onDismissExit: () -> Unit,
+    onDeleteAccountConfirm: () -> Unit,
+    onDeleteAccountDismiss: () -> Unit,
+    onAccountDeletedConfirm: () -> Unit
 ) {
     if (showConfirmDialog) {
         NightMessageDialog(
@@ -382,6 +424,32 @@ private fun AccountDialogs(
             iconColor = CheeseYellow,
             onConfirm = onConfirmExit,
             onDismiss = onDismissExit
+        )
+    }
+
+    if (showDeleteAccountDialog) {
+        NightMessageDialog(
+            title = "Eliminar cuenta",
+            message = "Esta acción eliminará tu cuenta de forma irreversible. No podrás recuperar estos datos. ¿Deseas continuar?",
+            confirmText = "Eliminar",
+            dismissText = "Cancelar",
+            icon = Icons.Default.Warning,
+            iconColor = CheeseYellow,
+            onConfirm = onDeleteAccountConfirm,
+            onDismiss = onDeleteAccountDismiss
+        )
+    }
+
+    if (showAccountDeletedDialog) {
+        NightMessageDialog(
+            title = "Cuenta eliminada",
+            message = "Tu cuenta fue eliminada correctamente. Volverás al inicio de sesión.",
+            confirmText = "Aceptar",
+            dismissText = null,
+            icon = Icons.Default.CheckCircle,
+            iconColor = CheeseYellow,
+            onConfirm = onAccountDeletedConfirm,
+            onDismiss = null
         )
     }
 }

@@ -69,6 +69,10 @@ fun AppNavigation() {
         initial = UserSession()
     )
 
+    val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(
+        factory = AccountCredentialsViewModelFactory(sessionManager)
+    )
+
     var activeUserId by remember {
         mutableStateOf<Long?>(null)
     }
@@ -404,31 +408,113 @@ fun AppNavigation() {
         }
 
         composable(Routes.SETTINGS) {
-            SettingsScreen(
-                userSession = userSession,
-                onBackToHome = {
-                    navController.popBackStack()
-                },
-                onNavigateToAccount = {
-                    navController.navigate(Routes.ACCOUNT)
-                },
-                onLogout = {
-                    activeUserId = null
-
-                    coroutineScope.launch {
-                        sessionManager.clearSession()
-
-                        navController.navigate(Routes.LOGIN) {
-                            popUpTo(Routes.HOME) {
-                                inclusive = true
-                            }
-
-                            launchSingleTop = true
-                        }
-                    }
-                }
+            val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(
+                factory = AccountCredentialsViewModelFactory(sessionManager)
             )
+
+            val accountUiState by accountCredentialsViewModel.uiState.collectAsState()
+
+            var showLogoutConfirmation by remember {
+                mutableStateOf(false)
+            }
+
+            var isLeavingSession by remember {
+                mutableStateOf(false)
+            }
+
+            if (!isLeavingSession) {
+                SettingsScreen(
+                    userSession = userSession,
+                    onBackToHome = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToAccount = {
+                        navController.navigate(Routes.ACCOUNT)
+                    },
+                    onLogout = {
+                        showLogoutConfirmation = true
+                    },
+                    onDeleteAccountClick = {
+                        accountCredentialsViewModel.onDeleteAccountClick()
+                    }
+                )
+            }
+
+            if (showLogoutConfirmation) {
+                NightMessageDialog(
+                    title = "Cerrar sesión",
+                    message = "¿Deseas cerrar tu sesión actual?",
+                    confirmText = "Cerrar sesión",
+                    dismissText = "Cancelar",
+                    icon = Icons.Default.Warning,
+                    iconColor = CheeseYellow,
+                    onConfirm = {
+                        showLogoutConfirmation = false
+                        isLeavingSession = true
+                        activeUserId = null
+
+                        coroutineScope.launch {
+                            sessionManager.clearSession()
+
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(Routes.HOME) {
+                                    inclusive = true
+                                }
+
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                    onDismiss = {
+                        showLogoutConfirmation = false
+                    }
+                )
+            }
+
+            if (accountUiState.showDeleteAccountDialog) {
+                NightMessageDialog(
+                    title = "Eliminar cuenta",
+                    message = "Esta acción eliminará tu cuenta y tu ficha de repartidor. No podrás recuperar estos datos. ¿Deseas continuar?",
+                    confirmText = "Eliminar",
+                    dismissText = "Cancelar",
+                    icon = Icons.Default.Warning,
+                    iconColor = CheeseYellow,
+                    onConfirm = {
+                        isLeavingSession = true
+                        accountCredentialsViewModel.deleteAccount(userSession.userId)
+                    },
+                    onDismiss = {
+                        accountCredentialsViewModel.dismissDeleteAccountDialog()
+                    }
+                )
+            }
+
+            if (accountUiState.showAccountDeletedDialog) {
+                NightMessageDialog(
+                    title = "Cuenta eliminada",
+                    message = "Tu cuenta fue eliminada correctamente. Volverás al inicio de sesión.",
+                    confirmText = "Aceptar",
+                    dismissText = null,
+                    icon = Icons.Default.Warning,
+                    iconColor = CheeseYellow,
+                    onConfirm = {
+                        accountCredentialsViewModel.finishAccountDeletedFlow {
+                            activeUserId = null
+
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(Routes.HOME) {
+                                    inclusive = true
+                                }
+
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                    onDismiss = null
+                )
+            }
         }
+
 
         composable(Routes.ACCOUNT) {
             val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(

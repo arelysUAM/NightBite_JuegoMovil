@@ -1,23 +1,3 @@
-import java.util.Properties
-
-val localProperties = Properties().apply {
-    val localPropertiesFile = rootProject.file("local.properties")
-
-    if (localPropertiesFile.exists()) {
-        localPropertiesFile.inputStream().use { input ->
-            load(input)
-        }
-    }
-}
-
-val debugBaseUrl: String =
-    localProperties.getProperty("NIGHTBITE_DEBUG_BASE_URL")
-        ?: "http://10.131.181.86:8080/"
-
-val releaseBaseUrl: String =
-    localProperties.getProperty("NIGHTBITE_RELEASE_BASE_URL")
-        ?: "https://api-nightbite.com/"
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -44,23 +24,11 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField(
-                "String",
-                "BASE_URL",
-                "\"$debugBaseUrl\""
-            )
-
             manifestPlaceholders["usesCleartextTraffic"] = "true"
         }
 
         release {
-            buildConfigField(
-                "String",
-                "BASE_URL",
-                "\"$releaseBaseUrl\""
-            )
-
-            manifestPlaceholders["usesCleartextTraffic"] = "false"
+            manifestPlaceholders["usesCleartextTraffic"] = "true"
 
             isMinifyEnabled = false
 

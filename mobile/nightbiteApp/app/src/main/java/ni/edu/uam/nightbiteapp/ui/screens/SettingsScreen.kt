@@ -72,6 +72,7 @@ fun SettingsScreen(
     onBackToHome: () -> Unit,
     onNavigateToAccount: () -> Unit,
     onLogout: () -> Unit,
+    onDeleteAccountClick: () -> Unit,
     onSupportClick: () -> Unit = {},
     onTermsClick: () -> Unit = {}
 ) {
@@ -141,6 +142,7 @@ fun SettingsScreen(
             },
             onNavigateToAccount = onNavigateToAccount,
             onLogout = onLogout,
+            onDeleteAccountClick = onDeleteAccountClick,
             onSupportClick = onSupportClick,
             onTermsClick = onTermsClick
         )
@@ -159,6 +161,7 @@ private fun SettingsCard(
     onAccountTabClick: () -> Unit,
     onNavigateToAccount: () -> Unit,
     onLogout: () -> Unit,
+    onDeleteAccountClick: () -> Unit,
     onSupportClick: () -> Unit,
     onTermsClick: () -> Unit
 ) {
@@ -196,6 +199,7 @@ private fun SettingsCard(
                         actionButtonWidth = actionButtonWidth,
                         onNavigateToAccount = onNavigateToAccount,
                         onLogout = onLogout,
+                        onDeleteAccountClick = onDeleteAccountClick,
                         onTermsClick = onTermsClick
                     )
                 }
@@ -368,6 +372,7 @@ private fun AccountSettingsContent(
     actionButtonWidth: Dp,
     onNavigateToAccount: () -> Unit,
     onLogout: () -> Unit,
+    onDeleteAccountClick: () -> Unit,
     onTermsClick: () -> Unit
 ) {
     Column(
@@ -419,7 +424,7 @@ private fun AccountSettingsContent(
                 contentColor = SettingsHeaderPink,
                 borderColor = SettingsHeaderPink,
                 width = actionButtonWidth,
-                onClick = {}
+                onClick = onDeleteAccountClick
             )
         }
 
