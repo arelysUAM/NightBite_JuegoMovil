@@ -33,24 +33,12 @@ public class UserAccountController {
         this.jwtService = jwtService;
     }
 
-    /**
-     * Endpoint para obtener todas las cuentas de usuario.
-     *
-     * Método HTTP: GET
-     * URL: /api/users
-     */
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userAccountService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
-    /**
-     * Endpoint para obtener una cuenta de usuario por su id.
-     *
-     * Método HTTP: GET
-     * URL: /api/users/{id}
-     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         return userAccountService.getUserById(id)
@@ -60,102 +48,54 @@ public class UserAccountController {
                         .body(new MessageResponse("Cuenta de usuario no encontrada")));
     }
 
-    /**
-     * Endpoint para registrar una nueva cuenta de usuario.
-     *
-     * Método HTTP: POST
-     * URL: /api/users/register
-     */
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody UserRegisterRequest request) {
-        try {
-            UserResponse response = userAccountService.registerUser(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse(e.getMessage()));
-        }
+    public ResponseEntity<UserResponse> registerUser(
+            @RequestBody UserRegisterRequest request
+    ) {
+        UserResponse response = userAccountService.registerUser(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
-    /**
-     * Endpoint para iniciar sesión.
-     *
-     * Método HTTP: POST
-     * URL: /api/users/login
-     *
-     * Si las credenciales son correctas, devuelve:
-     * - token JWT
-     * - datos del usuario autenticado
-     */
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserLoginRequest request) {
-        try {
-            UserResponse user = userAccountService.loginUser(request);
-            String token = jwtService.generateToken(user);
+    public ResponseEntity<AuthResponse> loginUser(
+            @RequestBody UserLoginRequest request
+    ) {
+        UserResponse user = userAccountService.loginUser(request);
+        String token = jwtService.generateToken(user);
 
-            return ResponseEntity.ok(
-                    new AuthResponse(token, user)
-            );
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new MessageResponse(e.getMessage()));
-        }
+        return ResponseEntity.ok(
+                new AuthResponse(token, user)
+        );
     }
 
-    /**
-     * Endpoint para cambiar el nombre de usuario de una cuenta.
-     *
-     * Método HTTP: PUT
-     * URL: /api/users/{id}/username
-     */
     @PutMapping("/{id}/username")
-    public ResponseEntity<?> updateUsername(
+    public ResponseEntity<UserResponse> updateUsername(
             @PathVariable Long id,
             @RequestBody UpdateUsernameRequest request
     ) {
-        try {
-            UserResponse response = userAccountService.updateUsername(id, request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse(e.getMessage()));
-        }
+        UserResponse response = userAccountService.updateUsername(id, request);
+        return ResponseEntity.ok(response);
     }
 
-    /**
-     * Endpoint para cambiar la contraseña de una cuenta.
-     *
-     * Método HTTP: PUT
-     * URL: /api/users/{id}/password
-     */
     @PutMapping("/{id}/password")
-    public ResponseEntity<?> updatePassword(
+    public ResponseEntity<MessageResponse> updatePassword(
             @PathVariable Long id,
             @RequestBody UpdatePasswordRequest request
     ) {
-        try {
-            userAccountService.updatePassword(id, request);
-            return ResponseEntity.ok(
-                    new MessageResponse("Contraseña actualizada correctamente")
-            );
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse(e.getMessage()));
-        }
+        userAccountService.updatePassword(id, request);
+
+        return ResponseEntity.ok(
+                new MessageResponse("Contraseña actualizada correctamente")
+        );
     }
 
-    /**
-     * Endpoint para eliminar una cuenta de usuario.
-     *
-     * Método HTTP: DELETE
-     * URL: /api/users/{id}
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<MessageResponse> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<MessageResponse> deleteUser(
+            @PathVariable Long id
+    ) {
         boolean deleted = userAccountService.deleteUser(id);
 
         if (!deleted) {

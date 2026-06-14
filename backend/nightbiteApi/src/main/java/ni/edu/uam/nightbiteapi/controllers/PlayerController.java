@@ -20,7 +20,9 @@ public class PlayerController {
 
     private final PlayerService playerService;
 
-    public PlayerController(PlayerService playerService) {
+    public PlayerController(
+            PlayerService playerService
+    ) {
         this.playerService = playerService;
     }
 
@@ -31,7 +33,9 @@ public class PlayerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getPlayerById(@PathVariable Long id) {
+    public ResponseEntity<?> getPlayerById(
+            @PathVariable Long id
+    ) {
         return playerService.getPlayerById(id)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity
@@ -40,7 +44,9 @@ public class PlayerController {
     }
 
     @GetMapping("/account/{userAccountId}")
-    public ResponseEntity<?> getPlayerByUserAccountId(@PathVariable Long userAccountId) {
+    public ResponseEntity<?> getPlayerByUserAccountId(
+            @PathVariable Long userAccountId
+    ) {
         return playerService.getPlayerByUserAccountId(userAccountId)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity
@@ -49,15 +55,14 @@ public class PlayerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> savePlayer(@RequestBody PlayerRequest request) {
-        try {
-            PlayerResponse savedPlayer = playerService.savePlayer(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedPlayer);
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new MessageResponse(ex.getMessage()));
-        }
+    public ResponseEntity<PlayerResponse> savePlayer(
+            @RequestBody PlayerRequest request
+    ) {
+        PlayerResponse savedPlayer = playerService.savePlayer(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(savedPlayer);
     }
 
     @PutMapping("/{id}")
@@ -65,21 +70,17 @@ public class PlayerController {
             @PathVariable Long id,
             @RequestBody PlayerRequest request
     ) {
-        try {
-            return playerService.updatePlayer(id, request)
-                    .<ResponseEntity<?>>map(ResponseEntity::ok)
-                    .orElseGet(() -> ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body(new MessageResponse("Ficha de repartidor no encontrada")));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new MessageResponse(ex.getMessage()));
-        }
+        return playerService.updatePlayer(id, request)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(new MessageResponse("Ficha de repartidor no encontrada")));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<MessageResponse> deletePlayer(@PathVariable Long id) {
+    public ResponseEntity<MessageResponse> deletePlayer(
+            @PathVariable Long id
+    ) {
         boolean deleted = playerService.deletePlayer(id);
 
         if (!deleted) {
@@ -88,6 +89,8 @@ public class PlayerController {
                     .body(new MessageResponse("Ficha de repartidor no encontrada"));
         }
 
-        return ResponseEntity.ok(new MessageResponse("Ficha de repartidor eliminada correctamente"));
+        return ResponseEntity.ok(
+                new MessageResponse("Ficha de repartidor eliminada correctamente")
+        );
     }
 }
