@@ -1,4 +1,4 @@
-package ni.edu.uam.nightbiteapp.ui.components
+package ni.edu.uam.nightbiteapp.ui.components.feedback
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text

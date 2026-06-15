@@ -1,4 +1,4 @@
-package ni.edu.uam.nightbiteapp.ui.components
+package ni.edu.uam.nightbiteapp.ui.components.buttons
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

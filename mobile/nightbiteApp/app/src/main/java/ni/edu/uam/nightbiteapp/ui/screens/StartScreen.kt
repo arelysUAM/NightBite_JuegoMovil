@@ -14,10 +14,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
-import ni.edu.uam.nightbiteapp.ui.components.AnimatedLoadingText
-import ni.edu.uam.nightbiteapp.ui.components.GameTitle
-import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
-import ni.edu.uam.nightbiteapp.ui.components.StartBackground
+import ni.edu.uam.nightbiteapp.ui.components.feedback.AnimatedLoadingText
+import ni.edu.uam.nightbiteapp.ui.components.branding.GameTitle
+import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.components.branding.StartBackground
 import ni.edu.uam.nightbiteapp.ui.design.NightSizes
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow

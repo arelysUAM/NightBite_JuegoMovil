@@ -1,5 +1,7 @@
-package ni.edu.uam.nightbiteapp.ui.components
+package ni.edu.uam.nightbiteapp.ui.components.dialogs
 
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightSecondaryButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope

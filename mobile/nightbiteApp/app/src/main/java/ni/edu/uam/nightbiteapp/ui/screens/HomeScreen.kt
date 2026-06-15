@@ -40,8 +40,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
-import ni.edu.uam.nightbiteapp.ui.components.NightLevelButton
-import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightLevelButton
+import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
 import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 import ni.edu.uam.nightbiteapp.ui.model.NightLevel

@@ -1,4 +1,4 @@
-package ni.edu.uam.nightbiteapp.ui.components
+package ni.edu.uam.nightbiteapp.ui.components.fields
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

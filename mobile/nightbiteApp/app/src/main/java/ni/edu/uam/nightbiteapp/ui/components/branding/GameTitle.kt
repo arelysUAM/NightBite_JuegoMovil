@@ -1,4 +1,4 @@
-package ni.edu.uam.nightbiteapp.ui.components
+package ni.edu.uam.nightbiteapp.ui.components.branding
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth

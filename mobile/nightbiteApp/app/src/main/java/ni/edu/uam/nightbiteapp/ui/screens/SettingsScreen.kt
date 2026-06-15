@@ -25,7 +25,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -226,7 +226,7 @@ private fun SettingsHeader(
             onClick = onGameTabClick
         ) {
             Icon(
-                imageVector = Icons.Default.VolumeUp,
+                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                 contentDescription = "Opciones del juego",
                 tint = SmokeWhite
             )
@@ -322,13 +322,13 @@ private fun GameSettingsContent(
 
             SettingsOptionRow(
                 text = "Música",
-                icon = Icons.Default.VolumeUp,
+                icon = Icons.AutoMirrored.Filled.VolumeUp,
                 width = optionRowWidth
             )
 
             SettingsOptionRow(
                 text = "Sonido",
-                icon = Icons.Default.VolumeUp,
+                icon = Icons.AutoMirrored.Filled.VolumeUp,
                 width = optionRowWidth
             )
 

@@ -30,10 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import ni.edu.uam.nightbiteapp.data.local.mock.NightLevelsData
-import ni.edu.uam.nightbiteapp.ui.components.NightBaseCard
-import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
-import ni.edu.uam.nightbiteapp.ui.components.NightPrimaryButton
-import ni.edu.uam.nightbiteapp.ui.components.NightSecondaryButton
+import ni.edu.uam.nightbiteapp.ui.components.cards.NightBaseCard
+import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightSecondaryButton
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.model.GameResultType
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow

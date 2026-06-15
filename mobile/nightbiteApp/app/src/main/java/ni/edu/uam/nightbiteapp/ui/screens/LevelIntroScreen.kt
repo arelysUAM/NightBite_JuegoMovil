@@ -15,11 +15,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import ni.edu.uam.nightbiteapp.ui.components.EnemyCard
-import ni.edu.uam.nightbiteapp.ui.components.NightBaseCard
-import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
-import ni.edu.uam.nightbiteapp.ui.components.NightPrimaryButton
-import ni.edu.uam.nightbiteapp.ui.components.NightSecondaryButton
+import ni.edu.uam.nightbiteapp.ui.components.cards.EnemyCard
+import ni.edu.uam.nightbiteapp.ui.components.cards.NightBaseCard
+import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightSecondaryButton
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.model.NightLevel
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow

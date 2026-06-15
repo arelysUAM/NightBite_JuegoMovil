@@ -23,7 +23,7 @@ import ni.edu.uam.nightbiteapp.data.local.mock.NightLevelsData
 import ni.edu.uam.nightbiteapp.data.local.mock.NightProgressData
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
-import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.model.GameResultType
 import ni.edu.uam.nightbiteapp.ui.screens.AccountScreen
 import ni.edu.uam.nightbiteapp.ui.screens.AgeCheckScreen

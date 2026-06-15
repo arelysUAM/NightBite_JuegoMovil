@@ -42,11 +42,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import ni.edu.uam.nightbiteapp.ui.components.NightBaseCard
-import ni.edu.uam.nightbiteapp.ui.components.NightMessageDialog
-import ni.edu.uam.nightbiteapp.ui.components.NightPrimaryButton
-import ni.edu.uam.nightbiteapp.ui.components.NightSecondaryButton
-import ni.edu.uam.nightbiteapp.ui.components.NightTextField
+import ni.edu.uam.nightbiteapp.ui.components.cards.NightBaseCard
+import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightSecondaryButton
+import ni.edu.uam.nightbiteapp.ui.components.fields.NightTextField
 import ni.edu.uam.nightbiteapp.ui.design.NightShapes
 import ni.edu.uam.nightbiteapp.ui.design.NightSizes
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
@@ -54,14 +54,13 @@ import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.DarkText
 import ni.edu.uam.nightbiteapp.ui.theme.FieldBackground
 import ni.edu.uam.nightbiteapp.ui.theme.LavenderGray
-import ni.edu.uam.nightbiteapp.ui.theme.NeonGreen
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
-import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
 import androidx.compose.foundation.layout.BoxWithConstraints
 import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
 import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
 import androidx.compose.ui.unit.Dp
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 
 @Composable
 fun PlayerCreationScreen(
@@ -420,7 +419,10 @@ private fun PlayerDropdownField(
                 cursorColor = CheeseYellow
             ),
             modifier = Modifier
-                .menuAnchor()
+                .menuAnchor(
+                    type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                    enabled = enabled
+                )
                 .fillMaxWidth()
                 .height(NightSizes.textFieldHeight)
                 .clickable {
