@@ -1,6 +1,8 @@
 package ni.edu.uam.nightbiteapi.services;
 
 import ni.edu.uam.nightbiteapi.dto.PlayerSummaryResponse;
+import ni.edu.uam.nightbiteapi.dto.UpdatePasswordRequest;
+import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
 import ni.edu.uam.nightbiteapi.dto.UserLoginRequest;
 import ni.edu.uam.nightbiteapi.dto.UserRegisterRequest;
 import ni.edu.uam.nightbiteapi.dto.UserResponse;
@@ -10,11 +12,6 @@ import ni.edu.uam.nightbiteapi.repositories.PlayerRepository;
 import ni.edu.uam.nightbiteapi.repositories.UserAccountRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import ni.edu.uam.nightbiteapi.dto.UpdatePasswordRequest;
-import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,27 +41,27 @@ public class UserAccountService {
     }
 
     public Optional<UserResponse> getUserById(Long id) {
-        validateAuthenticatedUserOwnsAccount(id);
-
         return userAccountRepository.findById(id)
                 .map(this::mapToResponseWithPlayer);
     }
 
     public UserResponse registerUser(UserRegisterRequest request) {
-
         validateRegisterRequest(request);
 
-        if (userAccountRepository.existsByUsername(request.getUsername())) {
+        String username = request.getUsername().trim().toLowerCase();
+        String email = request.getEmail().trim().toLowerCase();
+
+        if (userAccountRepository.existsByUsername(username)) {
             throw new RuntimeException("El nombre de usuario ya está registrado");
         }
 
-        if (userAccountRepository.existsByEmail(request.getEmail())) {
+        if (userAccountRepository.existsByEmail(email)) {
             throw new RuntimeException("El correo ya está registrado");
         }
 
         UserAccount user = new UserAccount();
-        user.setUsername(request.getUsername().trim().toLowerCase());
-        user.setEmail(request.getEmail().trim().toLowerCase());
+        user.setUsername(username);
+        user.setEmail(email);
         user.setAge(request.getAge());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
@@ -82,10 +79,12 @@ public class UserAccountService {
             throw new RuntimeException("Campos incompletos");
         }
 
+        String usernameOrEmail = request.getUsernameOrEmail().trim().toLowerCase();
+
         UserAccount user = userAccountRepository
                 .findByUsernameOrEmail(
-                        request.getUsernameOrEmail().trim(),
-                        request.getUsernameOrEmail().trim()
+                        usernameOrEmail,
+                        usernameOrEmail
                 )
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
@@ -102,8 +101,6 @@ public class UserAccountService {
     }
 
     public UserResponse updateUsername(Long id, UpdateUsernameRequest request) {
-        validateAuthenticatedUserOwnsAccount(id);
-
         UserAccount user = userAccountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cuenta de usuario no encontrada"));
 
@@ -127,8 +124,6 @@ public class UserAccountService {
     }
 
     public void updatePassword(Long id, UpdatePasswordRequest request) {
-        validateAuthenticatedUserOwnsAccount(id);
-
         UserAccount user = userAccountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cuenta de usuario no encontrada"));
 
@@ -158,18 +153,13 @@ public class UserAccountService {
     }
 
     public boolean deleteUser(Long id) {
-        validateAuthenticatedUserOwnsAccount(id);
-
         Optional<UserAccount> optionalUser = userAccountRepository.findById(id);
 
         if (optionalUser.isEmpty()) {
             return false;
         }
 
-        UserAccount user = optionalUser.get();
-
-        userAccountRepository.delete(user);
-
+        userAccountRepository.delete(optionalUser.get());
         return true;
     }
 
@@ -186,6 +176,10 @@ public class UserAccountService {
 
         if (!normalizedUsername.equals(normalizedUsername.toLowerCase())) {
             throw new RuntimeException("El nombre de usuario debe estar en minúsculas");
+        }
+
+        if (normalizedUsername.length() < 4) {
+            throw new RuntimeException("El nombre de usuario debe tener al menos 4 caracteres");
         }
 
         if (normalizedUsername.length() > 16) {
@@ -273,32 +267,6 @@ public class UserAccountService {
         validateAge(request.getAge());
     }
 
-    private void validateAuthenticatedUserOwnsAccount(Long requestedUserId) {
-        if (requestedUserId == null) {
-            throw new AccessDeniedException("No tienes permiso para acceder a esta cuenta");
-        }
-
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AccessDeniedException("Debes iniciar sesión para acceder a este recurso");
-        }
-
-        String authenticatedUserIdText = authentication.getName();
-
-        try {
-            Long authenticatedUserId = Long.parseLong(authenticatedUserIdText);
-
-            if (!authenticatedUserId.equals(requestedUserId)) {
-                throw new AccessDeniedException("No tienes permiso para acceder a esta cuenta");
-            }
-        } catch (NumberFormatException e) {
-            throw new AccessDeniedException("Token inválido");
-        }
-    }
-
     private UserResponse mapToResponseWithPlayer(UserAccount user) {
         PlayerSummaryResponse playerSummary = playerRepository
                 .findByUserAccountId(user.getId())
@@ -318,7 +286,6 @@ public class UserAccountService {
     private PlayerSummaryResponse mapPlayerToSummary(Player player) {
         return new PlayerSummaryResponse(
                 player.getId(),
-                player.getNickname(),
                 player.getDriverName(),
                 player.getGender(),
                 player.getHelmetColor(),

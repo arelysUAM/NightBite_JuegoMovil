@@ -12,10 +12,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Servicio encargado de manejar la lógica relacionada con la ficha/personaje
- * del repartidor dentro del juego.
- */
 @Service
 public class PlayerService {
 
@@ -38,8 +34,10 @@ public class PlayerService {
             "Delivery"
     );
 
-    public PlayerService(PlayerRepository playerRepository,
-                         UserAccountRepository userAccountRepository) {
+    public PlayerService(
+            PlayerRepository playerRepository,
+            UserAccountRepository userAccountRepository
+    ) {
         this.playerRepository = playerRepository;
         this.userAccountRepository = userAccountRepository;
     }
@@ -48,7 +46,6 @@ public class PlayerService {
         return new PlayerResponse(
                 player.getId(),
                 player.getUserAccount().getId(),
-                player.getNickname(),
                 player.getDriverName(),
                 player.getGender(),
                 player.getHelmetColor(),
@@ -61,10 +58,6 @@ public class PlayerService {
     private void validateRequiredFields(PlayerRequest request) {
         if (request.getUserAccountId() == null) {
             throw new IllegalArgumentException("El id de la cuenta de usuario es obligatorio");
-        }
-
-        if (request.getNickname() == null || request.getNickname().trim().isEmpty()) {
-            throw new IllegalArgumentException("El apodo del repartidor es obligatorio");
         }
 
         if (request.getDriverName() == null || request.getDriverName().trim().isEmpty()) {
@@ -85,17 +78,12 @@ public class PlayerService {
     }
 
     private void normalizeRequest(PlayerRequest request) {
-        request.setNickname(request.getNickname().trim().toLowerCase());
         request.setDriverName(request.getDriverName().trim());
         request.setHelmetColor(request.getHelmetColor().trim());
         request.setMotorcycleType(request.getMotorcycleType().trim());
     }
 
     private void validateLengths(PlayerRequest request) {
-        if (request.getNickname().length() > 30) {
-            throw new IllegalArgumentException("El apodo no debe superar los 30 caracteres");
-        }
-
         if (request.getDriverName().length() > 80) {
             throw new IllegalArgumentException("El nombre del repartidor no debe superar los 80 caracteres");
         }
@@ -106,16 +94,6 @@ public class PlayerService {
 
         if (request.getMotorcycleType().length() > 30) {
             throw new IllegalArgumentException("El tipo de moto no debe superar los 30 caracteres");
-        }
-    }
-
-    private void validateNicknameFormat(String nickname) {
-        if (nickname.contains(" ")) {
-            throw new IllegalArgumentException("El apodo no debe contener espacios");
-        }
-
-        if (!nickname.matches("^[a-z0-9_]+$")) {
-            throw new IllegalArgumentException("El apodo solo puede contener letras minúsculas, números y guion bajo");
         }
     }
 
@@ -137,7 +115,6 @@ public class PlayerService {
         validateRequiredFields(request);
         normalizeRequest(request);
         validateLengths(request);
-        validateNicknameFormat(request.getNickname());
         validatePlayerOptions(request);
     }
 
@@ -168,13 +145,8 @@ public class PlayerService {
             throw new IllegalArgumentException("Esta cuenta ya tiene una ficha de repartidor");
         }
 
-        if (playerRepository.existsByNickname(request.getNickname())) {
-            throw new IllegalArgumentException("El apodo ya está en uso");
-        }
-
         Player player = new Player();
         player.setUserAccount(userAccount);
-        player.setNickname(request.getNickname());
         player.setDriverName(request.getDriverName());
         player.setGender(request.getGender());
         player.setHelmetColor(request.getHelmetColor());
@@ -196,17 +168,6 @@ public class PlayerService {
 
         Player existingPlayer = optionalPlayer.get();
 
-        Optional<Player> playerWithSameNickname = playerRepository.findAll()
-                .stream()
-                .filter(player -> player.getNickname().equals(request.getNickname()))
-                .filter(player -> !player.getId().equals(id))
-                .findFirst();
-
-        if (playerWithSameNickname.isPresent()) {
-            throw new IllegalArgumentException("El apodo ya está en uso");
-        }
-
-        existingPlayer.setNickname(request.getNickname());
         existingPlayer.setDriverName(request.getDriverName());
         existingPlayer.setGender(request.getGender());
         existingPlayer.setHelmetColor(request.getHelmetColor());

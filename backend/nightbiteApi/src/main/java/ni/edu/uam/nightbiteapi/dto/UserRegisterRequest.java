@@ -6,7 +6,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 public class UserRegisterRequest {
 
     @NotBlank(message = "El nombre de usuario es obligatorio")
@@ -30,9 +34,6 @@ public class UserRegisterRequest {
     @Min(value = 13, message = "Debes tener 13 años o más para crear una cuenta")
     private Integer age;
 
-    public UserRegisterRequest() {
-    }
-
     public UserRegisterRequest(
             String username,
             String email,
@@ -45,35 +46,4 @@ public class UserRegisterRequest {
         this.age = age;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
 }

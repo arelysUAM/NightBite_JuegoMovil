@@ -2,10 +2,14 @@ package ni.edu.uam.nightbiteapi.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * DTO utilizado para solicitar el cambio de contraseña.
  */
+@Setter
+@Getter
 public class UpdatePasswordRequest {
 
     @NotBlank(message = "La contraseña actual es obligatoria")
@@ -18,9 +22,6 @@ public class UpdatePasswordRequest {
     @NotBlank(message = "La confirmación de contraseña es obligatoria")
     private String confirmNewPassword;
 
-    public UpdatePasswordRequest() {
-    }
-
     public UpdatePasswordRequest(
             String currentPassword,
             String newPassword,
@@ -31,27 +32,4 @@ public class UpdatePasswordRequest {
         this.confirmNewPassword = confirmNewPassword;
     }
 
-    public String getCurrentPassword() {
-        return currentPassword;
-    }
-
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public String getConfirmNewPassword() {
-        return confirmNewPassword;
-    }
-
-    public void setCurrentPassword(String currentPassword) {
-        this.currentPassword = currentPassword;
-    }
-
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
-    }
-
-    public void setConfirmNewPassword(String confirmNewPassword) {
-        this.confirmNewPassword = confirmNewPassword;
-    }
 }

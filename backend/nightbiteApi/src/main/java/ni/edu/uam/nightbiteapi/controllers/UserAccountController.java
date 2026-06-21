@@ -1,37 +1,35 @@
 package ni.edu.uam.nightbiteapi.controllers;
 
-import ni.edu.uam.nightbiteapi.dto.AuthResponse;
+import jakarta.validation.Valid;
 import ni.edu.uam.nightbiteapi.dto.MessageResponse;
 import ni.edu.uam.nightbiteapi.dto.UpdatePasswordRequest;
 import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
 import ni.edu.uam.nightbiteapi.dto.UserLoginRequest;
 import ni.edu.uam.nightbiteapi.dto.UserRegisterRequest;
 import ni.edu.uam.nightbiteapi.dto.UserResponse;
-import ni.edu.uam.nightbiteapi.services.JwtService;
 import ni.edu.uam.nightbiteapi.services.UserAccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 
 import java.util.List;
 
 /**
  * Controlador REST para la gestión de cuentas de usuario.
+ *
+ * Para el entregable no se utiliza JWT.
+ * El login devuelve directamente los datos públicos del usuario.
  */
 @RestController
 @RequestMapping("/api/users")
 public class UserAccountController {
 
     private final UserAccountService userAccountService;
-    private final JwtService jwtService;
 
     public UserAccountController(
-            UserAccountService userAccountService,
-            JwtService jwtService
+            UserAccountService userAccountService
     ) {
         this.userAccountService = userAccountService;
-        this.jwtService = jwtService;
     }
 
     @GetMapping
@@ -41,7 +39,9 @@ public class UserAccountController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+    public ResponseEntity<?> getUserById(
+            @PathVariable Long id
+    ) {
         return userAccountService.getUserById(id)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity
@@ -61,15 +61,11 @@ public class UserAccountController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> loginUser(
+    public ResponseEntity<UserResponse> loginUser(
             @Valid @RequestBody UserLoginRequest request
     ) {
-        UserResponse user = userAccountService.loginUser(request);
-        String token = jwtService.generateToken(user);
-
-        return ResponseEntity.ok(
-                new AuthResponse(token, user)
-        );
+        UserResponse response = userAccountService.loginUser(request);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/username")
