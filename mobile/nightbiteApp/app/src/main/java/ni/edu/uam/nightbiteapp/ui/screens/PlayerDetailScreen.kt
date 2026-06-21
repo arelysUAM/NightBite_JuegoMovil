@@ -239,17 +239,14 @@ private fun PlayerDetailContent(
         )
     ){
         ContractCard(
-            playerId = player.id,
-            nickname = player.nickname
+            playerId = player.id
         )
 
         Spacer(modifier = Modifier.height(sectionSpacing))
 
         DriverDataCard(
             driverName = player.driverName,
-            gender = player.gender,
-            helmetColor = player.helmetColor,
-            motorcycleType = player.motorcycleType
+            gender = player.gender
         )
 
         Spacer(modifier = Modifier.height(sectionSpacing))
@@ -257,14 +254,6 @@ private fun PlayerDetailContent(
         WorkDataCard()
 
         Spacer(modifier = Modifier.height(sectionSpacing))
-
-        NightPrimaryButton(
-            text = "Editar ficha",
-            onClick = onEditPlayer,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(itemSpacing))
 
         NightSecondaryButton(
             text = "Volver al menú principal",
@@ -276,8 +265,7 @@ private fun PlayerDetailContent(
 
 @Composable
 private fun ContractCard(
-    playerId: Long,
-    nickname: String
+    playerId: Long
 ) {
     NightBaseCard(
         contentPadding = PaddingValues(
@@ -293,7 +281,6 @@ private fun ContractCard(
         Spacer(modifier = Modifier.height(NightSpacing.medium))
 
         DetailText(label = "ID de jugador", value = "#$playerId")
-        DetailText(label = "Apodo", value = nickname)
         DetailText(label = "Noche máxima alcanzada", value = "Nivel 0")
     }
 }
@@ -301,9 +288,7 @@ private fun ContractCard(
 @Composable
 private fun DriverDataCard(
     driverName: String,
-    gender: String,
-    helmetColor: String,
-    motorcycleType: String
+    gender: String
 ) {
     NightBaseCard(
         contentPadding = PaddingValues(
@@ -320,8 +305,6 @@ private fun DriverDataCard(
 
         DetailText(label = "Nombre del repartidor", value = driverName)
         DetailText(label = "Género", value = gender)
-        DetailText(label = "Color de casco", value = helmetColor)
-        DetailText(label = "Tipo de moto", value = motorcycleType)
     }
 }
 

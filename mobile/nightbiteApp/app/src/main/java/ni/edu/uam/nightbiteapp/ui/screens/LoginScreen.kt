@@ -32,17 +32,13 @@ import ni.edu.uam.nightbiteapp.viewmodel.LoginErrorType
 import ni.edu.uam.nightbiteapp.viewmodel.LoginUiState
 import ni.edu.uam.nightbiteapp.viewmodel.LoginViewModel
 
-/**
- * Pantalla de inicio de sesión de NightBite.
- *
- * Usa NightScreenContainer para conservar el fondo, el scroll,
- * el ajuste por teclado y las dimensiones responsivas de forma estándar.
- */
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToHome: (UserResponse) -> Unit,
     onExitApp: () -> Unit,
+    initialUsername: String = "",
+    initialPassword: String = "",
     loginViewModel: LoginViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -53,12 +49,25 @@ fun LoginScreen(
 
     val uiState = loginViewModel.uiState
 
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var lastBackPressTime by remember { mutableLongStateOf(0L) }
+    var username by remember {
+        mutableStateOf(initialUsername)
+    }
 
-    var loginErrorMessage by remember { mutableStateOf<String?>(null) }
-    var loginErrorType by remember { mutableStateOf<LoginErrorType?>(null) }
+    var password by remember {
+        mutableStateOf(initialPassword)
+    }
+
+    var lastBackPressTime by remember {
+        mutableLongStateOf(0L)
+    }
+
+    var loginErrorMessage by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var loginErrorType by remember {
+        mutableStateOf<LoginErrorType?>(null)
+    }
 
     fun clearLoginError() {
         loginErrorMessage = null
@@ -70,15 +79,18 @@ fun LoginScreen(
         password = ""
     }
 
+    LaunchedEffect(initialUsername, initialPassword) {
+        username = initialUsername
+        password = initialPassword
+    }
+
     LaunchedEffect(uiState) {
         when (uiState) {
             is LoginUiState.Success -> {
                 val loggedUser = uiState.user
-                val token = uiState.token
 
                 sessionManager.saveSession(
-                    user = loggedUser,
-                    token = token
+                    user = loggedUser
                 )
 
                 Toast.makeText(

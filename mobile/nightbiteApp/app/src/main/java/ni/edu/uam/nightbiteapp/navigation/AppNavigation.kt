@@ -29,12 +29,14 @@ import ni.edu.uam.nightbiteapp.ui.screens.AccountScreen
 import ni.edu.uam.nightbiteapp.ui.screens.AgeCheckScreen
 import ni.edu.uam.nightbiteapp.ui.screens.GamePlaceholderScreen
 import ni.edu.uam.nightbiteapp.ui.screens.GameResultScreen
+import ni.edu.uam.nightbiteapp.ui.screens.GenderSelectionScreen
 import ni.edu.uam.nightbiteapp.ui.screens.HomeScreen
 import ni.edu.uam.nightbiteapp.ui.screens.LevelIntroScreen
 import ni.edu.uam.nightbiteapp.ui.screens.LoginScreen
 import ni.edu.uam.nightbiteapp.ui.screens.PlayerCreationScreen
 import ni.edu.uam.nightbiteapp.ui.screens.PlayerDetailScreen
 import ni.edu.uam.nightbiteapp.ui.screens.RegisterScreen
+import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
 import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModel
@@ -43,13 +45,7 @@ import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModelFactory
-import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
-import ni.edu.uam.nightbiteapp.data.remote.RetrofitClient
-import androidx.compose.runtime.LaunchedEffect
 
-/**
- * Componente principal de navegación de la aplicación.
- */
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -61,33 +57,45 @@ fun AppNavigation() {
         SessionManager(context.applicationContext)
     }
 
-    LaunchedEffect(sessionManager) {
-        RetrofitClient.initialize(sessionManager)
-    }
-
     val userSession by sessionManager.userSessionFlow.collectAsState(
         initial = UserSession()
-    )
-
-    val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(
-        factory = AccountCredentialsViewModelFactory(sessionManager)
     )
 
     var activeUserId by remember {
         mutableStateOf<Long?>(null)
     }
 
-    /**
-     * Regresa al HomeScreen y elimina las pantallas abiertas
-     * por encima del menú principal.
-     */
+    var pendingLoginUsername by remember {
+        mutableStateOf("")
+    }
+
+    var pendingLoginPassword by remember {
+        mutableStateOf("")
+    }
+
+    var showLastStepsWelcomeMessage by remember {
+        mutableStateOf(false)
+    }
+
     fun navigateBackToHome() {
         navController.navigate(Routes.HOME) {
             popUpTo(Routes.HOME) {
                 inclusive = false
             }
-
             launchSingleTop = true
+        }
+    }
+
+    fun navigateToLoginKeepingPrefill() {
+        val returnedToLogin = navController.popBackStack(
+            route = Routes.LOGIN,
+            inclusive = false
+        )
+
+        if (!returnedToLogin) {
+            navController.navigate(Routes.LOGIN) {
+                launchSingleTop = true
+            }
         }
     }
 
@@ -112,9 +120,23 @@ fun AppNavigation() {
                 onNavigateToHome = { user ->
                     activeUserId = user.id
 
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.START) {
-                            inclusive = true
+                    if (user.player == null) {
+                        showLastStepsWelcomeMessage = true
+
+                        navController.navigate(Routes.GENDER_SELECTION) {
+                            popUpTo(Routes.START) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    } else {
+                        showLastStepsWelcomeMessage = false
+
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.START) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
                     }
                 }
@@ -123,15 +145,36 @@ fun AppNavigation() {
 
         composable(Routes.LOGIN) {
             LoginScreen(
+                initialUsername = pendingLoginUsername,
+                initialPassword = pendingLoginPassword,
                 onNavigateToRegister = {
                     navController.navigate(Routes.AGE_CHECK)
                 },
                 onNavigateToHome = { user ->
                     activeUserId = user.id
 
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) {
-                            inclusive = true
+                    val isFreshRegisterLogin = pendingLoginPassword.isNotBlank()
+
+                    pendingLoginUsername = ""
+                    pendingLoginPassword = ""
+
+                    if (user.player == null) {
+                        showLastStepsWelcomeMessage = !isFreshRegisterLogin
+
+                        navController.navigate(Routes.GENDER_SELECTION) {
+                            popUpTo(Routes.LOGIN) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    } else {
+                        showLastStepsWelcomeMessage = false
+
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
                     }
                 },
@@ -169,6 +212,42 @@ fun AppNavigation() {
                 },
                 onBackToAgeCheck = {
                     navController.popBackStack()
+                },
+                onRegisterSuccess = { username, password ->
+                    pendingLoginUsername = username
+                    pendingLoginPassword = password
+
+                    navigateToLoginKeepingPrefill()
+                },
+                onEmailAlreadyRegistered = { email ->
+                    pendingLoginUsername = email
+                    pendingLoginPassword = ""
+
+                    navigateToLoginKeepingPrefill()
+                }
+            )
+        }
+
+        composable(Routes.GENDER_SELECTION) {
+            val playerCreationViewModel: PlayerCreationViewModel = viewModel(
+                factory = PlayerCreationViewModelFactory(sessionManager)
+            )
+
+            GenderSelectionScreen(
+                viewModel = playerCreationViewModel,
+                showWelcomeBackMessage = showLastStepsWelcomeMessage,
+                onExitApp = {
+                    activity?.finish()
+                },
+                onPlayerCreated = {
+                    showLastStepsWelcomeMessage = false
+
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.GENDER_SELECTION) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -187,13 +266,16 @@ fun AppNavigation() {
                     navController.navigate(Routes.PLAYER_CREATION)
                 },
                 onNavigateToAchievements = {
-                    // Pendiente: crear pantalla de libro de logros.
+                    // Pendiente: crear pantalla de logros.
                 },
                 onNavigateToSettings = {
                     navController.navigate(Routes.SETTINGS)
                 },
                 onLogout = {
                     activeUserId = null
+                    pendingLoginUsername = ""
+                    pendingLoginPassword = ""
+                    showLastStepsWelcomeMessage = false
 
                     coroutineScope.launch {
                         sessionManager.clearSession()
@@ -202,7 +284,6 @@ fun AppNavigation() {
                             popUpTo(Routes.HOME) {
                                 inclusive = true
                             }
-
                             launchSingleTop = true
                         }
                     }
@@ -222,6 +303,7 @@ fun AppNavigation() {
             )
         ) { backStackEntry ->
             val levelId = backStackEntry.arguments?.getInt("levelId")
+
             val selectedLevel = levelId?.let {
                 NightLevelsData.getLevelById(it)
             }
@@ -262,13 +344,6 @@ fun AppNavigation() {
                     )
                 },
                 onRestartLevel = {
-                    /*
-                     * Actualmente el simulador no guarda progreso interno,
-                     * por lo que permanece en la misma pantalla.
-                     *
-                     * Cuando se implemente LibGDX, aquí se reiniciará
-                     * el estado real del nivel.
-                     */
                     navController.navigate(
                         Routes.gamePlaceholder(levelId)
                     ) {
@@ -293,8 +368,7 @@ fun AppNavigation() {
             )
         ) { backStackEntry ->
             val levelId = backStackEntry.arguments?.getInt("levelId") ?: 0
-            val resultTypeName =
-                backStackEntry.arguments?.getString("resultType")
+            val resultTypeName = backStackEntry.arguments?.getString("resultType")
 
             val resultType = resultTypeName?.let { name ->
                 runCatching {
@@ -331,19 +405,24 @@ fun AppNavigation() {
                 GameResultScreen(
                     resultType = resultType,
                     content = resultContent,
-
-                    /*
-                     * Como GameResultScreen está sobre GamePlaceholderScreen,
-                     * regresar en la pila vuelve al mismo nivel.
-                     */
                     onRetryLevel = {
                         navController.popBackStack()
                     },
-
                     onContinue = {
+                        val currentUserId = activeUserId ?: userSession.userId
+
+                        if (levelId == 0) {
+                            tutorialStarsForResult(resultType)?.let { stars ->
+                                NightProgressData.saveTutorialStars(
+                                    userId = currentUserId,
+                                    stars = stars
+                                )
+                            }
+                        }
+
                         if (shouldUnlockNextLevel) {
                             NightProgressData.unlockNextLevel(
-                                userId = activeUserId ?: userSession.userId,
+                                userId = currentUserId,
                                 completedLevelId = levelId
                             )
                         }
@@ -364,7 +443,6 @@ fun AppNavigation() {
                             navigateBackToHome()
                         }
                     },
-
                     onBackToHome = {
                         navigateBackToHome()
                     }
@@ -382,7 +460,7 @@ fun AppNavigation() {
                     navController.navigate(Routes.PLAYER_CREATION)
                 },
                 onEditPlayer = {
-                    // Pendiente: edición de Player.
+                    // Pendiente.
                 }
             )
         }
@@ -452,6 +530,9 @@ fun AppNavigation() {
                         showLogoutConfirmation = false
                         isLeavingSession = true
                         activeUserId = null
+                        pendingLoginUsername = ""
+                        pendingLoginPassword = ""
+                        showLastStepsWelcomeMessage = false
 
                         coroutineScope.launch {
                             sessionManager.clearSession()
@@ -460,7 +541,6 @@ fun AppNavigation() {
                                 popUpTo(Routes.HOME) {
                                     inclusive = true
                                 }
-
                                 launchSingleTop = true
                             }
                         }
@@ -500,12 +580,14 @@ fun AppNavigation() {
                     onConfirm = {
                         accountCredentialsViewModel.finishAccountDeletedFlow {
                             activeUserId = null
+                            pendingLoginUsername = ""
+                            pendingLoginPassword = ""
+                            showLastStepsWelcomeMessage = false
 
                             navController.navigate(Routes.LOGIN) {
                                 popUpTo(Routes.HOME) {
                                     inclusive = true
                                 }
-
                                 launchSingleTop = true
                             }
                         }
@@ -514,7 +596,6 @@ fun AppNavigation() {
                 )
             }
         }
-
 
         composable(Routes.ACCOUNT) {
             val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(
@@ -529,16 +610,30 @@ fun AppNavigation() {
                 },
                 onNavigateToLogin = {
                     activeUserId = null
+                    pendingLoginUsername = ""
+                    pendingLoginPassword = ""
+                    showLastStepsWelcomeMessage = false
 
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.HOME) {
                             inclusive = true
                         }
-
                         launchSingleTop = true
                     }
                 }
             )
         }
+    }
+}
+
+private fun tutorialStarsForResult(
+    resultType: GameResultType
+): Int? {
+    return when (resultType) {
+        GameResultType.TUTORIAL_THREE_STARS -> 3
+        GameResultType.TUTORIAL_TWO_STARS -> 2
+        GameResultType.TUTORIAL_ONE_STAR -> 1
+        GameResultType.FIRED -> 0
+        else -> null
     }
 }

@@ -1,12 +1,12 @@
 package ni.edu.uam.nightbiteapp.ui.components.dialogs
 
-import ni.edu.uam.nightbiteapp.ui.components.buttons.NightPrimaryButton
-import ni.edu.uam.nightbiteapp.ui.components.buttons.NightSecondaryButton
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -31,6 +31,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.buttons.NightSecondaryButton
 import ni.edu.uam.nightbiteapp.ui.design.NightShapes
 import ni.edu.uam.nightbiteapp.ui.design.NightSizes
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
@@ -39,13 +42,6 @@ import ni.edu.uam.nightbiteapp.ui.theme.LavenderGray
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 
-/**
- * Cuadro superpuesto para mostrar mensajes de confirmación, advertencia,
- * éxito o error dentro de NightBite.
- *
- * additionalContent permite agregar controles personalizados, como las
- * opciones del menú de pausa.
- */
 @Composable
 fun NightMessageDialog(
     title: String,
@@ -62,89 +58,97 @@ fun NightMessageDialog(
     Dialog(
         onDismissRequest = {
             onDismiss?.invoke()
-        }
+        },
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        )
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Surface(
-                modifier = Modifier
-                    .size(NightSizes.iconLarge)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = CircleShape
-                    ),
-                shape = CircleShape,
-                color = iconColor
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = modifier
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    tint = SmokeWhite,
-                    modifier = Modifier.padding(15.dp)
-                )
-            }
-
-            Card(
-                shape = NightShapes.dialog,
-                colors = CardDefaults.cardColors(
-                    containerColor = NightSurface
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 10.dp
-                ),
-                modifier = Modifier.width(NightSizes.dialogWidth)
-            ) {
-                Column(
-                    modifier = Modifier.padding(
-                        horizontal = NightSpacing.dialogHorizontal,
-                        vertical = NightSpacing.dialogVertical
-                    ),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Surface(
+                    modifier = Modifier
+                        .size(NightSizes.iconLarge)
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = CircleShape
+                        ),
+                    shape = CircleShape,
+                    color = iconColor
                 ) {
-                    Text(
-                        text = title,
-                        color = SmokeWhite,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Black,
-                        textAlign = TextAlign.Center
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = SmokeWhite,
+                        modifier = Modifier.padding(15.dp)
                     )
+                }
 
-                    Spacer(modifier = Modifier.height(NightSpacing.small))
-
-                    Text(
-                        text = message,
-                        color = LavenderGray,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    if (additionalContent != null) {
-                        Spacer(modifier = Modifier.height(NightSpacing.large))
-
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            content = additionalContent
+                Card(
+                    shape = NightShapes.dialog,
+                    colors = CardDefaults.cardColors(
+                        containerColor = NightSurface
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 10.dp
+                    ),
+                    modifier = Modifier.width(NightSizes.dialogWidth)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(
+                            horizontal = NightSpacing.dialogHorizontal,
+                            vertical = NightSpacing.dialogVertical
+                        ),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = title,
+                            color = SmokeWhite,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Black,
+                            textAlign = TextAlign.Center
                         )
-                    }
 
-                    Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+                        Spacer(modifier = Modifier.height(NightSpacing.small))
 
-                    if (dismissText != null && onDismiss != null) {
-                        DialogActionsRow(
-                            dismissText = dismissText,
-                            confirmText = confirmText,
-                            onDismiss = onDismiss,
-                            onConfirm = onConfirm
+                        Text(
+                            text = message,
+                            color = LavenderGray,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center
                         )
-                    } else {
-                        NightPrimaryButton(
-                            text = confirmText,
-                            onClick = onConfirm,
-                            modifier = Modifier.width(240.dp)
-                        )
+
+                        if (additionalContent != null) {
+                            Spacer(modifier = Modifier.height(NightSpacing.large))
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                content = additionalContent
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(NightSpacing.extraLarge))
+
+                        if (dismissText != null && onDismiss != null) {
+                            DialogActionsRow(
+                                dismissText = dismissText,
+                                confirmText = confirmText,
+                                onDismiss = onDismiss,
+                                onConfirm = onConfirm
+                            )
+                        } else {
+                            NightPrimaryButton(
+                                text = confirmText,
+                                onClick = onConfirm,
+                                modifier = Modifier.width(240.dp)
+                            )
+                        }
                     }
                 }
             }

@@ -24,8 +24,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.R
-import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.cards.NightRegisterCard
+import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
@@ -35,17 +35,13 @@ import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterUiState
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
 
-/**
- * Pantalla de registro de cuenta de NightBite.
- *
- * Usa NightScreenContainer para reutilizar el fondo, el scroll,
- * el ajuste por teclado y las dimensiones responsivas de la app.
- */
 @Composable
 fun RegisterScreen(
     age: Int,
     onBackToLogin: () -> Unit,
     onBackToAgeCheck: () -> Unit,
+    onRegisterSuccess: (username: String, password: String) -> Unit,
+    onEmailAlreadyRegistered: (email: String) -> Unit,
     registerViewModel: RegisterViewModel = viewModel()
 ) {
     val uiState = registerViewModel.uiState
@@ -63,16 +59,21 @@ fun RegisterScreen(
     var showAllErrors by remember { mutableStateOf(false) }
     var showEmptyFieldsDialog by remember { mutableStateOf(false) }
     var showCancelRegisterDialog by remember { mutableStateOf(false) }
+    var showEmailAlreadyRegisteredDialog by remember { mutableStateOf(false) }
+
+    var usernameTakenError by remember { mutableStateOf<String?>(null) }
 
     var dialogTitle by remember { mutableStateOf("") }
     var dialogMessage by remember { mutableStateOf("") }
     var dialogType by remember { mutableStateOf(RegisterDialogType.None) }
 
-    val usernameError = if (usernameTouched || showAllErrors) {
+    val usernameFormatError = if (usernameTouched || showAllErrors) {
         AccountValidators.validateUsername(username)
     } else {
         null
     }
+
+    val usernameError = usernameFormatError ?: usernameTakenError
 
     val emailError = if (emailTouched || showAllErrors) {
         AccountValidators.validateEmail(email)
@@ -94,6 +95,15 @@ fun RegisterScreen(
     } else {
         null
     }
+
+    val usernameSuccess =
+        username.isNotBlank() &&
+                usernameFormatError == null &&
+                usernameTakenError == null
+
+    val emailSuccess =
+        email.isNotBlank() &&
+                emailError == null
 
     val hasRegisterData =
         username.isNotBlank() ||
@@ -117,6 +127,7 @@ fun RegisterScreen(
 
     fun validateAndRegister() {
         showAllErrors = true
+        usernameTakenError = null
 
         if (allFieldsAreEmpty) {
             showEmptyFieldsDialog = true
@@ -158,9 +169,27 @@ fun RegisterScreen(
             }
 
             is RegisterUiState.Error -> {
-                dialogTitle = "No se pudo registrar"
-                dialogMessage = uiState.message
-                dialogType = RegisterDialogType.Error
+                val message = uiState.message
+
+                when {
+                    message.contains("nombre de usuario", ignoreCase = true) &&
+                            message.contains("registrado", ignoreCase = true) -> {
+                        usernameTouched = true
+                        usernameTakenError = "Nombre de usuario no disponible."
+                    }
+
+                    message.contains("correo", ignoreCase = true) &&
+                            message.contains("registrado", ignoreCase = true) -> {
+                        showEmailAlreadyRegisteredDialog = true
+                    }
+
+                    else -> {
+                        dialogTitle = "No se pudo registrar"
+                        dialogMessage = message
+                        dialogType = RegisterDialogType.Error
+                    }
+                }
+
                 registerViewModel.resetState()
             }
 
@@ -202,8 +231,11 @@ fun RegisterScreen(
                 emailError = emailError,
                 passwordError = passwordError,
                 confirmPasswordError = confirmPasswordError,
+                usernameSuccess = usernameSuccess,
+                emailSuccess = emailSuccess,
                 onUsernameChange = { value ->
                     usernameTouched = true
+                    usernameTakenError = null
                     username = value
                         .lowercase()
                         .replace(" ", "")
@@ -255,12 +287,21 @@ fun RegisterScreen(
                 onDismissEmptyFieldsDialog = {
                     showEmptyFieldsDialog = false
                 },
+                showEmailAlreadyRegisteredDialog = showEmailAlreadyRegisteredDialog,
+                email = email,
+                onStartLoginWithEmail = { selectedEmail ->
+                    showEmailAlreadyRegisteredDialog = false
+                    onEmailAlreadyRegistered(selectedEmail)
+                },
+                onDismissEmailAlreadyRegistered = {
+                    showEmailAlreadyRegisteredDialog = false
+                },
                 dialogType = dialogType,
                 dialogTitle = dialogTitle,
                 dialogMessage = dialogMessage,
                 onSuccessConfirm = {
                     dialogType = RegisterDialogType.None
-                    onBackToLogin()
+                    onRegisterSuccess(username, password)
                 },
                 onErrorConfirm = {
                     dialogType = RegisterDialogType.None
@@ -277,6 +318,10 @@ private fun RegisterDialogs(
     onConfirmCancelRegister: () -> Unit,
     showEmptyFieldsDialog: Boolean,
     onDismissEmptyFieldsDialog: () -> Unit,
+    showEmailAlreadyRegisteredDialog: Boolean,
+    email: String,
+    onStartLoginWithEmail: (String) -> Unit,
+    onDismissEmailAlreadyRegistered: () -> Unit,
     dialogType: RegisterDialogType,
     dialogTitle: String,
     dialogMessage: String,
@@ -304,6 +349,21 @@ private fun RegisterDialogs(
             icon = Icons.Default.Warning,
             iconColor = CheeseYellow,
             onConfirm = onDismissEmptyFieldsDialog
+        )
+    }
+
+    if (showEmailAlreadyRegisteredDialog) {
+        NightMessageDialog(
+            title = "Correo ya registrado",
+            message = "Ya hay una cuenta ligada a este correo. ¿Quieres iniciar sesión?",
+            confirmText = "Iniciar sesión",
+            dismissText = "Cancelar",
+            icon = Icons.Default.Warning,
+            iconColor = CheeseYellow,
+            onConfirm = {
+                onStartLoginWithEmail(email)
+            },
+            onDismiss = onDismissEmailAlreadyRegistered
         )
     }
 

@@ -67,18 +67,18 @@ fun NightTextField(
         else -> CheeseYellow
     }
 
-    val leadingIconColor = when {
+    val focusedIconColor = when {
         !enabled -> LavenderGray
         isError -> PizzaRed
         isSuccess -> NeonGreen
         else -> NightSurface
     }
 
-    val trailingIconColor = when {
+    val unfocusedIconColor = when {
         !enabled -> LavenderGray
         isError -> PizzaRed
         isSuccess -> NeonGreen
-        else -> NightSurface
+        else -> LavenderGray
     }
 
     Column(
@@ -137,13 +137,13 @@ fun NightTextField(
                 disabledTextColor = DarkText.copy(alpha = 0.55f),
                 errorTextColor = DarkText,
 
-                focusedLeadingIconColor = leadingIconColor,
-                unfocusedLeadingIconColor = leadingIconColor,
+                focusedLeadingIconColor = focusedIconColor,
+                unfocusedLeadingIconColor = unfocusedIconColor,
                 disabledLeadingIconColor = LavenderGray,
                 errorLeadingIconColor = PizzaRed,
 
-                focusedTrailingIconColor = trailingIconColor,
-                unfocusedTrailingIconColor = trailingIconColor,
+                focusedTrailingIconColor = focusedIconColor,
+                unfocusedTrailingIconColor = unfocusedIconColor,
                 disabledTrailingIconColor = LavenderGray,
                 errorTrailingIconColor = PizzaRed,
 

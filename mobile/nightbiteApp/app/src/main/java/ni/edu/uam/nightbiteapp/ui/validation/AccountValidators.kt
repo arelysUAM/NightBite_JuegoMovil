@@ -12,21 +12,21 @@ object AccountValidators {
 
     fun validateUsername(username: String): String? {
         if (username.isBlank()) {
-            return "El nombre de usuario es obligatorio."
+            return "Usuario obligatorio."
         }
 
         val normalizedUsername = username.trim()
 
         if (normalizedUsername.length < USERNAME_MIN_LENGTH) {
-            return "El nombre de usuario debe tener al menos 4 caracteres."
+            return "Muy corto. Mínimo 4 caracteres."
         }
 
         if (normalizedUsername.length > USERNAME_MAX_LENGTH) {
-            return "El nombre de usuario no debe superar los 16 caracteres."
+            return "Muy largo. Máximo 16 caracteres."
         }
 
         if (!normalizedUsername.matches(Regex("^[a-z0-9_]+$"))) {
-            return "Caracteres no permitidos. Usa solo letras minúsculas, números y (_)."
+            return "Solo minúsculas, números y guion bajo."
         }
 
         return null
@@ -34,25 +34,25 @@ object AccountValidators {
 
     fun validateEmail(email: String): String? {
         if (email.isBlank()) {
-            return "El correo es obligatorio."
+            return "Correo obligatorio."
         }
 
         val normalizedEmail = email.trim()
 
         if (normalizedEmail.contains(" ")) {
-            return "El correo no debe contener espacios."
+            return "Sin espacios."
         }
 
         if (normalizedEmail != normalizedEmail.lowercase()) {
-            return "El correo debe estar en minúsculas."
+            return "Debe estar en minúsculas."
         }
 
         if (normalizedEmail.length > EMAIL_MAX_LENGTH) {
-            return "El correo no debe superar los 100 caracteres."
+            return "Muy largo. Máximo 100 caracteres."
         }
 
         if (!Patterns.EMAIL_ADDRESS.matcher(normalizedEmail).matches()) {
-            return "Ingresa un correo electrónico válido."
+            return "Correo inválido."
         }
 
         return null
@@ -60,22 +60,22 @@ object AccountValidators {
 
     fun validatePassword(
         password: String,
-        fieldName: String = "La contraseña"
+        fieldName: String = "Contraseña"
     ): String? {
         if (password.isBlank()) {
-            return "$fieldName es obligatoria."
+            return "$fieldName obligatoria."
         }
 
         if (password.length < PASSWORD_MIN_LENGTH) {
-            return "$fieldName debe tener al menos 8 caracteres."
+            return "Muy corta. Mínimo 8 caracteres."
         }
 
         if (password.length > PASSWORD_MAX_LENGTH) {
-            return "$fieldName no debe superar los 50 caracteres."
+            return "Muy larga. Máximo 50 caracteres."
         }
 
         if (password.startsWith(" ") || password.endsWith(" ")) {
-            return "$fieldName no puede iniciar ni terminar con espacios."
+            return "No puede iniciar o terminar con espacios."
         }
 
         return null
@@ -86,11 +86,11 @@ object AccountValidators {
         confirmPassword: String
     ): String? {
         if (confirmPassword.isBlank()) {
-            return "La confirmación de contraseña es obligatoria."
+            return "Confirma la contraseña."
         }
 
         if (password != confirmPassword) {
-            return "Las contraseñas no coinciden."
+            return "No coinciden."
         }
 
         return null
@@ -101,11 +101,11 @@ object AccountValidators {
         confirmNewPassword: String
     ): String? {
         if (confirmNewPassword.isBlank()) {
-            return "La confirmación de contraseña es obligatoria."
+            return "Confirma la nueva contraseña."
         }
 
         if (newPassword != confirmNewPassword) {
-            return "La nueva contraseña y la confirmación no coinciden."
+            return "No coinciden."
         }
 
         return null

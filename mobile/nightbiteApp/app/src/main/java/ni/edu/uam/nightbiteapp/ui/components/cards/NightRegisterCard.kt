@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.buttons.NightPrimaryButton
-import ni.edu.uam.nightbiteapp.ui.components.cards.NightBaseCard
 import ni.edu.uam.nightbiteapp.ui.components.fields.NightTextField
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.DarkPurple
@@ -61,6 +60,8 @@ fun NightRegisterCard(
     emailError: String?,
     passwordError: String?,
     confirmPasswordError: String?,
+    usernameSuccess: Boolean,
+    emailSuccess: Boolean,
     onUsernameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -130,6 +131,8 @@ fun NightRegisterCard(
                         emailError = emailError,
                         passwordError = passwordError,
                         confirmPasswordError = confirmPasswordError,
+                        usernameSuccess = usernameSuccess,
+                        emailSuccess = emailSuccess,
                         passwordVisible = passwordVisible,
                         confirmPasswordVisible = confirmPasswordVisible,
                         isPasswordValid = isPasswordValid,
@@ -180,6 +183,8 @@ private fun RegisterFieldsColumn(
     emailError: String?,
     passwordError: String?,
     confirmPasswordError: String?,
+    usernameSuccess: Boolean,
+    emailSuccess: Boolean,
     passwordVisible: Boolean,
     confirmPasswordVisible: Boolean,
     isPasswordValid: Boolean,
@@ -200,9 +205,10 @@ private fun RegisterFieldsColumn(
         NightTextField(
             value = username,
             onValueChange = onUsernameChange,
-            label = "Nombre",
+            label = "Usuario",
             icon = Icons.Default.Person,
             isError = usernameError != null,
+            isSuccess = usernameSuccess,
             errorMessage = usernameError,
             reserveErrorSpace = true,
             modifier = Modifier.width(fieldWidth)
@@ -214,6 +220,7 @@ private fun RegisterFieldsColumn(
             label = "Correo electrónico",
             icon = Icons.Default.Email,
             isError = emailError != null,
+            isSuccess = emailSuccess,
             errorMessage = emailError,
             reserveErrorSpace = true,
             modifier = Modifier.width(fieldWidth)
@@ -380,7 +387,10 @@ private fun RegisterIconPreview(
             modifier = Modifier
                 .size(iconContainerSize * 0.20f)
                 .align(Alignment.TopEnd)
-                .offset(x = 0.dp, y = iconContainerSize * 0.08f)
+                .offset(
+                    x = 0.dp,
+                    y = iconContainerSize * 0.08f
+                )
                 .background(
                     color = DarkPurple.copy(alpha = 0.7f),
                     shape = CircleShape

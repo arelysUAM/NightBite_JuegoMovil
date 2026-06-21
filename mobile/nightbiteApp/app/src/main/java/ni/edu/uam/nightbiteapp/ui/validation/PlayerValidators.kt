@@ -2,9 +2,11 @@ package ni.edu.uam.nightbiteapp.ui.validation
 
 object PlayerValidators {
 
-    const val NICKNAME_MAX_LENGTH = 30
     const val DRIVER_NAME_MAX_LENGTH = 80
     const val OPTION_MAX_LENGTH = 30
+
+    const val DEFAULT_HELMET_COLOR = "Negro"
+    const val DEFAULT_MOTORCYCLE_TYPE = "Delivery"
 
     val ALLOWED_HELMET_COLORS = listOf(
         "Negro",
@@ -22,49 +24,23 @@ object PlayerValidators {
         "Delivery"
     )
 
-    fun validateNickname(nickname: String): String? {
-        if (nickname.isBlank()) {
-            return "El apodo del repartidor es obligatorio."
-        }
-
-        val normalizedNickname = nickname.trim()
-
-        if (normalizedNickname.contains(" ")) {
-            return "El apodo no debe contener espacios."
-        }
-
-        if (normalizedNickname != normalizedNickname.lowercase()) {
-            return "El apodo debe estar en minúsculas."
-        }
-
-        if (normalizedNickname.length > NICKNAME_MAX_LENGTH) {
-            return "El apodo no debe superar los 30 caracteres."
-        }
-
-        if (!normalizedNickname.matches(Regex("^[a-z0-9_]+$"))) {
-            return "Formato permitido: letras, números y guiones bajos."
-        }
-
-        return null
-    }
-
     fun validateDriverName(driverName: String): String? {
         if (driverName.isBlank()) {
-            return "El nombre del repartidor es obligatorio."
+            return "El nombre es obligatorio."
         }
 
         val normalizedDriverName = driverName.trim()
 
         if (normalizedDriverName.length > DRIVER_NAME_MAX_LENGTH) {
-            return "El nombre del repartidor no debe superar los 80 caracteres."
+            return "El nombre no debe superar los 80 caracteres."
         }
 
-        if (normalizedDriverName.contains(" ")) {
-            return "El nombre del repartidor no debe contener espacios."
+        if (normalizedDriverName.count { it == ' ' } > 1) {
+            return "Ingresa máximo un espacio."
         }
 
-        if (!normalizedDriverName.matches(Regex("^[A-Za-zÁÉÍÓÚáéíóúÑñ]+$"))) {
-            return "El nombre del repartidor solo puede contener letras."
+        if (!normalizedDriverName.matches(Regex("^[A-Za-zÁÉÍÓÚáéíóúÑñ]+( [A-Za-zÁÉÍÓÚáéíóúÑñ]+)?$"))) {
+            return "El nombre solo puede contener letras."
         }
 
         return null
@@ -72,7 +48,7 @@ object PlayerValidators {
 
     fun validateGender(gender: String): String? {
         if (gender.isBlank()) {
-            return "El género es obligatorio."
+            return "Selecciona un género para continuar."
         }
 
         if (gender != "Femenino" && gender != "Masculino") {
@@ -119,14 +95,36 @@ object PlayerValidators {
     }
 
     fun formatPersonName(value: String): String {
-        return value
+        val singleSpacedValue = value
             .replace(Regex("\\s+"), " ")
             .trimStart()
+
+        val limitedSpaceValue = keepOnlyOneSpace(singleSpacedValue)
+
+        return limitedSpaceValue
+            .lowercase()
             .split(" ")
             .joinToString(" ") { word ->
-                word.lowercase().replaceFirstChar { char ->
-                    if (char.isLowerCase()) char.titlecase() else char.toString()
+                word.replaceFirstChar { char ->
+                    if (char.isLowerCase()) {
+                        char.titlecase()
+                    } else {
+                        char.toString()
+                    }
                 }
             }
+    }
+
+    private fun keepOnlyOneSpace(value: String): String {
+        val firstSpaceIndex = value.indexOf(' ')
+
+        if (firstSpaceIndex == -1) {
+            return value
+        }
+
+        val beforeSpace = value.substring(0, firstSpaceIndex + 1)
+        val afterSpace = value.substring(firstSpaceIndex + 1).replace(" ", "")
+
+        return beforeSpace + afterSpace
     }
 }
