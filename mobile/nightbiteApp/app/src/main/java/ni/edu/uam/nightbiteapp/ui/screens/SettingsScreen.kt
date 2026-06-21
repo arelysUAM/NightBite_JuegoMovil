@@ -38,11 +38,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -216,7 +219,13 @@ private fun SettingsHeader(
         Text(
             text = "Configuraciones",
             color = SmokeWhite,
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.headlineSmall.copy(
+                shadow = Shadow(
+                    color = NightSurface.copy(alpha = 0.55f),
+                    offset = Offset(2f, 2f),
+                    blurRadius = 2f
+                )
+            ),
             fontWeight = FontWeight.Black,
             modifier = Modifier.weight(1f)
         )

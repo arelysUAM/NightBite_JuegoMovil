@@ -56,6 +56,10 @@ import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import java.util.Calendar
 import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
+import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 
 /**
  * Pantalla para verificar la edad antes de permitir crear una cuenta.
@@ -247,7 +251,14 @@ private fun AgeCheckTitleBlock() {
             fontFamily = LilitaOne,
             fontWeight = FontWeight.Normal,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.titleLarge.copy(
+                shadow = Shadow(
+                    color = NightSurface.copy(alpha = 0.55f),
+                    offset = Offset(2f, 2f),
+                    blurRadius = 2f
+                )
+            )
         )
 
         Spacer(modifier = Modifier.height(NightSpacing.extraSmall))

@@ -9,5 +9,6 @@ data class NightLevel(
     val enemyDescription: String,
     val enemyBehavior: String,
     val survivalTip: String,
-    val isUnlocked: Boolean = true
+    val isUnlocked: Boolean = true,
+    val stars: Int = 0
 )

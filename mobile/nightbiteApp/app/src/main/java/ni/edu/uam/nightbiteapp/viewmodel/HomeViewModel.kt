@@ -7,8 +7,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.mock.NightLevelsData
-import ni.edu.uam.nightbiteapp.data.repository.UserRepository
 import ni.edu.uam.nightbiteapp.data.local.mock.NightProgressData
+import ni.edu.uam.nightbiteapp.data.repository.UserRepository
+import ni.edu.uam.nightbiteapp.ui.model.NightLevel
 
 class HomeViewModel(
     private val userRepository: UserRepository = UserRepository()
@@ -24,7 +25,13 @@ class HomeViewModel(
 
     fun loadHomeData(userId: Long?) {
         val maxUnlockedLevelId = NightProgressData.getMaxUnlockedLevel(userId)
-        val levelsByProgress = NightLevelsData.getLevelsByProgress(maxUnlockedLevelId)
+        val rawLevelsByProgress = NightLevelsData.getLevelsByProgress(maxUnlockedLevelId)
+        val levelStars = getLevelStars(userId)
+        val levelsByProgress = applyStarsToLevels(
+            levels = rawLevelsByProgress,
+            levelStars = levelStars
+        )
+        val tutorialStars = levelStars[0] ?: 0
 
         if (userId == null) {
             _uiState.update {
@@ -32,7 +39,10 @@ class HomeViewModel(
                     isLoading = false,
                     user = null,
                     levels = levelsByProgress,
-                    errorMessage = "No hay una sesión activa."
+                    tutorialStars = tutorialStars,
+                    levelStars = levelStars,
+                    errorMessage = "No hay una sesión activa.",
+                    userLoadFailed = true
                 )
             }
             return
@@ -44,7 +54,10 @@ class HomeViewModel(
                     it.copy(
                         isLoading = true,
                         errorMessage = null,
-                        levels = levelsByProgress
+                        levels = levelsByProgress,
+                        tutorialStars = tutorialStars,
+                        levelStars = levelStars,
+                        userLoadFailed = false
                     )
                 }
 
@@ -56,16 +69,26 @@ class HomeViewModel(
                             isLoading = false,
                             user = response.body(),
                             levels = levelsByProgress,
-                            errorMessage = null
+                            tutorialStars = tutorialStars,
+                            levelStars = levelStars,
+                            errorMessage = null,
+                            userLoadFailed = false
                         )
                     }
                 } else {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            user = null,
+                            user = it.user,
                             levels = levelsByProgress,
-                            errorMessage = "No se pudo cargar la información del usuario."
+                            tutorialStars = tutorialStars,
+                            levelStars = levelStars,
+                            errorMessage = when (response.code()) {
+                                401 -> "No se pudo validar la sesión. Inicia sesión nuevamente."
+                                403 -> "No tienes permiso para cargar esta cuenta."
+                                else -> "No se pudo cargar la información del usuario."
+                            },
+                            userLoadFailed = true
                         )
                     }
                 }
@@ -73,9 +96,12 @@ class HomeViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        user = null,
+                        user = it.user,
                         levels = levelsByProgress,
-                        errorMessage = "Error de conexión con la API."
+                        tutorialStars = tutorialStars,
+                        levelStars = levelStars,
+                        errorMessage = "Error de conexión con la API.",
+                        userLoadFailed = true
                     )
                 }
             }
@@ -84,7 +110,37 @@ class HomeViewModel(
 
     fun clearError() {
         _uiState.update {
-            it.copy(errorMessage = null)
+            it.copy(
+                errorMessage = null,
+                userLoadFailed = false
+            )
+        }
+    }
+
+    private fun getLevelStars(userId: Long?): Map<Int, Int> {
+        val tutorialStars = NightProgressData.getTutorialStars(userId)
+
+        return mapOf(
+            0 to tutorialStars,
+            1 to 0,
+            2 to 0,
+            3 to 0,
+            4 to 0
+        )
+    }
+
+    private fun applyStarsToLevels(
+        levels: List<NightLevel>,
+        levelStars: Map<Int, Int>
+    ): List<NightLevel> {
+        return levels.map { level ->
+            level.copy(
+                stars = if (level.isUnlocked) {
+                    levelStars[level.id]?.coerceIn(0, 3) ?: 0
+                } else {
+                    0
+                }
+            )
         }
     }
 }

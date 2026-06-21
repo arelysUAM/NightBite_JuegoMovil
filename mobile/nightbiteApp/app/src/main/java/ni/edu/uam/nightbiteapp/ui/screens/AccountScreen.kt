@@ -147,7 +147,7 @@ fun AccountScreen(
 
         AccountDialogs(
             showConfirmDialog = uiState.showConfirmDialog,
-            showSessionExpiredDialog = uiState.showSessionExpiredDialog,
+            showSessionExpiredDialog = uiState.showCredentialsUpdatedDialog,
             showExitConfirmation = showExitConfirmation,
             showDeleteAccountDialog = showDeleteAccountConfirmation,
             showAccountDeletedDialog = uiState.showAccountDeletedDialog,
