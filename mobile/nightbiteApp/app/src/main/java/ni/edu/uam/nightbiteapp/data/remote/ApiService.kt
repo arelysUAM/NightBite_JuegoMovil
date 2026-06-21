@@ -1,6 +1,5 @@
 package ni.edu.uam.nightbiteapp.data.remote
 
-import ni.edu.uam.nightbiteapp.data.remote.dto.AuthResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.PlayerRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.PlayerResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserLoginRequest
@@ -59,7 +58,7 @@ interface ApiService {
     @POST("api/users/login")
     suspend fun loginUser(
         @Body userLoginRequest: UserLoginRequest
-    ): Response<AuthResponse>
+    ): Response<UserResponse>
 
     @PUT("api/users/{id}/username")
     suspend fun updateUsername(
