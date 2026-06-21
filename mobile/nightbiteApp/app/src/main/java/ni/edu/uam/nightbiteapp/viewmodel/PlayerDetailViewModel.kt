@@ -25,7 +25,14 @@ class PlayerDetailViewModel(
                 uiState = if (response.isSuccessful && response.body() != null) {
                     PlayerDetailUiState.Success(response.body()!!)
                 } else {
-                    PlayerDetailUiState.Error("No se pudo cargar la ficha del repartidor.")
+                    PlayerDetailUiState.Error(
+                        when (response.code()) {
+                            401 -> "Tu sesión expiró. Inicia sesión nuevamente."
+                            403 -> "No tienes permiso para consultar esta ficha."
+                            404 -> "No se encontró la cuenta asociada a esta ficha."
+                            else -> "No se pudo cargar la ficha del repartidor."
+                        }
+                    )
                 }
             } catch (e: Exception) {
                 uiState = PlayerDetailUiState.Error("Error de conexión con la API.")

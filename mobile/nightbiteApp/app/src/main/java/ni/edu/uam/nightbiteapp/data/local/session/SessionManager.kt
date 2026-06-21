@@ -13,12 +13,6 @@ import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 
 private val Context.sessionDataStore by preferencesDataStore(name = "user_session")
 
-/**
- * Clase encargada de guardar, leer y limpiar la sesión local del usuario.
- *
- * Usa Preferences DataStore porque solo necesitamos almacenar datos pequeños
- * como el id del usuario, username, email, token y estado de sesión.
- */
 class SessionManager(
     private val context: Context
 ) {
@@ -29,7 +23,6 @@ class SessionManager(
         private val USERNAME = stringPreferencesKey("username")
         private val EMAIL = stringPreferencesKey("email")
         private val AGE = intPreferencesKey("age")
-        private val TOKEN = stringPreferencesKey("token")
     }
 
     val userSessionFlow: Flow<UserSession> = context.sessionDataStore.data
@@ -39,14 +32,12 @@ class SessionManager(
                 userId = preferences[USER_ID],
                 username = preferences[USERNAME] ?: "",
                 email = preferences[EMAIL] ?: "",
-                age = preferences[AGE],
-                token = preferences[TOKEN] ?: ""
+                age = preferences[AGE]
             )
         }
 
     suspend fun saveSession(
-        user: UserResponse,
-        token: String
+        user: UserResponse
     ) {
         context.sessionDataStore.edit { preferences ->
             preferences[IS_LOGGED_IN] = true
@@ -54,7 +45,6 @@ class SessionManager(
             preferences[USERNAME] = user.username
             preferences[EMAIL] = user.email
             preferences[AGE] = user.age
-            preferences[TOKEN] = token
         }
     }
 

@@ -11,7 +11,6 @@ import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.remote.dto.PlayerRequest
 import ni.edu.uam.nightbiteapp.data.repository.PlayerRepository
 import ni.edu.uam.nightbiteapp.ui.validation.PlayerValidators
-import ni.edu.uam.nightbiteapp.ui.validation.PlayerValidators.formatPersonName
 
 class PlayerCreationViewModel(
     private val sessionManager: SessionManager,
@@ -22,22 +21,11 @@ class PlayerCreationViewModel(
     val uiState: StateFlow<PlayerCreationUiState> = _uiState
 
     val genderOptions = listOf("Femenino", "Masculino")
-    val helmetColorOptions = PlayerValidators.ALLOWED_HELMET_COLORS
-    val motorcycleTypeOptions = PlayerValidators.ALLOWED_MOTORCYCLE_TYPES
-
-    fun onNicknameChange(value: String) {
-        _uiState.update {
-            it.copy(
-                nickname = value,
-                errorMessage = null
-            )
-        }
-    }
 
     fun onDriverNameChange(value: String) {
         _uiState.update {
             it.copy(
-                driverName = formatSingleName(value),
+                driverName = PlayerValidators.formatPersonName(value),
                 errorMessage = null
             )
         }
@@ -52,54 +40,23 @@ class PlayerCreationViewModel(
         }
     }
 
-    fun onHelmetColorSelected(value: String) {
-        _uiState.update {
-            it.copy(
-                helmetColor = value,
-                errorMessage = null
-            )
-        }
-    }
-
-    fun onMotorcycleTypeSelected(value: String) {
-        _uiState.update {
-            it.copy(
-                motorcycleType = value,
-                errorMessage = null
-            )
-        }
-    }
-
     fun createPlayer() {
         val currentState = _uiState.value
 
-        val nicknameError = PlayerValidators.validateNickname(currentState.nickname)
-        if (nicknameError != null) {
-            showError(nicknameError)
+        if (currentState.isLoading) {
             return
         }
 
-        val driverNameError = PlayerValidators.validateDriverName(currentState.driverName)
-        if (driverNameError != null) {
-            showError(driverNameError)
+        val nameError = PlayerValidators.validateDriverName(currentState.driverName)
+
+        if (nameError != null) {
+            showError(nameError)
             return
         }
 
         val genderError = PlayerValidators.validateGender(currentState.gender)
         if (genderError != null) {
             showError(genderError)
-            return
-        }
-
-        val helmetColorError = PlayerValidators.validateHelmetColor(currentState.helmetColor)
-        if (helmetColorError != null) {
-            showError(helmetColorError)
-            return
-        }
-
-        val motorcycleTypeError = PlayerValidators.validateMotorcycleType(currentState.motorcycleType)
-        if (motorcycleTypeError != null) {
-            showError(motorcycleTypeError)
             return
         }
 
@@ -127,11 +84,10 @@ class PlayerCreationViewModel(
 
                 val playerRequest = PlayerRequest(
                     userAccountId = userId,
-                    nickname = currentState.nickname.trim().lowercase(),
                     driverName = currentState.driverName.trim(),
                     gender = currentState.gender,
-                    helmetColor = currentState.helmetColor.trim(),
-                    motorcycleType = currentState.motorcycleType.trim()
+                    helmetColor = PlayerValidators.DEFAULT_HELMET_COLOR,
+                    motorcycleType = PlayerValidators.DEFAULT_MOTORCYCLE_TYPE
                 )
 
                 val response = playerRepository.createPlayer(playerRequest)
@@ -143,13 +99,29 @@ class PlayerCreationViewModel(
                             isPlayerCreated = true
                         )
                     }
-                } else {
+                    return@launch
+                }
+
+                val errorBody = response.errorBody()?.string().orEmpty()
+
+                if (
+                    response.code() == 400 &&
+                    errorBody.contains("ya tiene una ficha", ignoreCase = true)
+                ) {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "No se pudo crear la ficha. Verifica si este usuario ya tiene un Player."
+                            isPlayerCreated = true
                         )
                     }
+                    return@launch
+                }
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "No se pudo completar la configuración de la cuenta."
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.update {
@@ -174,7 +146,25 @@ class PlayerCreationViewModel(
         }
     }
 
-    private fun formatSingleName(value: String): String {
+    private fun validateDriverName(value: String): String? {
+        val cleanedValue = value.trim()
+
+        if (cleanedValue.isBlank()) {
+            return "Ingresa tu nombre para continuar."
+        }
+
+        if (cleanedValue.length > 80) {
+            return "El nombre no debe superar los 80 caracteres."
+        }
+
+        if (!cleanedValue.matches(Regex("^[A-Za-zÁÉÍÓÚáéíóúÑñ]+$"))) {
+            return "El nombre solo puede contener letras."
+        }
+
+        return null
+    }
+
+    private fun formatDriverName(value: String): String {
         val cleanedValue = value
             .replace(" ", "")
             .lowercase()
@@ -186,5 +176,10 @@ class PlayerCreationViewModel(
                 char.toString()
             }
         }
+    }
+
+    companion object {
+        private const val DEFAULT_HELMET_COLOR = "Negro"
+        private const val DEFAULT_MOTORCYCLE_TYPE = "Delivery"
     }
 }

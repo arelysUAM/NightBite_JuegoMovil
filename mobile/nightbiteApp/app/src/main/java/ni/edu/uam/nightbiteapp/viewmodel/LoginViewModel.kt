@@ -49,11 +49,10 @@ class LoginViewModel(
                     response.isSuccessful &&
                     response.body() != null
                 ) {
-                    val authResponse = response.body()!!
+                    val user = response.body()!!
 
                     uiState = LoginUiState.Success(
-                        user = authResponse.user,
-                        token = authResponse.token
+                        user = user
                     )
                 } else {
                     val apiMessage = try {

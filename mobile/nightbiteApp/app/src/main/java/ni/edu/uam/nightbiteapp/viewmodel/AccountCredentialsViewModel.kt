@@ -211,7 +211,7 @@ class AccountCredentialsViewModel(
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    showSessionExpiredDialog = true,
+                    showCredentialsUpdatedDialog = true,
                     successMessage = "Credenciales actualizadas correctamente."
                 )
 

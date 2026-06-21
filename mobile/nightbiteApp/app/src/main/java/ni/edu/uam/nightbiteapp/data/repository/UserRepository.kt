@@ -2,7 +2,6 @@ package ni.edu.uam.nightbiteapp.data.repository
 
 import ni.edu.uam.nightbiteapp.data.remote.ApiService
 import ni.edu.uam.nightbiteapp.data.remote.RetrofitClient
-import ni.edu.uam.nightbiteapp.data.remote.dto.AuthResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.MessageResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.UpdatePasswordRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UpdateUsernameRequest
@@ -35,7 +34,7 @@ class UserRepository(
 
     suspend fun loginUser(
         userLoginRequest: UserLoginRequest
-    ): Response<AuthResponse> {
+    ): Response<UserResponse> {
         return apiService.loginUser(userLoginRequest)
     }
 

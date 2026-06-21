@@ -9,10 +9,17 @@ import retrofit2.Response
 /**
  * Repositorio encargado de gestionar las operaciones relacionadas
  * con la ficha/personaje del repartidor.
+ *
+ * No guardamos una instancia fija de ApiService, porque RetrofitClient
+ * puede inicializarse después con AuthInterceptor y SessionManager.
  */
 class PlayerRepository(
-    private val apiService: ApiService = RetrofitClient.apiService
+    private val apiServiceProvider: () -> ApiService = {
+        RetrofitClient.apiService
+    }
 ) {
+    private val apiService: ApiService
+        get() = apiServiceProvider()
 
     suspend fun getPlayers(): Response<List<PlayerResponse>> {
         return apiService.getPlayers()

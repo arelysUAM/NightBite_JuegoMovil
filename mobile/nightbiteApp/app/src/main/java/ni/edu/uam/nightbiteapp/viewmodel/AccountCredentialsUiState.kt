@@ -13,5 +13,5 @@ data class AccountCredentialsUiState(
     val showAccountDeletedDialog: Boolean = false,
 
     val showConfirmDialog: Boolean = false,
-    val showSessionExpiredDialog: Boolean = false
+    val showCredentialsUpdatedDialog: Boolean = false
 )
