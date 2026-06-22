@@ -24,7 +24,7 @@ public class Player {
     @JoinColumn(name = "user_account_id", nullable = false, unique = true)
     private UserAccount userAccount;
 
-    @Column(name = "driver_name", nullable = false, length = 80)
+    @Column(name = "driver_name", nullable = false, length = 20)
     private String driverName;
 
     @Enumerated(EnumType.STRING)

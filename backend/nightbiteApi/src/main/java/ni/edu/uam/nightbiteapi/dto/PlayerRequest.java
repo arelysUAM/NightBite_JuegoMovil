@@ -16,7 +16,7 @@ public class PlayerRequest {
     private Long userAccountId;
 
     @NotBlank(message = "El nombre del repartidor es obligatorio")
-    @Size(max = 80, message = "El nombre del repartidor no debe superar los 80 caracteres")
+    @Size(max = 20, message = "El nombre del repartidor no debe superar los 20 caracteres")
     @Pattern(
             regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ]+( [A-Za-zÁÉÍÓÚáéíóúÑñ]+)?$",
             message = "El nombre del repartidor solo puede contener letras"
