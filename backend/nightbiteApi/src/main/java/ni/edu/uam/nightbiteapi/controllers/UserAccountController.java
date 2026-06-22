@@ -7,6 +7,7 @@ import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
 import ni.edu.uam.nightbiteapi.dto.UserLoginRequest;
 import ni.edu.uam.nightbiteapi.dto.UserRegisterRequest;
 import ni.edu.uam.nightbiteapi.dto.UserResponse;
+import ni.edu.uam.nightbiteapi.dto.UsernameAvailabilityResponse;
 import ni.edu.uam.nightbiteapi.services.UserAccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,16 @@ public class UserAccountController {
                 .orElseGet(() -> ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body(new MessageResponse("Cuenta de usuario no encontrada")));
+    }
+
+    @GetMapping("/check-username/{username}")
+    public ResponseEntity<UsernameAvailabilityResponse> checkUsernameAvailability(
+            @PathVariable String username
+    ) {
+        UsernameAvailabilityResponse response =
+                userAccountService.checkUsernameAvailability(username);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")

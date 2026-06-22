@@ -6,6 +6,7 @@ import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
 import ni.edu.uam.nightbiteapi.dto.UserLoginRequest;
 import ni.edu.uam.nightbiteapi.dto.UserRegisterRequest;
 import ni.edu.uam.nightbiteapi.dto.UserResponse;
+import ni.edu.uam.nightbiteapi.dto.UsernameAvailabilityResponse;
 import ni.edu.uam.nightbiteapi.model.Player;
 import ni.edu.uam.nightbiteapi.model.UserAccount;
 import ni.edu.uam.nightbiteapi.repositories.PlayerRepository;
@@ -43,6 +44,24 @@ public class UserAccountService {
     public Optional<UserResponse> getUserById(Long id) {
         return userAccountRepository.findById(id)
                 .map(this::mapToResponseWithPlayer);
+    }
+
+    public UsernameAvailabilityResponse checkUsernameAvailability(String username) {
+        validateUsername(username);
+
+        String normalizedUsername = username.trim().toLowerCase();
+
+        boolean available = !userAccountRepository.existsByUsername(normalizedUsername);
+
+        String message = available
+                ? "Nombre de usuario disponible."
+                : "Nombre de usuario no disponible.";
+
+        return new UsernameAvailabilityResponse(
+                normalizedUsername,
+                available,
+                message
+        );
     }
 
     public UserResponse registerUser(UserRegisterRequest request) {

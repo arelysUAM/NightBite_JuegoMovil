@@ -9,6 +9,7 @@ import ni.edu.uam.nightbiteapp.data.remote.dto.UserLoginRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserRegisterRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import retrofit2.Response
+import ni.edu.uam.nightbiteapp.data.remote.dto.UsernameAvailabilityResponse
 
 /**
  * Repositorio encargado de gestionar las operaciones relacionadas
@@ -30,6 +31,12 @@ class UserRepository(
         userRegisterRequest: UserRegisterRequest
     ): Response<UserResponse> {
         return apiService.registerUser(userRegisterRequest)
+    }
+
+    suspend fun checkUsernameAvailability(
+        username: String
+    ): Response<UsernameAvailabilityResponse> {
+        return apiService.checkUsernameAvailability(username)
     }
 
     suspend fun loginUser(

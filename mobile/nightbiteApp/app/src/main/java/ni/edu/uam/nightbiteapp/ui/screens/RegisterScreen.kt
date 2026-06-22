@@ -34,7 +34,7 @@ import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterUiState
 import ni.edu.uam.nightbiteapp.viewmodel.RegisterViewModel
-
+import ni.edu.uam.nightbiteapp.viewmodel.UsernameAvailabilityUiState
 @Composable
 fun RegisterScreen(
     age: Int,
@@ -45,6 +45,7 @@ fun RegisterScreen(
     registerViewModel: RegisterViewModel = viewModel()
 ) {
     val uiState = registerViewModel.uiState
+    val usernameAvailabilityState = registerViewModel.usernameAvailabilityState
 
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -73,7 +74,18 @@ fun RegisterScreen(
         null
     }
 
-    val usernameError = usernameFormatError ?: usernameTakenError
+    val usernameAvailabilityError = when (usernameAvailabilityState) {
+        is UsernameAvailabilityUiState.Unavailable -> {
+            usernameAvailabilityState.message
+        }
+
+        else -> null
+    }
+
+    val usernameError =
+        usernameFormatError
+            ?: usernameAvailabilityError
+            ?: usernameTakenError
 
     val emailError = if (emailTouched || showAllErrors) {
         AccountValidators.validateEmail(email)
@@ -99,7 +111,8 @@ fun RegisterScreen(
     val usernameSuccess =
         username.isNotBlank() &&
                 usernameFormatError == null &&
-                usernameTakenError == null
+                usernameTakenError == null &&
+                usernameAvailabilityState is UsernameAvailabilityUiState.Available
 
     val emailSuccess =
         email.isNotBlank() &&
@@ -134,6 +147,10 @@ fun RegisterScreen(
             return
         }
 
+        if (usernameAvailabilityState is UsernameAvailabilityUiState.Checking) {
+            return
+        }
+
         val currentUsernameError = AccountValidators.validateUsername(username)
         val currentEmailError = AccountValidators.validateEmail(email)
         val currentPasswordError = AccountValidators.validatePassword(password)
@@ -141,6 +158,11 @@ fun RegisterScreen(
             password = password,
             confirmPassword = confirmPassword
         )
+
+        if (usernameAvailabilityState is UsernameAvailabilityUiState.Unavailable) {
+            usernameTouched = true
+            return
+        }
 
         val formIsValid =
             currentUsernameError == null &&
@@ -156,6 +178,17 @@ fun RegisterScreen(
                 confirmPassword = confirmPassword,
                 age = age
             )
+        }
+    }
+
+    LaunchedEffect(username) {
+        val normalizedUsername = username.trim().lowercase()
+        val formatError = AccountValidators.validateUsername(normalizedUsername)
+
+        if (normalizedUsername.isBlank() || formatError != null) {
+            registerViewModel.clearUsernameAvailability()
+        } else {
+            registerViewModel.checkUsernameAvailability(normalizedUsername)
         }
     }
 
@@ -236,6 +269,7 @@ fun RegisterScreen(
                 onUsernameChange = { value ->
                     usernameTouched = true
                     usernameTakenError = null
+
                     username = value
                         .lowercase()
                         .replace(" ", "")

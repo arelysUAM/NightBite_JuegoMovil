@@ -15,6 +15,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import ni.edu.uam.nightbiteapp.data.remote.dto.MessageResponse
 import retrofit2.http.DELETE
+import ni.edu.uam.nightbiteapp.data.remote.dto.UsernameAvailabilityResponse
 
 /**
  * Define los endpoints remotos que Android consumirá desde la API de Spring Boot.
@@ -33,6 +34,11 @@ interface ApiService {
     suspend fun getPlayerByUserAccountId(
         @Path("userAccountId") userAccountId: Long
     ): Response<PlayerResponse>
+
+    @GET("api/users/check-username/{username}")
+    suspend fun checkUsernameAvailability(
+        @Path("username") username: String
+    ): Response<UsernameAvailabilityResponse>
 
     @POST("api/players")
     suspend fun createPlayer(
