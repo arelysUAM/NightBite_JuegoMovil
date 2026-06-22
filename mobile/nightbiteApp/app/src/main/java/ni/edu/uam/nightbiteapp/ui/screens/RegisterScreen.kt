@@ -329,6 +329,8 @@ fun RegisterScreen(
                 },
                 onDismissEmailAlreadyRegistered = {
                     showEmailAlreadyRegisteredDialog = false
+                    email = ""
+                    emailTouched = false
                 },
                 dialogType = dialogType,
                 dialogTitle = dialogTitle,
@@ -389,7 +391,7 @@ private fun RegisterDialogs(
     if (showEmailAlreadyRegisteredDialog) {
         NightMessageDialog(
             title = "Correo ya registrado",
-            message = "Ya hay una cuenta ligada a este correo. ¿Quieres iniciar sesión?",
+            message = "Este correo ya está ligado a una cuenta. ¿Quieres iniciar sesión?",
             confirmText = "Iniciar sesión",
             dismissText = "Cancelar",
             icon = Icons.Default.Warning,

@@ -1,21 +1,22 @@
 package ni.edu.uam.nightbiteapp.data.remote
 
+import ni.edu.uam.nightbiteapp.data.remote.dto.MessageResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.PlayerRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.PlayerResponse
+import ni.edu.uam.nightbiteapp.data.remote.dto.UpdateAccountInfoRequest
+import ni.edu.uam.nightbiteapp.data.remote.dto.UpdatePasswordRequest
+import ni.edu.uam.nightbiteapp.data.remote.dto.UpdateUsernameRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserLoginRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserRegisterRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
-import ni.edu.uam.nightbiteapp.data.remote.dto.UpdatePasswordRequest
-import ni.edu.uam.nightbiteapp.data.remote.dto.UpdateUsernameRequest
-import retrofit2.http.PUT
+import ni.edu.uam.nightbiteapp.data.remote.dto.UsernameAvailabilityResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
-import ni.edu.uam.nightbiteapp.data.remote.dto.MessageResponse
-import retrofit2.http.DELETE
-import ni.edu.uam.nightbiteapp.data.remote.dto.UsernameAvailabilityResponse
 
 /**
  * Define los endpoints remotos que Android consumirá desde la API de Spring Boot.
@@ -35,11 +36,6 @@ interface ApiService {
         @Path("userAccountId") userAccountId: Long
     ): Response<PlayerResponse>
 
-    @GET("api/users/check-username/{username}")
-    suspend fun checkUsernameAvailability(
-        @Path("username") username: String
-    ): Response<UsernameAvailabilityResponse>
-
     @POST("api/players")
     suspend fun createPlayer(
         @Body playerRequest: PlayerRequest
@@ -52,6 +48,11 @@ interface ApiService {
     suspend fun getUserById(
         @Path("id") id: Long
     ): Response<UserResponse>
+
+    @GET("api/users/check-username/{username}")
+    suspend fun checkUsernameAvailability(
+        @Path("username") username: String
+    ): Response<UsernameAvailabilityResponse>
 
     @GET("api/health")
     suspend fun checkHealth(): Response<MessageResponse>
@@ -70,6 +71,12 @@ interface ApiService {
     suspend fun updateUsername(
         @Path("id") id: Long,
         @Body request: UpdateUsernameRequest
+    ): Response<UserResponse>
+
+    @PUT("api/users/{id}/account-info")
+    suspend fun updateAccountInfo(
+        @Path("id") id: Long,
+        @Body request: UpdateAccountInfoRequest
     ): Response<UserResponse>
 
     @PUT("api/users/{id}/password")

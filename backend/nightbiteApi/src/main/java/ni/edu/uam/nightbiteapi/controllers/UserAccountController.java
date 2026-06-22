@@ -2,6 +2,7 @@ package ni.edu.uam.nightbiteapi.controllers;
 
 import jakarta.validation.Valid;
 import ni.edu.uam.nightbiteapi.dto.MessageResponse;
+import ni.edu.uam.nightbiteapi.dto.UpdateAccountInfoRequest;
 import ni.edu.uam.nightbiteapi.dto.UpdatePasswordRequest;
 import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
 import ni.edu.uam.nightbiteapi.dto.UserLoginRequest;
@@ -85,6 +86,15 @@ public class UserAccountController {
             @Valid @RequestBody UpdateUsernameRequest request
     ) {
         UserResponse response = userAccountService.updateUsername(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/account-info")
+    public ResponseEntity<UserResponse> updateAccountInfo(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateAccountInfoRequest request
+    ) {
+        UserResponse response = userAccountService.updateAccountInfo(id, request);
         return ResponseEntity.ok(response);
     }
 

@@ -47,6 +47,11 @@ import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModelFactory
 import android.widget.Toast
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import ni.edu.uam.nightbiteapp.ui.screens.PasswordScreen
 
 @Composable
 fun AppNavigation() {
@@ -54,6 +59,7 @@ fun AppNavigation() {
     val context = LocalContext.current
     val activity = context as? Activity
     val coroutineScope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val sessionManager = remember {
         SessionManager(context.applicationContext)
@@ -102,6 +108,64 @@ fun AppNavigation() {
             navController.navigate(Routes.LOGIN) {
                 launchSingleTop = true
             }
+        }
+    }
+
+    fun navigateToSafeRouteAfterInactivity(
+        session: UserSession
+    ) {
+        activeUserId = session.userId
+        pendingLoginUsername = ""
+        pendingLoginPassword = ""
+        showLastStepsWelcomeMessage = false
+        showHomeWelcomeToast = false
+
+        val targetRoute = when {
+            !session.isLoggedIn -> Routes.START
+            session.hasPlayer -> Routes.HOME
+            else -> Routes.GENDER_SELECTION
+        }
+
+        navController.navigate(targetRoute) {
+            popUpTo(0) {
+                inclusive = true
+            }
+            launchSingleTop = true
+        }
+    }
+
+    DisposableEffect(lifecycleOwner, userSession) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> {
+                    coroutineScope.launch {
+                        sessionManager.saveLastActiveTime()
+                    }
+                }
+
+                Lifecycle.Event.ON_RESUME -> {
+                    coroutineScope.launch {
+                        val lastActiveTime = sessionManager.getLastActiveTime()
+                        val currentTime = System.currentTimeMillis()
+                        val inactiveTime = currentTime - lastActiveTime
+
+                        if (
+                            lastActiveTime > 0L &&
+                            inactiveTime >= INACTIVITY_LIMIT_MILLIS
+                        ) {
+                            navigateToSafeRouteAfterInactivity(userSession)
+                        }
+                    }
+                }
+
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
@@ -249,6 +313,10 @@ fun AppNavigation() {
                 },
                 onPlayerCreated = {
                     showLastStepsWelcomeMessage = false
+
+                    coroutineScope.launch {
+                        sessionManager.markPlayerCreated()
+                    }
 
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.GENDER_SELECTION) {
@@ -530,6 +598,9 @@ fun AppNavigation() {
                     onNavigateToAccount = {
                         navController.navigate(Routes.ACCOUNT)
                     },
+                    onNavigateToPassword = {
+                        navController.navigate(Routes.PASSWORD)
+                    },
                     onLogout = {
                         showLogoutConfirmation = true
                     },
@@ -644,6 +715,14 @@ fun AppNavigation() {
                 }
             )
         }
+
+        composable(Routes.PASSWORD) {
+            PasswordScreen(
+                onBackToSettings = {
+                    navController.popBackStack()
+                }
+            )
+        }
     }
 }
 
@@ -658,3 +737,5 @@ private fun tutorialStarsForResult(
         else -> null
     }
 }
+
+private const val INACTIVITY_LIMIT_MILLIS = 5 * 60 * 1000L

@@ -13,6 +13,7 @@ import ni.edu.uam.nightbiteapi.repositories.PlayerRepository;
 import ni.edu.uam.nightbiteapi.repositories.UserAccountRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import ni.edu.uam.nightbiteapi.dto.UpdateAccountInfoRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -142,6 +143,36 @@ public class UserAccountService {
         return mapToResponseWithPlayer(updatedUser);
     }
 
+    public UserResponse updateAccountInfo(
+            Long id,
+            UpdateAccountInfoRequest request
+    ) {
+        UserAccount user = userAccountRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cuenta de usuario no encontrada"));
+
+        validateUpdateAccountInfoRequest(request);
+
+        String newUsername = request.getUsername().trim().toLowerCase();
+
+        if (!user.getUsername().equals(newUsername)
+                && userAccountRepository.existsByUsername(newUsername)) {
+            throw new RuntimeException("El nombre de usuario ya está registrado");
+        }
+
+        Player player = playerRepository.findByUserAccountId(id)
+                .orElseThrow(() -> new RuntimeException("Ficha de repartidor no encontrada para esta cuenta"));
+
+        user.setUsername(newUsername);
+        user.setAge(request.getAge());
+
+        player.setGender(request.getGender());
+
+        UserAccount updatedUser = userAccountRepository.save(user);
+        playerRepository.save(player);
+
+        return mapToResponseWithPlayer(updatedUser);
+    }
+
     public void updatePassword(Long id, UpdatePasswordRequest request) {
         UserAccount user = userAccountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cuenta de usuario no encontrada"));
@@ -260,10 +291,23 @@ public class UserAccountService {
         if (age < 13) {
             throw new RuntimeException("Debes tener 13 años o más para crear una cuenta");
         }
+
+        if (age > 120) {
+            throw new RuntimeException("La edad no puede ser mayor a 120 años");
+        }
     }
 
     private void validateUpdateUsernameRequest(UpdateUsernameRequest request) {
         validateUsername(request.getNewUsername());
+    }
+
+    private void validateUpdateAccountInfoRequest(UpdateAccountInfoRequest request) {
+        validateUsername(request.getUsername());
+        validateAge(request.getAge());
+
+        if (request.getGender() == null) {
+            throw new RuntimeException("El género es obligatorio");
+        }
     }
 
     private void validateUpdatePasswordRequest(UpdatePasswordRequest request) {

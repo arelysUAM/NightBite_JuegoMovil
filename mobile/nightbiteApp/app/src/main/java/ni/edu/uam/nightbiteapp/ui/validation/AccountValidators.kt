@@ -63,7 +63,7 @@ object AccountValidators {
         fieldName: String = "Contraseña"
     ): String? {
         if (password.isBlank()) {
-            return "$fieldName obligatoria."
+            return "$fieldName es obligatoria."
         }
 
         if (password.length < PASSWORD_MIN_LENGTH) {
@@ -90,7 +90,7 @@ object AccountValidators {
         }
 
         if (password != confirmPassword) {
-            return "No coinciden."
+            return "Las contraseñas no coinciden."
         }
 
         return null

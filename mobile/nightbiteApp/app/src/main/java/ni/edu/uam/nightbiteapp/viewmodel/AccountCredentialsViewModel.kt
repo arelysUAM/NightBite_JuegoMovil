@@ -5,12 +5,17 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
+import ni.edu.uam.nightbiteapp.data.remote.dto.UpdateAccountInfoRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UpdatePasswordRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UpdateUsernameRequest
 import ni.edu.uam.nightbiteapp.data.repository.UserRepository
 import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
+import ni.edu.uam.nightbiteapp.ui.validation.PlayerValidators
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 class AccountCredentialsViewModel(
     private val userRepository: UserRepository,
@@ -18,34 +23,570 @@ class AccountCredentialsViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountCredentialsUiState())
+    private var usernameAvailabilityJob: Job? = null
     val uiState: StateFlow<AccountCredentialsUiState> = _uiState.asStateFlow()
 
+    val genderOptions = listOf("Femenino", "Masculino")
+
+    fun loadAccountInfo(userId: Long?) {
+        if (userId == null) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = "No se pudo identificar al usuario activo."
+                )
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+            }
+
+            try {
+                val response = userRepository.getUserById(userId)
+
+                if (!response.isSuccessful || response.body() == null) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "No se pudo cargar la información de la cuenta."
+                        )
+                    }
+                    return@launch
+                }
+
+                val user = response.body()!!
+                val username = user.username
+                val age = user.age.toString()
+                val gender = user.player?.gender.orEmpty()
+
+                _uiState.update {
+                    it.copy(
+                        username = username,
+                        email = user.email,
+                        age = age,
+                        gender = gender,
+                        createdAt = formatCreatedAt(user.createdAt),
+
+                        originalUsername = username,
+                        originalAge = age,
+                        originalGender = gender,
+
+                        usernameError = null,
+                        ageError = null,
+                        genderError = null,
+
+                        isEditing = false,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Error de conexión con la API."
+                    )
+                }
+            }
+        }
+    }
+
+    fun onUsernameChange(value: String) {
+        val cleanedUsername = value
+            .trim()
+            .lowercase()
+            .filter { character ->
+                character.isLetterOrDigit() || character == '_'
+            }
+            .take(AccountValidators.USERNAME_MAX_LENGTH)
+
+        val formatError = AccountValidators.validateUsername(cleanedUsername)
+
+        _uiState.update {
+            it.copy(
+                username = cleanedUsername,
+                usernameError = formatError,
+                errorMessage = null
+            )
+        }
+
+        usernameAvailabilityJob?.cancel()
+
+        if (
+            cleanedUsername.isBlank() ||
+            formatError != null
+        ) {
+            return
+        }
+
+        if (cleanedUsername == _uiState.value.originalUsername) {
+            _uiState.update {
+                it.copy(usernameError = null)
+            }
+            return
+        }
+
+        usernameAvailabilityJob = viewModelScope.launch {
+            delay(500L)
+
+            try {
+                val response = userRepository.checkUsernameAvailability(cleanedUsername)
+
+                val currentUsername = _uiState.value.username
+
+                if (currentUsername != cleanedUsername) {
+                    return@launch
+                }
+
+                if (!response.isSuccessful) {
+                    _uiState.update {
+                        it.copy(
+                            usernameError = "No se pudo verificar el usuario."
+                        )
+                    }
+                    return@launch
+                }
+
+                val availability = response.body()
+
+                if (availability?.available == false) {
+                    _uiState.update {
+                        it.copy(
+                            usernameError = availability.message
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            usernameError = null
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        usernameError = "No se pudo verificar el usuario."
+                    )
+                }
+            }
+        }
+    }
+
+    fun onAgeChange(value: String) {
+        val cleanedAge = value
+            .filter { it.isDigit() }
+            .take(3)
+
+        _uiState.update {
+            it.copy(
+                age = cleanedAge,
+                ageError = validateAge(cleanedAge),
+                errorMessage = null
+            )
+        }
+    }
+
+    fun onGenderSelected(value: String) {
+        _uiState.update {
+            it.copy(
+                gender = value,
+                genderError = null,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun beginEditing() {
+        _uiState.update {
+            it.copy(
+                isEditing = true,
+                usernameError = null,
+                ageError = null,
+                genderError = null,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun onSaveChangesClick() {
+        val isValid = validateAccountInfoFields()
+
+        if (!isValid) {
+            _uiState.update {
+                it.copy(
+                    showInvalidDataDialog = true,
+                    errorMessage = null
+                )
+            }
+            return
+        }
+
+        if (!hasEditableChanges()) {
+            _uiState.update {
+                it.copy(
+                    showInvalidDataDialog = true,
+                    errorMessage = null
+                )
+            }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                showSaveConfirmationDialog = true,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun dismissInvalidDataDialog() {
+        _uiState.update {
+            it.copy(
+                showInvalidDataDialog = false
+            )
+        }
+    }
+
+    fun dismissSaveConfirmationDialog() {
+        _uiState.update {
+            it.copy(
+                showSaveConfirmationDialog = false
+            )
+        }
+    }
+
+    fun confirmSaveChanges(userId: Long?) {
+        if (userId == null) {
+            _uiState.update {
+                it.copy(
+                    showSaveConfirmationDialog = false,
+                    errorMessage = "No se pudo identificar al usuario activo."
+                )
+            }
+            return
+        }
+
+        val state = _uiState.value
+        val ageValue = state.age.toIntOrNull()
+
+        if (ageValue == null) {
+            _uiState.update {
+                it.copy(
+                    showSaveConfirmationDialog = false,
+                    ageError = "La edad es obligatoria."
+                )
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    showSaveConfirmationDialog = false,
+                    errorMessage = null
+                )
+            }
+
+            try {
+                val usernameChanged =
+                    state.username.trim().lowercase() != state.originalUsername
+
+                if (usernameChanged) {
+                    val availabilityResponse =
+                        userRepository.checkUsernameAvailability(state.username)
+
+                    if (!availabilityResponse.isSuccessful) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                usernameError = "No se pudo verificar el nombre de usuario."
+                            )
+                        }
+                        return@launch
+                    }
+
+                    val availability = availabilityResponse.body()
+
+                    if (availability?.available == false) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                usernameError = availability.message
+                            )
+                        }
+                        return@launch
+                    }
+                }
+
+                val response = userRepository.updateAccountInfo(
+                    userId = userId,
+                    request = UpdateAccountInfoRequest(
+                        username = state.username.trim().lowercase(),
+                        age = ageValue,
+                        gender = state.gender
+                    )
+                )
+
+                if (!response.isSuccessful) {
+                    val errorMessage = extractErrorMessage(
+                        rawError = response.errorBody()?.string(),
+                        fallback = "No se pudo actualizar la información de la cuenta."
+                    )
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = errorMessage
+                        )
+                    }
+                    return@launch
+                }
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isEditing = false,
+                        showChangesSavedDialog = true,
+                        successMessage = "Información actualizada correctamente."
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Error de conexión con la API."
+                    )
+                }
+            }
+        }
+    }
+
+    fun finishChangesSavedFlow(onNavigateToLogin: () -> Unit) {
+        viewModelScope.launch {
+            sessionManager.clearSession()
+            _uiState.value = AccountCredentialsUiState()
+            onNavigateToLogin()
+        }
+    }
+
+    fun onCancelEditingClick() {
+        _uiState.update {
+            it.copy(
+                showCancelConfirmationDialog = true,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun dismissCancelConfirmationDialog() {
+        _uiState.update {
+            it.copy(
+                showCancelConfirmationDialog = false
+            )
+        }
+    }
+
+    fun confirmCancelEditing() {
+        restoreOriginalValuesAndLock()
+    }
+
+    fun onBackAttempt(onBackToSettings: () -> Unit) {
+        val state = _uiState.value
+
+        if (state.isEditing) {
+            _uiState.update {
+                it.copy(
+                    showExitConfirmationDialog = true,
+                    errorMessage = null
+                )
+            }
+        } else {
+            onBackToSettings()
+        }
+    }
+
+    fun dismissExitConfirmationDialog() {
+        _uiState.update {
+            it.copy(
+                showExitConfirmationDialog = false
+            )
+        }
+    }
+
+    fun confirmExitWithoutSaving(onBackToSettings: () -> Unit) {
+        restoreOriginalValuesAndLock()
+        onBackToSettings()
+    }
+
+    fun onResetProgressClick() {
+        _uiState.update {
+            it.copy(
+                showResetProgressDialog = true
+            )
+        }
+    }
+
+    fun dismissResetProgressDialog() {
+        _uiState.update {
+            it.copy(
+                showResetProgressDialog = false
+            )
+        }
+    }
+
+    private fun validateAccountInfoFields(): Boolean {
+        val state = _uiState.value
+
+        val formatUsernameError = AccountValidators.validateUsername(state.username)
+
+        val usernameError = when {
+            formatUsernameError != null -> formatUsernameError
+            state.usernameError != null -> state.usernameError
+            else -> null
+        }
+
+        val ageError = validateAge(state.age)
+        val genderError = PlayerValidators.validateGender(state.gender)
+
+        _uiState.update {
+            it.copy(
+                usernameError = usernameError,
+                ageError = ageError,
+                genderError = genderError,
+                errorMessage = null
+            )
+        }
+
+        return usernameError == null &&
+                ageError == null &&
+                genderError == null
+    }
+
+    private fun validateAge(ageText: String): String? {
+        if (ageText.isBlank()) {
+            return "La edad es obligatoria."
+        }
+
+        val age = ageText.toIntOrNull()
+            ?: return "La edad solo puede contener números."
+
+        if (age < 13) {
+            return "Debes tener 13 años o más."
+        }
+
+        if (age > 120) {
+            return "La edad no puede ser mayor a 120 años."
+        }
+
+        return null
+    }
+
+    private fun restoreOriginalValuesAndLock() {
+        _uiState.update {
+            it.copy(
+                username = it.originalUsername,
+                age = it.originalAge,
+                gender = it.originalGender,
+
+                usernameError = null,
+                ageError = null,
+                genderError = null,
+
+                isEditing = false,
+                showCancelConfirmationDialog = false,
+                showExitConfirmationDialog = false,
+                errorMessage = null
+            )
+        }
+    }
+
+    private fun hasEditableChanges(): Boolean {
+        val state = _uiState.value
+
+        return state.username != state.originalUsername ||
+                state.age != state.originalAge ||
+                state.gender != state.originalGender
+    }
+
+    private fun formatCreatedAt(createdAt: String?): String {
+        if (createdAt.isNullOrBlank()) {
+            return "No disponible"
+        }
+
+        val date = createdAt.take(10)
+
+        if (!date.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) {
+            return date
+        }
+
+        val year = date.substring(0, 4)
+        val month = date.substring(5, 7)
+        val day = date.substring(8, 10)
+
+        return "$day/$month/$year"
+    }
+
+    private fun extractErrorMessage(
+        rawError: String?,
+        fallback: String
+    ): String {
+        val error = rawError.orEmpty()
+
+        val messageFromJson = Regex("\"message\"\\s*:\\s*\"([^\"]+)\"")
+            .find(error)
+            ?.groupValues
+            ?.getOrNull(1)
+
+        return messageFromJson
+            ?.replace("\\\"", "\"")
+            ?: fallback
+    }
+
+    /*
+     * Funciones antiguas de credenciales.
+     * Se conservan por compatibilidad mientras reemplazamos AccountScreen.
+     */
+
     fun onNewUsernameChange(value: String) {
-        _uiState.value = _uiState.value.copy(
-            newUsername = value,
-            errorMessage = null
-        )
+        _uiState.update {
+            it.copy(
+                newUsername = value.trim().lowercase(),
+                errorMessage = null
+            )
+        }
     }
 
     fun onCurrentPasswordChange(value: String) {
-        _uiState.value = _uiState.value.copy(
-            currentPassword = value,
-            errorMessage = null
-        )
+        _uiState.update {
+            it.copy(
+                currentPassword = value,
+                errorMessage = null
+            )
+        }
     }
 
     fun onNewPasswordChange(value: String) {
-        _uiState.value = _uiState.value.copy(
-            newPassword = value,
-            errorMessage = null
-        )
+        _uiState.update {
+            it.copy(
+                newPassword = value,
+                errorMessage = null
+            )
+        }
     }
 
     fun onConfirmNewPasswordChange(value: String) {
-        _uiState.value = _uiState.value.copy(
-            confirmNewPassword = value,
-            errorMessage = null
-        )
+        _uiState.update {
+            it.copy(
+                confirmNewPassword = value,
+                errorMessage = null
+            )
+        }
     }
 
     fun onApplyChangesClick(currentUsername: String) {
@@ -63,17 +604,21 @@ class AccountCredentialsViewModel(
             val usernameError = AccountValidators.validateUsername(state.newUsername)
 
             if (usernameError != null) {
-                _uiState.value = state.copy(
-                    errorMessage = usernameError
-                )
+                _uiState.update {
+                    it.copy(
+                        errorMessage = usernameError
+                    )
+                }
                 return
             }
         }
 
         if (state.newUsername.isNotBlank() && state.newUsername == currentUsername) {
-            _uiState.value = state.copy(
-                errorMessage = "El nuevo nombre de usuario debe ser diferente al actual."
-            )
+            _uiState.update {
+                it.copy(
+                    errorMessage = "El nuevo nombre de usuario debe ser diferente al actual."
+                )
+            }
             return
         }
 
@@ -83,9 +628,11 @@ class AccountCredentialsViewModel(
                 state.newPassword.isBlank() ||
                 state.confirmNewPassword.isBlank()
             ) {
-                _uiState.value = state.copy(
-                    errorMessage = "Para cambiar la contraseña debes completar todos los campos de contraseña."
-                )
+                _uiState.update {
+                    it.copy(
+                        errorMessage = "Para cambiar la contraseña debes completar todos los campos de contraseña."
+                    )
+                }
                 return
             }
 
@@ -95,9 +642,11 @@ class AccountCredentialsViewModel(
             )
 
             if (currentPasswordError != null) {
-                _uiState.value = state.copy(
-                    errorMessage = currentPasswordError
-                )
+                _uiState.update {
+                    it.copy(
+                        errorMessage = currentPasswordError
+                    )
+                }
                 return
             }
 
@@ -107,9 +656,11 @@ class AccountCredentialsViewModel(
             )
 
             if (newPasswordError != null) {
-                _uiState.value = state.copy(
-                    errorMessage = newPasswordError
-                )
+                _uiState.update {
+                    it.copy(
+                        errorMessage = newPasswordError
+                    )
+                }
                 return
             }
 
@@ -119,28 +670,38 @@ class AccountCredentialsViewModel(
             )
 
             if (confirmPasswordError != null) {
-                _uiState.value = state.copy(
-                    errorMessage = confirmPasswordError
-                )
+                _uiState.update {
+                    it.copy(
+                        errorMessage = confirmPasswordError
+                    )
+                }
                 return
             }
 
             if (state.currentPassword == state.newPassword) {
-                _uiState.value = state.copy(
-                    errorMessage = "La nueva contraseña debe ser diferente a la actual."
-                )
+                _uiState.update {
+                    it.copy(
+                        errorMessage = "La nueva contraseña debe ser diferente a la actual."
+                    )
+                }
                 return
             }
         }
 
-        _uiState.value = state.copy(
-            showConfirmDialog = true,
-            errorMessage = null
-        )
+        _uiState.update {
+            it.copy(
+                showConfirmDialog = true,
+                errorMessage = null
+            )
+        }
     }
 
     fun dismissConfirmDialog() {
-        _uiState.value = _uiState.value.copy(showConfirmDialog = false)
+        _uiState.update {
+            it.copy(
+                showConfirmDialog = false
+            )
+        }
     }
 
     fun applyConfirmedChanges(
@@ -148,21 +709,25 @@ class AccountCredentialsViewModel(
         currentUsername: String
     ) {
         if (userId == null) {
-            _uiState.value = _uiState.value.copy(
-                showConfirmDialog = false,
-                errorMessage = "No se pudo identificar al usuario activo."
-            )
+            _uiState.update {
+                it.copy(
+                    showConfirmDialog = false,
+                    errorMessage = "No se pudo identificar al usuario activo."
+                )
+            }
             return
         }
 
         viewModelScope.launch {
             val state = _uiState.value
 
-            _uiState.value = state.copy(
-                isLoading = true,
-                showConfirmDialog = false,
-                errorMessage = null
-            )
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    showConfirmDialog = false,
+                    errorMessage = null
+                )
+            }
 
             try {
                 val wantsToChangeUsername =
@@ -182,10 +747,12 @@ class AccountCredentialsViewModel(
                     )
 
                     if (!usernameResponse.isSuccessful) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = "No se pudo actualizar el nombre de usuario."
-                        )
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = "No se pudo actualizar el nombre de usuario."
+                            )
+                        }
                         return@launch
                     }
                 }
@@ -201,25 +768,30 @@ class AccountCredentialsViewModel(
                     )
 
                     if (!passwordResponse.isSuccessful) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = "No se pudo actualizar la contraseña. Verifica la contraseña actual."
-                        )
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = "No se pudo actualizar la contraseña. Verifica la contraseña actual."
+                            )
+                        }
                         return@launch
                     }
                 }
 
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    showCredentialsUpdatedDialog = true,
-                    successMessage = "Credenciales actualizadas correctamente."
-                )
-
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        showCredentialsUpdatedDialog = true,
+                        successMessage = "Credenciales actualizadas correctamente."
+                    )
+                }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Error de conexión con el servidor."
-                )
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Error de conexión con el servidor."
+                    )
+                }
             }
         }
     }
@@ -232,33 +804,41 @@ class AccountCredentialsViewModel(
     }
 
     fun onDeleteAccountClick() {
-        _uiState.value = _uiState.value.copy(
-            showDeleteAccountDialog = true,
-            errorMessage = null
-        )
+        _uiState.update {
+            it.copy(
+                showDeleteAccountDialog = true,
+                errorMessage = null
+            )
+        }
     }
 
     fun dismissDeleteAccountDialog() {
-        _uiState.value = _uiState.value.copy(
-            showDeleteAccountDialog = false
-        )
+        _uiState.update {
+            it.copy(
+                showDeleteAccountDialog = false
+            )
+        }
     }
 
     fun deleteAccount(userId: Long?) {
         if (userId == null) {
-            _uiState.value = _uiState.value.copy(
-                errorMessage = "No se pudo identificar la cuenta del usuario.",
-                showDeleteAccountDialog = false
-            )
+            _uiState.update {
+                it.copy(
+                    errorMessage = "No se pudo identificar la cuenta del usuario.",
+                    showDeleteAccountDialog = false
+                )
+            }
             return
         }
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true,
-                errorMessage = null,
-                showDeleteAccountDialog = false
-            )
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    showDeleteAccountDialog = false
+                )
+            }
 
             try {
                 val response = userRepository.deleteUser(userId)
@@ -266,21 +846,27 @@ class AccountCredentialsViewModel(
                 if (response.isSuccessful) {
                     sessionManager.clearSession()
 
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        showAccountDeletedDialog = true
-                    )
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            showAccountDeletedDialog = true
+                        )
+                    }
                 } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = "No se pudo eliminar la cuenta."
-                    )
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "No se pudo eliminar la cuenta."
+                        )
+                    }
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Error de conexión con la API."
-                )
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Error de conexión con la API."
+                    )
+                }
             }
         }
     }

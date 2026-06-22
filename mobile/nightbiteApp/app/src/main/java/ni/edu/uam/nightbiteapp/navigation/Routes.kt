@@ -17,6 +17,8 @@ object Routes {
     const val SETTINGS = "settings"
     const val ACCOUNT = "account"
 
+    const val PASSWORD = "password"
+
     const val PLAYER_CREATION = "player_creation"
     const val PLAYER_DETAIL = "player_detail"
 

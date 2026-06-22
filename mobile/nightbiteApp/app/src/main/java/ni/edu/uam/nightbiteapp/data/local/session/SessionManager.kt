@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 
@@ -23,6 +24,8 @@ class SessionManager(
         private val USERNAME = stringPreferencesKey("username")
         private val EMAIL = stringPreferencesKey("email")
         private val AGE = intPreferencesKey("age")
+        private val HAS_PLAYER = booleanPreferencesKey("has_player")
+        private val LAST_ACTIVE_TIME = longPreferencesKey("last_active_time")
     }
 
     val userSessionFlow: Flow<UserSession> = context.sessionDataStore.data
@@ -32,7 +35,8 @@ class SessionManager(
                 userId = preferences[USER_ID],
                 username = preferences[USERNAME] ?: "",
                 email = preferences[EMAIL] ?: "",
-                age = preferences[AGE]
+                age = preferences[AGE],
+                hasPlayer = preferences[HAS_PLAYER] ?: false
             )
         }
 
@@ -45,7 +49,30 @@ class SessionManager(
             preferences[USERNAME] = user.username
             preferences[EMAIL] = user.email
             preferences[AGE] = user.age
+            preferences[HAS_PLAYER] = user.player != null
         }
+    }
+
+    suspend fun markPlayerCreated() {
+        context.sessionDataStore.edit { preferences ->
+            preferences[HAS_PLAYER] = true
+        }
+    }
+
+    suspend fun saveLastActiveTime(
+        timeMillis: Long = System.currentTimeMillis()
+    ) {
+        context.sessionDataStore.edit { preferences ->
+            preferences[LAST_ACTIVE_TIME] = timeMillis
+        }
+    }
+
+    suspend fun getLastActiveTime(): Long {
+        return context.sessionDataStore.data
+            .map { preferences ->
+                preferences[LAST_ACTIVE_TIME] ?: 0L
+            }
+            .first()
     }
 
     suspend fun clearSession() {

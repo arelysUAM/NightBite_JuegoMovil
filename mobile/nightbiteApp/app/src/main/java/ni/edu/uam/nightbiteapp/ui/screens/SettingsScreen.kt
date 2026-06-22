@@ -3,8 +3,8 @@ package ni.edu.uam.nightbiteapp.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -18,14 +18,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,32 +49,38 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
-import ni.edu.uam.nightbiteapp.ui.design.NightShapes
-import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
-import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
-import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
-import ni.edu.uam.nightbiteapp.ui.design.SettingsDimensions
-import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
-import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
-import ni.edu.uam.nightbiteapp.ui.theme.SettingsPanelPink
-import ni.edu.uam.nightbiteapp.ui.theme.SettingsHeaderPink
-import ni.edu.uam.nightbiteapp.ui.theme.SettingsTabPink
-import ni.edu.uam.nightbiteapp.ui.theme.SettingsOptionLavender
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
+import ni.edu.uam.nightbiteapp.ui.design.NightShapes
+import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
+import ni.edu.uam.nightbiteapp.ui.design.SettingsDimensions
+import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
+import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
+import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
+import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 
 private enum class SettingsTab {
     GAME,
     ACCOUNT
 }
 
+private val SettingsPanelBlue = Color(0xFF7B92E8)
+private val SettingsHeaderPurple = Color(0xFF5F56CA)
+private val SettingsTabPurple = Color(0xFF6A5ED5)
+private val SettingsSelectedTabPurple = Color(0xFF3E2EA8)
+private val SettingsInnerPurple = Color(0xFF21143F)
+private val SettingsRowCream = Color(0xFFF7F1DE)
+private val SettingsRowText = Color(0xFF21143F)
+
 @Composable
 fun SettingsScreen(
     userSession: UserSession,
     onBackToHome: () -> Unit,
     onNavigateToAccount: () -> Unit,
+    onNavigateToPassword: () -> Unit,
     onLogout: () -> Unit,
     onDeleteAccountClick: () -> Unit,
     onSupportClick: () -> Unit = {},
@@ -131,6 +137,7 @@ fun SettingsScreen(
                     selectedTab = SettingsTab.ACCOUNT
                 },
                 onNavigateToAccount = onNavigateToAccount,
+                onNavigateToPassword = onNavigateToPassword,
                 onLogout = onLogout,
                 onDeleteAccountClick = onDeleteAccountClick,
                 onSupportClick = onSupportClick,
@@ -151,6 +158,7 @@ private fun SettingsCard(
     onGameTabClick: () -> Unit,
     onAccountTabClick: () -> Unit,
     onNavigateToAccount: () -> Unit,
+    onNavigateToPassword: () -> Unit,
     onLogout: () -> Unit,
     onDeleteAccountClick: () -> Unit,
     onSupportClick: () -> Unit,
@@ -159,7 +167,12 @@ private fun SettingsCard(
     Column(
         modifier = modifier
             .clip(NightShapes.panel)
-            .background(SettingsPanelPink)
+            .background(SettingsPanelBlue)
+            .border(
+                width = 2.dp,
+                color = Color(0xFF556DCE),
+                shape = NightShapes.panel
+            )
     ) {
         SettingsHeader(
             selectedTab = selectedTab,
@@ -189,6 +202,7 @@ private fun SettingsCard(
                         optionRowWidth = optionRowWidth,
                         actionButtonWidth = actionButtonWidth,
                         onNavigateToAccount = onNavigateToAccount,
+                        onNavigateToPassword = onNavigateToPassword,
                         onLogout = onLogout,
                         onDeleteAccountClick = onDeleteAccountClick,
                         onTermsClick = onTermsClick
@@ -209,7 +223,7 @@ private fun SettingsHeader(
         modifier = Modifier
             .fillMaxWidth()
             .height(SettingsDimensions.headerHeight)
-            .background(SettingsHeaderPink)
+            .background(SettingsHeaderPurple)
             .padding(
                 start = NightSpacing.large,
                 end = NightSpacing.small
@@ -217,16 +231,19 @@ private fun SettingsHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Configuraciones",
+            text = "CONFIGURACIONES",
             color = SmokeWhite,
-            style = MaterialTheme.typography.headlineSmall.copy(
+            fontSize = 25.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 1.6.sp,
+            textAlign = TextAlign.Start,
+            style = MaterialTheme.typography.headlineLarge.copy(
                 shadow = Shadow(
-                    color = NightSurface.copy(alpha = 0.55f),
+                    color = NightSurface,
                     offset = Offset(2f, 2f),
-                    blurRadius = 2f
+                    blurRadius = 3f
                 )
             ),
-            fontWeight = FontWeight.Black,
             modifier = Modifier.weight(1f)
         )
 
@@ -280,9 +297,9 @@ private fun SettingsTabButton(
             .clip(NightShapes.smallCard)
             .background(
                 if (selected) {
-                    SettingsPanelPink
+                    SettingsSelectedTabPurple
                 } else {
-                    SettingsTabPink
+                    SettingsTabPurple
                 }
             )
             .clickable {
@@ -320,11 +337,8 @@ private fun GameSettingsContent(
         SettingsInnerCard(
             width = innerWidth
         ) {
-            Text(
-                text = "Opciones del Juego",
-                color = SmokeWhite,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black
+            SettingsSectionTitle(
+                text = "OPCIONES DEL JUEGO"
             )
 
             Spacer(modifier = Modifier.height(NightSpacing.medium))
@@ -368,6 +382,7 @@ private fun AccountSettingsContent(
     optionRowWidth: Dp,
     actionButtonWidth: Dp,
     onNavigateToAccount: () -> Unit,
+    onNavigateToPassword: () -> Unit,
     onLogout: () -> Unit,
     onDeleteAccountClick: () -> Unit,
     onTermsClick: () -> Unit
@@ -382,26 +397,19 @@ private fun AccountSettingsContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            SettingsProfileSummary(
-                width = innerWidth,
-                username = userSession.username,
-                displayId = buildNightBiteDisplayId(
-                    userId = userSession.userId ?: 0L,
-                    username = userSession.username
-                )
-            )
+        Spacer(modifier = Modifier.height(1.dp))
 
-            Spacer(modifier = Modifier.height(NightSpacing.small))
-
-            SettingsAccountOptions(
-                innerWidth = innerWidth,
-                rowWidth = optionRowWidth,
-                onNavigateToAccount = onNavigateToAccount
-            )
-        }
+        SettingsAccountPanel(
+            width = innerWidth,
+            rowWidth = optionRowWidth,
+            username = userSession.username,
+            displayId = buildNightBiteDisplayId(
+                userId = userSession.userId ?: 0L,
+                username = userSession.username
+            ),
+            onNavigateToAccount = onNavigateToAccount,
+            onNavigateToPassword = onNavigateToPassword
+        )
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(NightSpacing.small),
@@ -409,7 +417,7 @@ private fun AccountSettingsContent(
         ) {
             SettingsPillButton(
                 text = "CERRAR SESIÓN",
-                containerColor = SettingsHeaderPink,
+                containerColor = SettingsSelectedTabPurple,
                 contentColor = SmokeWhite,
                 width = actionButtonWidth,
                 onClick = onLogout
@@ -417,9 +425,9 @@ private fun AccountSettingsContent(
 
             SettingsPillButton(
                 text = "ELIMINAR CUENTA",
-                containerColor = SettingsPanelPink,
-                contentColor = SettingsHeaderPink,
-                borderColor = SettingsHeaderPink,
+                containerColor = Color.Transparent,
+                contentColor = SettingsInnerPurple,
+                borderColor = SettingsInnerPurple,
                 width = actionButtonWidth,
                 onClick = onDeleteAccountClick
             )
@@ -441,13 +449,35 @@ private fun SettingsInnerCard(
         modifier = Modifier
             .width(width)
             .clip(NightShapes.panel)
-            .background(NightSurface)
+            .background(SettingsInnerPurple)
             .padding(
                 horizontal = NightSpacing.large,
                 vertical = NightSpacing.medium
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
         content = content
+    )
+}
+
+@Composable
+private fun SettingsSectionTitle(
+    text: String
+) {
+    Text(
+        text = text,
+        color = SmokeWhite,
+        fontSize = 15.sp,
+        fontFamily = LilitaOne,
+        fontWeight = FontWeight.Normal,
+        letterSpacing = 1.2.sp,
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.titleMedium.copy(
+            shadow = Shadow(
+                color = NightSurface,
+                offset = Offset(1.4f, 1.4f),
+                blurRadius = 2f
+            )
+        )
     )
 }
 
@@ -466,14 +496,14 @@ private fun SettingsOptionRow(
             .width(width)
             .height(SettingsDimensions.optionRowHeight)
             .clip(NightShapes.smallCard)
-            .background(SettingsOptionLavender)
+            .background(SettingsRowCream)
             .padding(horizontal = NightSpacing.medium),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = text,
-            tint = NightSurface,
+            tint = SettingsRowText,
             modifier = Modifier.size(SettingsDimensions.optionIconSize)
         )
 
@@ -481,7 +511,7 @@ private fun SettingsOptionRow(
 
         Text(
             text = text,
-            color = NightSurface,
+            color = SettingsRowText,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
@@ -508,7 +538,7 @@ private fun SettingsMiniSwitch(
             .width(SettingsDimensions.switchWidth)
             .height(SettingsDimensions.switchHeight)
             .clip(RoundedCornerShape(50.dp))
-            .background(NightSurface)
+            .background(SettingsInnerPurple)
             .clickable {
                 onCheckedChange(!checked)
             }
@@ -523,57 +553,60 @@ private fun SettingsMiniSwitch(
             modifier = Modifier
                 .size(SettingsDimensions.switchThumbSize)
                 .clip(RoundedCornerShape(50.dp))
-                .background(SmokeWhite)
+                .background(
+                    if (checked) {
+                        CheeseYellow
+                    } else {
+                        SmokeWhite
+                    }
+                )
         )
     }
 }
 
 @Composable
-private fun SettingsProfileSummary(
+private fun SettingsAccountPanel(
     width: Dp,
+    rowWidth: Dp,
     username: String,
-    displayId: String
+    displayId: String,
+    onNavigateToAccount: () -> Unit,
+    onNavigateToPassword: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .width(width)
             .clip(NightShapes.panel)
-            .background(NightSurface)
+            .background(SettingsInnerPurple)
             .padding(
                 horizontal = NightSpacing.large,
-                vertical = NightSpacing.small
-            )
-    ) {
-        Text(
-            text = "Usuario: $username",
-            color = SmokeWhite,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            text = "ID: $displayId",
-            color = SmokeWhite,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-private fun SettingsAccountOptions(
-    innerWidth: Dp,
-    rowWidth: Dp,
-    onNavigateToAccount: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .width(innerWidth)
-            .clip(NightShapes.panel)
-            .background(NightSurface)
-            .padding(NightSpacing.small),
+                vertical = NightSpacing.medium
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Column(
+            modifier = Modifier.width(rowWidth),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = "Usuario: $username",
+                color = SmokeWhite,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = "ID: $displayId",
+                color = SmokeWhite,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(NightSpacing.large))
+
         SettingsAccountRow(
             text = "Información de la cuenta",
             width = rowWidth,
@@ -583,7 +616,7 @@ private fun SettingsAccountOptions(
         SettingsAccountRow(
             text = "Contraseña",
             width = rowWidth,
-            onClick = onNavigateToAccount
+            onClick = onNavigateToPassword
         )
     }
 }
@@ -599,7 +632,7 @@ private fun SettingsAccountRow(
             .width(width)
             .height(SettingsDimensions.accountRowHeight)
             .clip(NightShapes.smallCard)
-            .background(SettingsOptionLavender)
+            .background(SettingsRowCream)
             .clickable {
                 onClick()
             }
@@ -609,7 +642,7 @@ private fun SettingsAccountRow(
         Icon(
             imageVector = Icons.Default.Person,
             contentDescription = text,
-            tint = NightSurface,
+            tint = SettingsRowText,
             modifier = Modifier.size(SettingsDimensions.optionIconSize)
         )
 
@@ -617,7 +650,7 @@ private fun SettingsAccountRow(
 
         Text(
             text = text,
-            color = NightSurface,
+            color = SettingsRowText,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
@@ -626,7 +659,7 @@ private fun SettingsAccountRow(
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = "Abrir",
-            tint = NightSurface,
+            tint = SettingsRowText,
             modifier = Modifier.size(SettingsDimensions.optionIconSize)
         )
     }
@@ -670,8 +703,11 @@ private fun SettingsPillButton(
         Text(
             text = text,
             color = contentColor,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Black
+            fontSize = 13.sp,
+            fontFamily = LilitaOne,
+            fontWeight = FontWeight.Normal,
+            letterSpacing = 1.5.sp,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -683,9 +719,9 @@ private fun SettingsLink(
 ) {
     Text(
         text = text,
-        color = NightSurface,
+        color = SettingsInnerPurple,
         style = MaterialTheme.typography.bodyMedium,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Black,
         textDecoration = TextDecoration.Underline,
         modifier = Modifier.clickable {
             onClick()
