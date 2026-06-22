@@ -10,6 +10,7 @@ import ni.edu.uam.nightbiteapp.data.remote.dto.UserLoginRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserRegisterRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.UsernameAvailabilityResponse
+import ni.edu.uam.nightbiteapp.data.remote.dto.VerifyCurrentPasswordRequest
 import retrofit2.Response
 
 /**
@@ -68,10 +69,22 @@ class UserRepository(
         return apiService.updateAccountInfo(userId, request)
     }
 
+    suspend fun verifyCurrentPassword(
+        userId: Long,
+        currentPassword: String
+    ): Response<MessageResponse> {
+        return apiService.verifyCurrentPassword(
+            id = userId,
+            request = VerifyCurrentPasswordRequest(
+                currentPassword = currentPassword
+            )
+        )
+    }
+
     suspend fun updatePassword(
         userId: Long,
         request: UpdatePasswordRequest
-    ): Response<UserResponse> {
+    ): Response<MessageResponse> {
         return apiService.updatePassword(userId, request)
     }
 

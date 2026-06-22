@@ -14,6 +14,7 @@ import ni.edu.uam.nightbiteapi.repositories.UserAccountRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import ni.edu.uam.nightbiteapi.dto.UpdateAccountInfoRequest;
+import ni.edu.uam.nightbiteapi.dto.VerifyCurrentPasswordRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -173,6 +174,27 @@ public class UserAccountService {
         return mapToResponseWithPlayer(updatedUser);
     }
 
+    public void verifyCurrentPassword(
+            Long id,
+            VerifyCurrentPasswordRequest request
+    ) {
+        UserAccount user = userAccountRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cuenta de usuario no encontrada"));
+
+        if (request.getCurrentPassword() == null || request.getCurrentPassword().isBlank()) {
+            throw new RuntimeException("La contraseña actual es obligatoria");
+        }
+
+        boolean currentPasswordMatches = passwordEncoder.matches(
+                request.getCurrentPassword(),
+                user.getPasswordHash()
+        );
+
+        if (!currentPasswordMatches) {
+            throw new RuntimeException("La contraseña actual no es correcta");
+        }
+    }
+
     public void updatePassword(Long id, UpdatePasswordRequest request) {
         UserAccount user = userAccountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cuenta de usuario no encontrada"));
@@ -274,8 +296,8 @@ public class UserAccountService {
             throw new RuntimeException(fieldName + " debe tener al menos 8 caracteres");
         }
 
-        if (password.length() > 50) {
-            throw new RuntimeException(fieldName + " no debe superar los 50 caracteres");
+        if (password.length() > 20) {
+            throw new RuntimeException(fieldName + " no debe superar los 20 caracteres");
         }
 
         if (password.startsWith(" ") || password.endsWith(" ")) {
@@ -311,7 +333,10 @@ public class UserAccountService {
     }
 
     private void validateUpdatePasswordRequest(UpdatePasswordRequest request) {
-        validatePassword(request.getCurrentPassword(), "La contraseña actual");
+        if (request.getCurrentPassword() == null || request.getCurrentPassword().isBlank()) {
+            throw new RuntimeException("La contraseña actual es obligatoria");
+        }
+
         validatePassword(request.getNewPassword(), "La nueva contraseña");
 
         if (request.getConfirmNewPassword() == null || request.getConfirmNewPassword().isBlank()) {

@@ -13,6 +13,7 @@ import ni.edu.uam.nightbiteapi.services.UserAccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ni.edu.uam.nightbiteapi.dto.VerifyCurrentPasswordRequest;
 
 import java.util.List;
 
@@ -96,6 +97,18 @@ public class UserAccountController {
     ) {
         UserResponse response = userAccountService.updateAccountInfo(id, request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/verify-password")
+    public ResponseEntity<MessageResponse> verifyCurrentPassword(
+            @PathVariable Long id,
+            @Valid @RequestBody VerifyCurrentPasswordRequest request
+    ) {
+        userAccountService.verifyCurrentPassword(id, request);
+
+        return ResponseEntity.ok(
+                new MessageResponse("Contraseña actual verificada correctamente")
+        );
     }
 
     @PutMapping("/{id}/password")

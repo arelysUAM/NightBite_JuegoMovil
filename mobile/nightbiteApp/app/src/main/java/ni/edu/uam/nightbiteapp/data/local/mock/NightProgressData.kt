@@ -2,29 +2,50 @@ package ni.edu.uam.nightbiteapp.data.local.mock
 
 object NightProgressData {
     private val unlockedLevelByUser = mutableMapOf<Long, Int>()
-    private val tutorialStarsByUser = mutableMapOf<Long, Int>()
+    private val levelStarsByUser = mutableMapOf<Long, MutableMap<Int, Int>>()
 
     fun getMaxUnlockedLevel(userId: Long?): Int {
         if (userId == null) return 0
         return unlockedLevelByUser[userId] ?: 0
     }
 
-    fun getTutorialStars(userId: Long?): Int {
+    fun getLevelStars(
+        userId: Long?,
+        levelId: Int
+    ): Int {
         if (userId == null) return 0
-        return tutorialStarsByUser[userId] ?: 0
+
+        return levelStarsByUser[userId]
+            ?.get(levelId)
+            ?: 0
     }
 
-    fun saveTutorialStars(
+    fun getStarsByLevel(userId: Long?): Map<Int, Int> {
+        if (userId == null) return emptyMap()
+
+        return levelStarsByUser[userId]
+            ?.toMap()
+            ?: emptyMap()
+    }
+
+    fun saveLevelStars(
         userId: Long?,
+        levelId: Int,
         stars: Int
     ) {
         if (userId == null) return
 
+        val safeLevelId = levelId.coerceIn(0, 4)
         val safeStars = stars.coerceIn(0, 3)
-        val currentStars = getTutorialStars(userId)
+
+        val userStars = levelStarsByUser.getOrPut(userId) {
+            mutableMapOf()
+        }
+
+        val currentStars = userStars[safeLevelId] ?: 0
 
         if (safeStars > currentStars) {
-            tutorialStarsByUser[userId] = safeStars
+            userStars[safeLevelId] = safeStars
         }
     }
 

@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun GamePlaceholderScreen(
     levelId: Int,
-    onNavigateToResult: (GameResultType) -> Unit,
+    onNavigateToResult: (GameResultType, Int) -> Unit,
     onRestartLevel: () -> Unit,
     onBackToHome: () -> Unit
 ) {
@@ -203,13 +203,13 @@ private fun SimulatorInfoCard() {
 
 @Composable
 private fun TutorialResultButtons(
-    onNavigateToResult: (GameResultType) -> Unit
+    onNavigateToResult: (GameResultType, Int) -> Unit
 ) {
     val results = listOf(
-        "Ganador: 3 estrellas" to GameResultType.TUTORIAL_THREE_STARS,
-        "Resultado: 2 estrellas" to GameResultType.TUTORIAL_TWO_STARS,
-        "Resultado: 1 estrella" to GameResultType.TUTORIAL_ONE_STAR,
-        "Resultado: 0 estrellas" to GameResultType.FIRED
+        Triple("Ganar: 3 estrellas", GameResultType.VICTORY, 3),
+        Triple("Ganar: 2 estrellas", GameResultType.VICTORY, 2),
+        Triple("Ganar: 1 estrella", GameResultType.VICTORY, 1),
+        Triple("Resultado: 0 estrellas", GameResultType.FIRED, 0)
     )
 
     ResultButtonsRow(
@@ -221,12 +221,14 @@ private fun TutorialResultButtons(
 
 @Composable
 private fun NormalLevelResultButtons(
-    onNavigateToResult: (GameResultType) -> Unit
+    onNavigateToResult: (GameResultType, Int) -> Unit
 ) {
     val results = listOf(
-        "Ganador" to GameResultType.VICTORY,
-        "Sin vidas" to GameResultType.OUT_OF_LIVES,
-        "Entregas incompletas" to GameResultType.INCOMPLETE_DELIVERIES
+        Triple("Ganar: 3 estrellas", GameResultType.VICTORY, 3),
+        Triple("Ganar: 2 estrellas", GameResultType.VICTORY, 2),
+        Triple("Ganar: 1 estrella", GameResultType.VICTORY, 1),
+        Triple("Sin vidas", GameResultType.OUT_OF_LIVES, 0),
+        Triple("Entregas incompletas", GameResultType.INCOMPLETE_DELIVERIES, 0)
     )
 
     ResultButtonsRow(
@@ -238,12 +240,14 @@ private fun NormalLevelResultButtons(
 
 @Composable
 private fun FinalLevelResultButtons(
-    onNavigateToResult: (GameResultType) -> Unit
+    onNavigateToResult: (GameResultType, Int) -> Unit
 ) {
     val results = listOf(
-        "Ganador final" to GameResultType.FINAL_VICTORY,
-        "Sin vidas" to GameResultType.FINAL_DEFEAT,
-        "Entregas incompletas" to GameResultType.FINAL_DEFEAT
+        Triple("Ganar final: 3 estrellas", GameResultType.FINAL_VICTORY, 3),
+        Triple("Ganar final: 2 estrellas", GameResultType.FINAL_VICTORY, 2),
+        Triple("Ganar final: 1 estrella", GameResultType.FINAL_VICTORY, 1),
+        Triple("Sin vidas", GameResultType.FINAL_DEFEAT, 0),
+        Triple("Entregas incompletas", GameResultType.FINAL_DEFEAT, 0)
     )
 
     ResultButtonsRow(
@@ -256,9 +260,9 @@ private fun FinalLevelResultButtons(
 @Composable
 private fun ResultButtonsRow(
     title: String,
-    results: List<Pair<String, GameResultType>>,
-    onNavigateToResult: (GameResultType) -> Unit
-) {
+    results: List<Triple<String, GameResultType, Int>>,
+    onNavigateToResult: (GameResultType, Int) -> Unit
+){
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
@@ -279,7 +283,7 @@ private fun ResultButtonsRow(
             ResultButton(
                 text = result.first,
                 onClick = {
-                    onNavigateToResult(result.second)
+                    onNavigateToResult(result.second, result.third)
                 }
             )
         }

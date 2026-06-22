@@ -30,20 +30,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -52,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
@@ -62,105 +64,35 @@ import ni.edu.uam.nightbiteapp.ui.design.SettingsDimensions
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
+import ni.edu.uam.nightbiteapp.ui.theme.PasswordBorderBlue
+import ni.edu.uam.nightbiteapp.ui.theme.PasswordButtonPurple
+import ni.edu.uam.nightbiteapp.ui.theme.PasswordFieldCream
+import ni.edu.uam.nightbiteapp.ui.theme.PasswordFieldText
+import ni.edu.uam.nightbiteapp.ui.theme.PasswordHeaderPurple
+import ni.edu.uam.nightbiteapp.ui.theme.PasswordIconGray
+import ni.edu.uam.nightbiteapp.ui.theme.PasswordInnerPurple
+import ni.edu.uam.nightbiteapp.ui.theme.PasswordPanelBlue
+import ni.edu.uam.nightbiteapp.ui.theme.PasswordValidGreen
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
-import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
-import androidx.compose.ui.focus.onFocusChanged
-
-private val PasswordPanelBlue = Color(0xFF7B92E8)
-private val PasswordHeaderPurple = Color(0xFF5F56CA)
-private val PasswordButtonPurple = Color(0xFF3E2EA8)
-private val PasswordInnerPurple = Color(0xFF21143F)
-private val PasswordFieldCream = Color(0xFFF7F1DE)
-private val PasswordFieldText = Color(0xFF21143F)
-private val PasswordIconGray = Color(0xFFB7B7B7)
-private val PasswordBorderBlue = Color(0xFF556DCE)
+import ni.edu.uam.nightbiteapp.viewmodel.PasswordUiState
+import ni.edu.uam.nightbiteapp.viewmodel.PasswordViewModel
 
 @Composable
 fun PasswordScreen(
+    userId: Long?,
+    passwordViewModel: PasswordViewModel = viewModel(),
     onBackToSettings: () -> Unit,
-    onApplyPasswordChange: (
-        currentPassword: String,
-        newPassword: String,
-        confirmNewPassword: String
-    ) -> Unit = { _, _, _ -> }
+    onPasswordUpdated: () -> Unit
 ) {
-    var currentPassword by rememberSaveable { mutableStateOf("") }
-    var newPassword by rememberSaveable { mutableStateOf("") }
-    var confirmNewPassword by rememberSaveable { mutableStateOf("") }
-
-    var currentPasswordVisible by rememberSaveable { mutableStateOf(false) }
-    var newPasswordVisible by rememberSaveable { mutableStateOf(false) }
-    var confirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
-
-    var currentPasswordError by rememberSaveable { mutableStateOf<String?>(null) }
-    var newPasswordError by rememberSaveable { mutableStateOf<String?>(null) }
-    var confirmPasswordError by rememberSaveable { mutableStateOf<String?>(null) }
-
-    var showInvalidDataDialog by rememberSaveable { mutableStateOf(false) }
-    var showCancelDialog by rememberSaveable { mutableStateOf(false) }
-    var showSuccessDialog by rememberSaveable { mutableStateOf(false) }
-
-    fun hasChanges(): Boolean {
-        return currentPassword.isNotBlank() ||
-                newPassword.isNotBlank() ||
-                confirmNewPassword.isNotBlank()
-    }
-
-    fun validateFields(): Boolean {
-        val currentError = AccountValidators.validatePassword(
-            password = currentPassword,
-            fieldName = "La contraseña actual"
-        )
-
-        val newError = AccountValidators.validatePassword(
-            password = newPassword,
-            fieldName = "La nueva contraseña"
-        )
-
-        val confirmError = AccountValidators.validateNewPasswordConfirmation(
-            newPassword = newPassword,
-            confirmNewPassword = confirmNewPassword
-        )
-
-        val repeatedPasswordError = if (
-            currentError == null &&
-            newError == null &&
-            currentPassword == newPassword
-        ) {
-            "La nueva contraseña debe ser diferente."
-        } else {
-            null
-        }
-
-        currentPasswordError = currentError
-        newPasswordError = repeatedPasswordError ?: newError
-        confirmPasswordError = confirmError
-
-        return currentPasswordError == null &&
-                newPasswordError == null &&
-                confirmPasswordError == null
-    }
+    val uiState by passwordViewModel.uiState.collectAsState()
 
     fun requestBack() {
-        if (hasChanges()) {
-            showCancelDialog = true
-        } else {
+        val canLeave = passwordViewModel.onBackAttempt()
+
+        if (canLeave) {
             onBackToSettings()
         }
-    }
-
-    fun clearFieldsAndBack() {
-        currentPassword = ""
-        newPassword = ""
-        confirmNewPassword = ""
-
-        currentPasswordError = null
-        newPasswordError = null
-        confirmPasswordError = null
-
-        showCancelDialog = false
-        onBackToSettings()
     }
 
     BackHandler {
@@ -202,78 +134,62 @@ fun PasswordScreen(
                     .align(Alignment.Center)
                     .width(cardWidth)
                     .height(cardHeight),
-                currentPassword = currentPassword,
-                newPassword = newPassword,
-                confirmNewPassword = confirmNewPassword,
-                currentPasswordVisible = currentPasswordVisible,
-                newPasswordVisible = newPasswordVisible,
-                confirmPasswordVisible = confirmPasswordVisible,
-                currentPasswordError = currentPasswordError,
-                newPasswordError = newPasswordError,
-                confirmPasswordError = confirmPasswordError,
-                onCurrentPasswordChange = {
-                    currentPassword = it
-                    currentPasswordError = null
+                uiState = uiState,
+                onCurrentPasswordChange = { value ->
+                    passwordViewModel.onCurrentPasswordChange(
+                        value = value,
+                        userId = userId
+                    )
                 },
-                onNewPasswordChange = {
-                    newPassword = it
-                    newPasswordError = null
+                onNewPasswordChange = { value ->
+                    passwordViewModel.onNewPasswordChange(value)
                 },
-                onConfirmNewPasswordChange = {
-                    confirmNewPassword = it
-                    confirmPasswordError = null
+                onConfirmNewPasswordChange = { value ->
+                    passwordViewModel.onConfirmNewPasswordChange(value)
                 },
                 onToggleCurrentPassword = {
-                    currentPasswordVisible = !currentPasswordVisible
+                    passwordViewModel.toggleCurrentPasswordVisibility()
                 },
                 onToggleNewPassword = {
-                    newPasswordVisible = !newPasswordVisible
+                    passwordViewModel.toggleNewPasswordVisibility()
                 },
                 onToggleConfirmPassword = {
-                    confirmPasswordVisible = !confirmPasswordVisible
+                    passwordViewModel.toggleConfirmPasswordVisibility()
                 },
                 onCancelClick = {
-                    if (hasChanges()) {
-                        showCancelDialog = true
-                    } else {
+                    val canLeave = passwordViewModel.onCancelClick()
+
+                    if (canLeave) {
                         onBackToSettings()
                     }
                 },
                 onApplyClick = {
-                    val isValid = validateFields()
-
-                    if (!isValid) {
-                        showInvalidDataDialog = true
-                        return@PasswordCard
-                    }
-
-                    onApplyPasswordChange(
-                        currentPassword,
-                        newPassword,
-                        confirmNewPassword
-                    )
-
-                    showSuccessDialog = true
+                    passwordViewModel.onApplyClick(userId)
                 }
             )
         }
 
         PasswordDialogs(
-            showInvalidDataDialog = showInvalidDataDialog,
-            showCancelDialog = showCancelDialog,
-            showSuccessDialog = showSuccessDialog,
+            uiState = uiState,
             onDismissInvalidData = {
-                showInvalidDataDialog = false
+                passwordViewModel.dismissInvalidDataDialog()
             },
             onDismissCancel = {
-                showCancelDialog = false
+                passwordViewModel.dismissCancelDialog()
             },
             onConfirmCancel = {
-                clearFieldsAndBack()
+                passwordViewModel.confirmCancel()
+                onBackToSettings()
+            },
+            onDismissSaveConfirmation = {
+                passwordViewModel.dismissSaveConfirmationDialog()
+            },
+            onConfirmSavePassword = {
+                passwordViewModel.confirmSavePassword(userId)
             },
             onSuccessConfirm = {
-                showSuccessDialog = false
-                onBackToSettings()
+                passwordViewModel.confirmSuccess()
+                onPasswordUpdated()
             }
         )
     }
@@ -282,15 +198,7 @@ fun PasswordScreen(
 @Composable
 private fun PasswordCard(
     modifier: Modifier,
-    currentPassword: String,
-    newPassword: String,
-    confirmNewPassword: String,
-    currentPasswordVisible: Boolean,
-    newPasswordVisible: Boolean,
-    confirmPasswordVisible: Boolean,
-    currentPasswordError: String?,
-    newPasswordError: String?,
-    confirmPasswordError: String?,
+    uiState: PasswordUiState,
     onCurrentPasswordChange: (String) -> Unit,
     onNewPasswordChange: (String) -> Unit,
     onConfirmNewPasswordChange: (String) -> Unit,
@@ -325,15 +233,7 @@ private fun PasswordCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             PasswordInnerPanel(
-                currentPassword = currentPassword,
-                newPassword = newPassword,
-                confirmNewPassword = confirmNewPassword,
-                currentPasswordVisible = currentPasswordVisible,
-                newPasswordVisible = newPasswordVisible,
-                confirmPasswordVisible = confirmPasswordVisible,
-                currentPasswordError = currentPasswordError,
-                newPasswordError = newPasswordError,
-                confirmPasswordError = confirmPasswordError,
+                uiState = uiState,
                 onCurrentPasswordChange = onCurrentPasswordChange,
                 onNewPasswordChange = onNewPasswordChange,
                 onConfirmNewPasswordChange = onConfirmNewPasswordChange,
@@ -345,6 +245,7 @@ private fun PasswordCard(
             Spacer(modifier = Modifier.height(NightSpacing.medium))
 
             PasswordActionButtons(
+                isSaving = uiState.isSaving,
                 onCancelClick = onCancelClick,
                 onApplyClick = onApplyClick
             )
@@ -386,15 +287,7 @@ private fun PasswordHeader(
 
 @Composable
 private fun PasswordInnerPanel(
-    currentPassword: String,
-    newPassword: String,
-    confirmNewPassword: String,
-    currentPasswordVisible: Boolean,
-    newPasswordVisible: Boolean,
-    confirmPasswordVisible: Boolean,
-    currentPasswordError: String?,
-    newPasswordError: String?,
-    confirmPasswordError: String?,
+    uiState: PasswordUiState,
     onCurrentPasswordChange: (String) -> Unit,
     onNewPasswordChange: (String) -> Unit,
     onConfirmNewPasswordChange: (String) -> Unit,
@@ -416,10 +309,11 @@ private fun PasswordInnerPanel(
         verticalArrangement = Arrangement.Center
     ) {
         PasswordField(
-            value = currentPassword,
+            value = uiState.currentPassword,
             placeholder = "Contraseña actual",
-            visible = currentPasswordVisible,
-            errorMessage = currentPasswordError,
+            visible = uiState.currentPasswordVisible,
+            errorMessage = uiState.currentPasswordError,
+            isValid = uiState.currentPasswordIsValid,
             onValueChange = onCurrentPasswordChange,
             onToggleVisibility = onToggleCurrentPassword
         )
@@ -427,10 +321,11 @@ private fun PasswordInnerPanel(
         Spacer(modifier = Modifier.height(2.dp))
 
         PasswordField(
-            value = newPassword,
+            value = uiState.newPassword,
             placeholder = "Nueva contraseña",
-            visible = newPasswordVisible,
-            errorMessage = newPasswordError,
+            visible = uiState.newPasswordVisible,
+            errorMessage = uiState.newPasswordError,
+            isValid = uiState.newPasswordIsValid,
             onValueChange = onNewPasswordChange,
             onToggleVisibility = onToggleNewPassword
         )
@@ -438,10 +333,11 @@ private fun PasswordInnerPanel(
         Spacer(modifier = Modifier.height(2.dp))
 
         PasswordField(
-            value = confirmNewPassword,
+            value = uiState.confirmNewPassword,
             placeholder = "Confirmar nueva contraseña",
-            visible = confirmPasswordVisible,
-            errorMessage = confirmPasswordError,
+            visible = uiState.confirmPasswordVisible,
+            errorMessage = uiState.confirmPasswordError,
+            isValid = uiState.confirmPasswordIsValid,
             onValueChange = onConfirmNewPasswordChange,
             onToggleVisibility = onToggleConfirmPassword
         )
@@ -454,6 +350,7 @@ private fun PasswordField(
     placeholder: String,
     visible: Boolean,
     errorMessage: String?,
+    isValid: Boolean,
     onValueChange: (String) -> Unit,
     onToggleVisibility: () -> Unit
 ) {
@@ -467,6 +364,12 @@ private fun PasswordField(
         PasswordIconGray
     }
 
+    val borderColor = when {
+        errorMessage != null -> PizzaRed
+        isValid -> PasswordValidGreen
+        else -> Color.Transparent
+    }
+
     Column {
         Row(
             modifier = Modifier
@@ -476,11 +379,7 @@ private fun PasswordField(
                 .background(PasswordFieldCream)
                 .border(
                     width = 2.dp,
-                    color = if (errorMessage != null) {
-                        PizzaRed
-                    } else {
-                        Color.Transparent
-                    },
+                    color = borderColor,
                     shape = NightShapes.smallCard
                 )
                 .padding(horizontal = NightSpacing.medium),
@@ -550,7 +449,7 @@ private fun PasswordField(
             modifier = Modifier
                 .width(350.dp)
                 .height(18.dp)
-                .padding(start = 42.dp),
+                .padding(start = 14.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             if (errorMessage != null) {
@@ -568,6 +467,7 @@ private fun PasswordField(
 
 @Composable
 private fun PasswordActionButtons(
+    isSaving: Boolean,
     onCancelClick: () -> Unit,
     onApplyClick: () -> Unit
 ) {
@@ -576,10 +476,15 @@ private fun PasswordActionButtons(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         PasswordPillButton(
-            text = "APLICAR CAMBIOS",
+            text = if (isSaving) {
+                "APLICANDO..."
+            } else {
+                "APLICAR CAMBIOS"
+            },
             width = 220.dp,
             containerColor = PasswordButtonPurple,
             contentColor = SmokeWhite,
+            enabled = !isSaving,
             onClick = onApplyClick
         )
 
@@ -588,6 +493,7 @@ private fun PasswordActionButtons(
             width = 135.dp,
             containerColor = PizzaRed,
             contentColor = SmokeWhite,
+            enabled = !isSaving,
             onClick = onCancelClick
         )
     }
@@ -599,6 +505,7 @@ private fun PasswordPillButton(
     width: Dp,
     containerColor: Color,
     contentColor: Color,
+    enabled: Boolean,
     onClick: () -> Unit
 ) {
     val interactionSource = remember {
@@ -610,8 +517,15 @@ private fun PasswordPillButton(
             .width(width)
             .height(SettingsDimensions.actionButtonHeight)
             .clip(NightShapes.button)
-            .background(containerColor)
+            .background(
+                if (enabled) {
+                    containerColor
+                } else {
+                    containerColor.copy(alpha = 0.55f)
+                }
+            )
             .clickable(
+                enabled = enabled,
                 interactionSource = interactionSource,
                 indication = null
             ) {
@@ -633,15 +547,16 @@ private fun PasswordPillButton(
 
 @Composable
 private fun PasswordDialogs(
-    showInvalidDataDialog: Boolean,
-    showCancelDialog: Boolean,
-    showSuccessDialog: Boolean,
+    uiState: PasswordUiState,
     onDismissInvalidData: () -> Unit,
     onDismissCancel: () -> Unit,
     onConfirmCancel: () -> Unit,
+    onDismissSaveConfirmation: () -> Unit,
+    onConfirmSavePassword: () -> Unit,
     onSuccessConfirm: () -> Unit
 ) {
-    if (showInvalidDataDialog) {
+
+    if (uiState.showInvalidDataDialog) {
         NightMessageDialog(
             title = "Datos inválidos",
             message = "Revisa los campos marcados en rojo antes de aplicar los cambios.",
@@ -652,7 +567,7 @@ private fun PasswordDialogs(
         )
     }
 
-    if (showCancelDialog) {
+    if (uiState.showCancelDialog) {
         NightMessageDialog(
             title = "Cancelar cambios",
             message = "Los cambios no se guardarán. ¿Deseas descartarlos?",
@@ -665,10 +580,23 @@ private fun PasswordDialogs(
         )
     }
 
-    if (showSuccessDialog) {
+    if (uiState.showSaveConfirmationDialog) {
         NightMessageDialog(
-            title = "Interfaz lista",
-            message = "La pantalla ya validó los datos. La conexión con el backend se puede agregar en el siguiente paso.",
+            title = "Iniciar sesión nuevamente",
+            message = "Al guardar estos cambios deberás iniciar sesión nuevamente. ¿Deseas continuar?",
+            confirmText = "Confirmar",
+            dismissText = "Cancelar",
+            icon = Icons.Default.Warning,
+            iconColor = CheeseYellow,
+            onConfirm = onConfirmSavePassword,
+            onDismiss = onDismissSaveConfirmation
+        )
+    }
+
+    if (uiState.showSuccessDialog) {
+        NightMessageDialog(
+            title = "Contraseña actualizada",
+            message = "Tu contraseña fue actualizada correctamente. Inicia sesión nuevamente para continuar.",
             confirmText = "Aceptar",
             icon = Icons.Default.CheckCircle,
             iconColor = CheeseYellow,

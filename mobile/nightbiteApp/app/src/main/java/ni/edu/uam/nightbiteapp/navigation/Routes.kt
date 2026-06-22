@@ -16,15 +16,15 @@ object Routes {
 
     const val SETTINGS = "settings"
     const val ACCOUNT = "account"
-
     const val PASSWORD = "password"
 
     const val PLAYER_CREATION = "player_creation"
     const val PLAYER_DETAIL = "player_detail"
 
+    const val TUTORIAL_LOADING = "tutorial_loading"
     const val LEVEL_INTRO = "level_intro/{levelId}"
     const val GAME_PLACEHOLDER = "game_placeholder/{levelId}"
-    const val GAME_RESULT = "game_result/{levelId}/{resultType}"
+    const val GAME_RESULT = "game_result/{levelId}/{resultType}/{stars}"
 
     fun registerWithAge(age: Int): String {
         return "register/$age"
@@ -40,8 +40,9 @@ object Routes {
 
     fun gameResult(
         levelId: Int,
-        resultType: String
+        resultType: String,
+        stars: Int
     ): String {
-        return "game_result/$levelId/$resultType"
+        return "game_result/$levelId/$resultType/${stars.coerceIn(0, 3)}"
     }
 }

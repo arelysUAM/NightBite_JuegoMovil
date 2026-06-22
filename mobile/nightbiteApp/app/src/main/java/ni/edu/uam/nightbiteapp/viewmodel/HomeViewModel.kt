@@ -25,12 +25,18 @@ class HomeViewModel(
 
     fun loadHomeData(userId: Long?) {
         val maxUnlockedLevelId = NightProgressData.getMaxUnlockedLevel(userId)
-        val rawLevelsByProgress = NightLevelsData.getLevelsByProgress(maxUnlockedLevelId)
+
+        val rawLevelsByProgress = NightLevelsData.getLevelsByProgress(
+            maxUnlockedLevelId = maxUnlockedLevelId
+        )
+
         val levelStars = getLevelStars(userId)
+
         val levelsByProgress = applyStarsToLevels(
             levels = rawLevelsByProgress,
             levelStars = levelStars
         )
+
         val tutorialStars = levelStars[0] ?: 0
 
         if (userId == null) {
@@ -118,15 +124,12 @@ class HomeViewModel(
     }
 
     private fun getLevelStars(userId: Long?): Map<Int, Int> {
-        val tutorialStars = NightProgressData.getTutorialStars(userId)
-
-        return mapOf(
-            0 to tutorialStars,
-            1 to 0,
-            2 to 0,
-            3 to 0,
-            4 to 0
-        )
+        return (0..4).associateWith { levelId ->
+            NightProgressData.getLevelStars(
+                userId = userId,
+                levelId = levelId
+            )
+        }
     }
 
     private fun applyStarsToLevels(

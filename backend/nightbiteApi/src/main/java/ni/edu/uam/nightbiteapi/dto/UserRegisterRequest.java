@@ -27,7 +27,7 @@ public class UserRegisterRequest {
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 8, max = 50, message = "La contraseña debe tener entre 8 y 50 caracteres")
+    @Size(min = 8, max = 20, message = "La contraseña debe tener entre 8 y 20 caracteres")
     private String password;
 
     @NotNull(message = "La edad es obligatoria")

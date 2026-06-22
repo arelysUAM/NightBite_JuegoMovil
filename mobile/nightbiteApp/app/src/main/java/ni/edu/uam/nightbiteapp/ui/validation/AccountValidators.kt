@@ -8,7 +8,7 @@ object AccountValidators {
     const val USERNAME_MAX_LENGTH = 16
     const val EMAIL_MAX_LENGTH = 100
     const val PASSWORD_MIN_LENGTH = 8
-    const val PASSWORD_MAX_LENGTH = 50
+    const val PASSWORD_MAX_LENGTH = 20
 
     fun validateUsername(username: String): String? {
         if (username.isBlank()) {
@@ -40,7 +40,7 @@ object AccountValidators {
         val normalizedEmail = email.trim()
 
         if (normalizedEmail.contains(" ")) {
-            return "Sin espacios."
+            return "No debe contener espacios."
         }
 
         if (normalizedEmail != normalizedEmail.lowercase()) {
@@ -71,7 +71,7 @@ object AccountValidators {
         }
 
         if (password.length > PASSWORD_MAX_LENGTH) {
-            return "Muy larga. Máximo 50 caracteres."
+            return "Muy larga. Máximo 20 caracteres."
         }
 
         if (password.startsWith(" ") || password.endsWith(" ")) {
@@ -105,7 +105,7 @@ object AccountValidators {
         }
 
         if (newPassword != confirmNewPassword) {
-            return "No coinciden."
+            return "Las contraseñas no coinciden."
         }
 
         return null

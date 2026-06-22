@@ -56,6 +56,10 @@ import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.viewmodel.HomeViewModel
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Suppress("UNUSED_PARAMETER")
 @Composable
@@ -79,12 +83,28 @@ fun HomeScreen(
     val uiState by homeViewModel.uiState.collectAsState()
     val resolvedUserId = userId ?: userSession.userId
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     var showMissingPlayerDialog by remember {
         mutableStateOf(false)
     }
 
     LaunchedEffect(resolvedUserId) {
         homeViewModel.loadHomeData(resolvedUserId)
+    }
+
+    DisposableEffect(lifecycleOwner, resolvedUserId) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                homeViewModel.loadHomeData(resolvedUserId)
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     BackHandler {

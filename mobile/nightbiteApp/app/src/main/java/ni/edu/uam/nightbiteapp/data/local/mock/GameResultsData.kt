@@ -12,7 +12,8 @@ import ni.edu.uam.nightbiteapp.ui.model.GameResultType
 object GameResultsData {
     fun getResultContent(
         levelId: Int,
-        resultType: GameResultType
+        resultType: GameResultType,
+        stars: Int = 0
     ): GameResultContent {
         return when (resultType) {
 
@@ -27,7 +28,7 @@ object GameResultsData {
                         "La siguiente noche ha sido desbloqueada"
                     ),
                     stars = 3,
-                    rewardMessage = "Noche 1 desbloqueada",
+                    rewardMessage = "Noche 2 desbloqueada",
                     illustrationDescription = "Tres estrellas sobre la motocicleta del repartidor"
                 )
             }
@@ -40,7 +41,7 @@ object GameResultsData {
                     details = listOf(
                         "Pedidos completados: al menos 80 %",
                         "Calificación obtenida: 2 estrellas",
-                        "Debes completar todos los pedidos para desbloquear la siguiente noche"
+                        "Completa el tutorial con 3 estrellas para desbloquear la siguiente noche"
                     ),
                     stars = 2,
                     illustrationDescription = "Dos estrellas sobre una bolsa de pedidos"
@@ -55,7 +56,7 @@ object GameResultsData {
                     details = listOf(
                         "Pedidos completados: al menos 50 %",
                         "Calificación obtenida: 1 estrella",
-                        "Debes completar todos los pedidos para desbloquear la siguiente noche"
+                        "Completa el tutorial con 3 estrellas para desbloquear la siguiente noche"
                     ),
                     stars = 1,
                     illustrationDescription = "Una estrella sobre una caja de entrega"
@@ -69,24 +70,44 @@ object GameResultsData {
                     message = "No completaste suficientes pedidos durante el tutorial.",
                     details = listOf(
                         "Pedidos completados: menos del 50 %",
+                        "Calificación obtenida: 0 estrellas",
                         "El restaurante ha terminado tu contrato"
                     ),
+                    stars = 0,
                     illustrationDescription = "Contrato de repartidor marcado como despedido"
                 )
             }
 
             GameResultType.VICTORY -> {
+                val safeStars = stars.coerceIn(1, 3)
+                val starWord = if (safeStars == 1) {
+                    "estrella"
+                } else {
+                    "estrellas"
+                }
+
+                val unlockMessage = if (safeStars == 3) {
+                    "La siguiente noche ha sido desbloqueada"
+                } else {
+                    "Completa la jornada con 3 estrellas para desbloquear la siguiente noche"
+                }
+
                 GameResultContent(
                     title = "Jornada completada",
-                    subtitle = "Sobreviviste a la noche",
-                    message = "Completaste todos los pedidos y regresaste a la pizzería.",
+                    subtitle = "Calificación: $safeStars $starWord",
+                    message = "Sobreviviste a la noche y completaste la jornada.",
                     details = listOf(
-                        "Noche completada: $levelId",
-                        "Pedidos completados: todos",
-                        "Estado del repartidor: a salvo"
+                        "Noche completada: ${levelId + 1}",
+                        "Calificación obtenida: $safeStars $starWord",
+                        unlockMessage
                     ),
-                    rewardMessage = "Recibiste una nueva medalla",
-                    illustrationDescription = "Medalla nocturna junto al casco del repartidor"
+                    stars = safeStars,
+                    rewardMessage = if (safeStars == 3) {
+                        "Recibiste una nueva medalla"
+                    } else {
+                        null
+                    },
+                    illustrationDescription = "Resultado de la jornada del repartidor"
                 )
             }
 
@@ -96,10 +117,11 @@ object GameResultsData {
                     subtitle = "Te quedaste sin vidas",
                     message = "La ciudad quedó en silencio después de tu último intento.",
                     details = listOf(
-                        "Noche jugada: $levelId",
+                        "Noche jugada: ${levelId + 1}",
                         "Vidas restantes: 0",
-                        "La jornada no pudo completarse"
+                        "Calificación obtenida: 0 estrellas"
                     ),
+                    stars = 0,
                     illustrationDescription = "Casco del repartidor abandonado bajo un poste de luz"
                 )
             }
@@ -110,25 +132,38 @@ object GameResultsData {
                     subtitle = "Entregas incompletas",
                     message = "Sobreviviste, pero no completaste todos los pedidos antes de terminar la jornada.",
                     details = listOf(
-                        "Noche jugada: $levelId",
+                        "Noche jugada: ${levelId + 1}",
                         "Pedidos pendientes: sí",
-                        "El repartidor no logró regresar"
+                        "Calificación obtenida: 0 estrellas"
                     ),
+                    stars = 0,
                     illustrationDescription = "Cartel de se busca con la fotografía del repartidor"
                 )
             }
 
             GameResultType.FINAL_VICTORY -> {
+                val safeStars = stars.coerceIn(1, 3)
+                val starWord = if (safeStars == 1) {
+                    "estrella"
+                } else {
+                    "estrellas"
+                }
+
                 GameResultContent(
                     title = "Jornada final completada",
-                    subtitle = "Los clientes estuvieron satisfechos",
-                    message = "Completaste todos los pedidos, sobreviviste y lograste regresar a tu dimensión.",
+                    subtitle = "Calificación: $safeStars $starWord",
+                    message = "Completaste la última jornada y lograste regresar a tu dimensión.",
                     details = listOf(
                         "Noche final completada",
-                        "Pedidos completados: todos",
+                        "Calificación obtenida: $safeStars $starWord",
                         "Estado del repartidor: libre"
                     ),
-                    rewardMessage = "Recibiste tu paga",
+                    stars = safeStars,
+                    rewardMessage = if (safeStars == 3) {
+                        "Recibiste tu paga"
+                    } else {
+                        null
+                    },
                     illustrationDescription = "El repartidor saliendo del restaurante con su pago",
                     isFinalResult = true
                 )
@@ -141,9 +176,10 @@ object GameResultsData {
                     message = "No lograste completar la noche final y quedaste atrapado en esa dimensión.",
                     details = listOf(
                         "Noche final no completada",
-                        "El repartidor ya no puede regresar",
-                        "Ahora forma parte de los repartidores perdidos"
+                        "Calificación obtenida: 0 estrellas",
+                        "Ahora formas parte de los repartidores perdidos"
                     ),
+                    stars = 0,
                     illustrationDescription = "El repartidor transformado y encerrado en la dimensión alterna",
                     isFinalResult = true
                 )

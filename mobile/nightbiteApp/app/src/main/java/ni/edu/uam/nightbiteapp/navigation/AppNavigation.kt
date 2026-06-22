@@ -52,6 +52,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import ni.edu.uam.nightbiteapp.ui.screens.PasswordScreen
+import ni.edu.uam.nightbiteapp.ui.screens.TutorialLoadingScreen
 
 @Composable
 fun AppNavigation() {
@@ -346,7 +347,11 @@ fun AppNavigation() {
                 userId = activeUserId ?: userSession.userId,
                 userSession = userSession,
                 onNavigateToLevelIntro = { levelId ->
-                    navController.navigate(Routes.levelIntro(levelId))
+                    if (levelId == 0) {
+                        navController.navigate(Routes.TUTORIAL_LOADING)
+                    } else {
+                        navController.navigate(Routes.levelIntro(levelId))
+                    }
                 },
                 onNavigateToPlayerDetail = {
                     navController.navigate(Routes.PLAYER_DETAIL)
@@ -379,6 +384,19 @@ fun AppNavigation() {
                 },
                 onExitApp = {
                     activity?.finish()
+                }
+            )
+        }
+
+        composable(Routes.TUTORIAL_LOADING) {
+            TutorialLoadingScreen(
+                onTutorialLoaded = {
+                    navController.navigate(Routes.gamePlaceholder(0)) {
+                        popUpTo(Routes.TUTORIAL_LOADING) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -424,11 +442,12 @@ fun AppNavigation() {
 
             GamePlaceholderScreen(
                 levelId = levelId,
-                onNavigateToResult = { resultType ->
+                onNavigateToResult = { resultType, stars ->
                     navController.navigate(
                         Routes.gameResult(
                             levelId = levelId,
-                            resultType = resultType.name
+                            resultType = resultType.name,
+                            stars = stars
                         )
                     )
                 },
@@ -453,11 +472,19 @@ fun AppNavigation() {
                 },
                 navArgument("resultType") {
                     type = NavType.StringType
+                },
+                navArgument("stars") {
+                    type = NavType.IntType
                 }
             )
         ) { backStackEntry ->
             val levelId = backStackEntry.arguments?.getInt("levelId") ?: 0
             val resultTypeName = backStackEntry.arguments?.getString("resultType")
+
+            val earnedStars = backStackEntry.arguments
+                ?.getInt("stars")
+                ?.coerceIn(0, 3)
+                ?: 0
 
             val resultType = resultTypeName?.let { name ->
                 runCatching {
@@ -483,13 +510,19 @@ fun AppNavigation() {
             } else {
                 val resultContent = GameResultsData.getResultContent(
                     levelId = levelId,
-                    resultType = resultType
+                    resultType = resultType,
+                    stars = earnedStars
                 )
 
+                val isSuccessfulResult =
+                    resultType == GameResultType.VICTORY ||
+                            resultType == GameResultType.FINAL_VICTORY ||
+                            resultType == GameResultType.TUTORIAL_THREE_STARS ||
+                            resultType == GameResultType.TUTORIAL_TWO_STARS ||
+                            resultType == GameResultType.TUTORIAL_ONE_STAR
+
                 val shouldUnlockNextLevel =
-                    resultType == GameResultType.TUTORIAL_THREE_STARS ||
-                            resultType == GameResultType.VICTORY ||
-                            resultType == GameResultType.FINAL_VICTORY
+                    isSuccessfulResult && earnedStars == 3
 
                 GameResultScreen(
                     resultType = resultType,
@@ -500,13 +533,12 @@ fun AppNavigation() {
                     onContinue = {
                         val currentUserId = activeUserId ?: userSession.userId
 
-                        if (levelId == 0) {
-                            tutorialStarsForResult(resultType)?.let { stars ->
-                                NightProgressData.saveTutorialStars(
-                                    userId = currentUserId,
-                                    stars = stars
-                                )
-                            }
+                        if (isSuccessfulResult) {
+                            NightProgressData.saveLevelStars(
+                                userId = currentUserId,
+                                levelId = levelId,
+                                stars = earnedStars
+                            )
                         }
 
                         if (shouldUnlockNextLevel) {
@@ -689,6 +721,27 @@ fun AppNavigation() {
             }
         }
 
+        composable(Routes.PASSWORD) {
+            PasswordScreen(
+                userId = activeUserId ?: userSession.userId,
+                onBackToSettings = {
+                    navController.popBackStack()
+                },
+                onPasswordUpdated = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+
+                    coroutineScope.launch {
+                        sessionManager.clearSession()
+                    }
+                }
+            )
+        }
+
         composable(Routes.ACCOUNT) {
             val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(
                 factory = AccountCredentialsViewModelFactory(sessionManager)
@@ -712,14 +765,6 @@ fun AppNavigation() {
                         }
                         launchSingleTop = true
                     }
-                }
-            )
-        }
-
-        composable(Routes.PASSWORD) {
-            PasswordScreen(
-                onBackToSettings = {
-                    navController.popBackStack()
                 }
             )
         }

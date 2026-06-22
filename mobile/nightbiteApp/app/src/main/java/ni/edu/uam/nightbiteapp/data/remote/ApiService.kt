@@ -10,6 +10,7 @@ import ni.edu.uam.nightbiteapp.data.remote.dto.UserLoginRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserRegisterRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.UsernameAvailabilityResponse
+import ni.edu.uam.nightbiteapp.data.remote.dto.VerifyCurrentPasswordRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -79,11 +80,17 @@ interface ApiService {
         @Body request: UpdateAccountInfoRequest
     ): Response<UserResponse>
 
+    @POST("api/users/{id}/verify-password")
+    suspend fun verifyCurrentPassword(
+        @Path("id") id: Long,
+        @Body request: VerifyCurrentPasswordRequest
+    ): Response<MessageResponse>
+
     @PUT("api/users/{id}/password")
     suspend fun updatePassword(
         @Path("id") id: Long,
         @Body request: UpdatePasswordRequest
-    ): Response<UserResponse>
+    ): Response<MessageResponse>
 
     @DELETE("api/users/{id}")
     suspend fun deleteUser(

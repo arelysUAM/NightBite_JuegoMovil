@@ -1,5 +1,10 @@
 package ni.edu.uam.nightbiteapi.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class UsernameAvailabilityResponse {
 
     private String username;
@@ -19,27 +24,4 @@ public class UsernameAvailabilityResponse {
         this.message = message;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public boolean isAvailable() {
-        return available;
-    }
-
-    public void setAvailable(boolean available) {
-        this.available = available;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
 }

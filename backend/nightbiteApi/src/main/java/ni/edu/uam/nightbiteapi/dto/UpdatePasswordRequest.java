@@ -22,6 +22,9 @@ public class UpdatePasswordRequest {
     @NotBlank(message = "La confirmación de contraseña es obligatoria")
     private String confirmNewPassword;
 
+    public UpdatePasswordRequest() {
+    }
+
     public UpdatePasswordRequest(
             String currentPassword,
             String newPassword,
@@ -31,5 +34,4 @@ public class UpdatePasswordRequest {
         this.newPassword = newPassword;
         this.confirmNewPassword = confirmNewPassword;
     }
-
 }

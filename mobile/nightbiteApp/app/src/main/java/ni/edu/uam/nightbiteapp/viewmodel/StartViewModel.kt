@@ -2,6 +2,7 @@ package ni.edu.uam.nightbiteapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,78 +10,88 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.repository.UserRepository
-import android.os.SystemClock
+
+private const val POST_API_SPLASH_DELAY = 3000L
 
 class StartViewModel(
     private val sessionManager: SessionManager,
     private val userRepository: UserRepository = UserRepository()
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<StartUiState>(StartUiState.Loading)
+    private val _uiState = MutableStateFlow<StartUiState>(
+        StartUiState.Loading()
+    )
     val uiState: StateFlow<StartUiState> = _uiState
 
-    fun checkInitialState() {
-        viewModelScope.launch {
-            _uiState.value = StartUiState.Loading
+    private var checkInitialStateJob: Job? = null
 
-            val minimumSplashTime = 3000L
-            val startTime = SystemClock.elapsedRealtime()
+    fun checkInitialState(requestId: Long) {
+        checkInitialStateJob?.cancel()
 
-            try {
+        // Esto se hace fuera del launch para evitar que navegue usando un estado viejo.
+        _uiState.value = StartUiState.Loading(
+            requestId = requestId
+        )
+
+        checkInitialStateJob = viewModelScope.launch {
+            val nextState = try {
                 val healthResponse = userRepository.checkHealth()
 
-                val nextState = if (!healthResponse.isSuccessful) {
+                if (!healthResponse.isSuccessful) {
                     StartUiState.ServerError(
-                        "El servidor no respondió correctamente."
+                        message = "El servidor no respondió correctamente.",
+                        requestId = requestId
                     )
                 } else {
-                    val session = sessionManager.userSessionFlow.first()
-
-                    if (session.userId == null) {
-                        StartUiState.NavigateToLogin
-                    } else {
-                        val userResponse = userRepository.getUserById(session.userId)
-
-                        if (userResponse.isSuccessful && userResponse.body() != null) {
-                            StartUiState.NavigateToHome(
-                                userResponse.body()!!
-                            )
-                        } else {
-                            sessionManager.clearSession()
-                            StartUiState.NavigateToLogin
-                        }
-                    }
+                    resolveSessionState(requestId)
                 }
-
-                val elapsedTime = SystemClock.elapsedRealtime() - startTime
-                val remainingTime = minimumSplashTime - elapsedTime
-
-                if (remainingTime > 0) {
-                    delay(remainingTime)
-                }
-
-                _uiState.value = nextState
-
             } catch (e: Exception) {
-                val elapsedTime = SystemClock.elapsedRealtime() - startTime
-                val remainingTime = minimumSplashTime - elapsedTime
-
-                if (remainingTime > 0) {
-                    delay(remainingTime)
-                }
-
-                _uiState.value = StartUiState.ServerError(
-                    "No se pudo conectar con el servidor."
+                StartUiState.ServerError(
+                    message = "No se pudo conectar con el servidor.",
+                    requestId = requestId
                 )
             }
+
+            // Se espera después de consultar la API.
+            delay(POST_API_SPLASH_DELAY)
+
+            _uiState.value = nextState
         }
     }
 
-    fun retry() {
-        checkInitialState()
+    fun retry(requestId: Long) {
+        checkInitialState(requestId)
     }
 
-    fun continueToLogin() {
-        _uiState.value = StartUiState.NavigateToLogin
+    fun continueToLogin(requestId: Long) {
+        _uiState.value = StartUiState.NavigateToLogin(
+            requestId = requestId
+        )
+    }
+
+    private suspend fun resolveSessionState(requestId: Long): StartUiState {
+        val session = sessionManager.userSessionFlow.first()
+        val userId = session.userId
+
+        if (userId == null) {
+            return StartUiState.NavigateToLogin(
+                requestId = requestId
+            )
+        }
+
+        val userResponse = userRepository.getUserById(userId)
+
+        return if (userResponse.isSuccessful && userResponse.body() != null) {
+            StartUiState.NavigateToHome(
+                user = userResponse.body()!!,
+                requestId = requestId
+            )
+        } else {
+            sessionManager.clearSession()
+
+            StartUiState.NavigateToLogin(
+                requestId = requestId
+            )
+        }
     }
 }
