@@ -93,12 +93,6 @@ fun LoginScreen(
                     user = loggedUser
                 )
 
-                Toast.makeText(
-                    context,
-                    "Bienvenido, ${loggedUser.username}",
-                    Toast.LENGTH_SHORT
-                ).show()
-
                 loginViewModel.resetState()
                 onNavigateToHome(loggedUser)
             }

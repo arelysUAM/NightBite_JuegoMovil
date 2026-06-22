@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -67,28 +68,10 @@ fun NightMessageDialog(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = modifier
+            Box(
+                modifier = modifier.width(NightSizes.dialogWidth),
+                contentAlignment = Alignment.TopCenter
             ) {
-                Surface(
-                    modifier = Modifier
-                        .size(NightSizes.iconLarge)
-                        .shadow(
-                            elevation = 8.dp,
-                            shape = CircleShape
-                        ),
-                    shape = CircleShape,
-                    color = iconColor
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = title,
-                        tint = SmokeWhite,
-                        modifier = Modifier.padding(15.dp)
-                    )
-                }
-
                 Card(
                     shape = NightShapes.dialog,
                     colors = CardDefaults.cardColors(
@@ -106,6 +89,8 @@ fun NightMessageDialog(
                         ),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Spacer(modifier = Modifier.height(NightSizes.iconLarge / 2))
+
                         Text(
                             text = title,
                             color = SmokeWhite,
@@ -120,7 +105,8 @@ fun NightMessageDialog(
                             text = message,
                             color = LavenderGray,
                             fontSize = 14.sp,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            lineHeight = 22.sp
                         )
 
                         if (additionalContent != null) {
@@ -150,6 +136,26 @@ fun NightMessageDialog(
                             )
                         }
                     }
+                }
+
+                Surface(
+                    modifier = Modifier
+                        .size(NightSizes.iconLarge)
+                        .align(Alignment.TopCenter)
+                        .offset(y = -(NightSizes.iconLarge / 2))
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = CircleShape
+                        ),
+                    shape = CircleShape,
+                    color = iconColor
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = SmokeWhite,
+                        modifier = Modifier.padding(15.dp)
+                    )
                 }
             }
         }

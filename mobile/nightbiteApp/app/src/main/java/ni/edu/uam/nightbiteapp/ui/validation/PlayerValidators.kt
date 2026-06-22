@@ -2,7 +2,8 @@ package ni.edu.uam.nightbiteapp.ui.validation
 
 object PlayerValidators {
 
-    const val DRIVER_NAME_MAX_LENGTH = 80
+    const val DRIVER_NAME_MIN_LENGTH = 3
+    const val DRIVER_NAME_MAX_LENGTH = 20
     const val OPTION_MAX_LENGTH = 30
 
     const val DEFAULT_HELMET_COLOR = "Negro"
@@ -31,16 +32,20 @@ object PlayerValidators {
 
         val normalizedDriverName = driverName.trim()
 
+        if (normalizedDriverName.length < DRIVER_NAME_MIN_LENGTH) {
+            return "El nombre debe tener mínimo 3 letras."
+        }
+
         if (normalizedDriverName.length > DRIVER_NAME_MAX_LENGTH) {
-            return "El nombre no debe superar los 80 caracteres."
+            return "El nombre no debe superar 20 caracteres."
         }
 
         if (normalizedDriverName.count { it == ' ' } > 1) {
-            return "Ingresa máximo un espacio."
+            return "Usa solo nombre o nombre y apellido."
         }
 
         if (!normalizedDriverName.matches(Regex("^[A-Za-zÁÉÍÓÚáéíóúÑñ]+( [A-Za-zÁÉÍÓÚáéíóúÑñ]+)?$"))) {
-            return "El nombre solo puede contener letras."
+            return "Solo se permiten letras."
         }
 
         return null
@@ -48,7 +53,7 @@ object PlayerValidators {
 
     fun validateGender(gender: String): String? {
         if (gender.isBlank()) {
-            return "Selecciona un género para continuar."
+            return "El género es obligatorio."
         }
 
         if (gender != "Femenino" && gender != "Masculino") {
@@ -66,7 +71,7 @@ object PlayerValidators {
         val normalizedHelmetColor = helmetColor.trim()
 
         if (normalizedHelmetColor.length > OPTION_MAX_LENGTH) {
-            return "El color del casco no debe superar los 30 caracteres."
+            return "El color del casco no debe superar 30 caracteres."
         }
 
         if (!ALLOWED_HELMET_COLORS.contains(normalizedHelmetColor)) {
@@ -84,7 +89,7 @@ object PlayerValidators {
         val normalizedMotorcycleType = motorcycleType.trim()
 
         if (normalizedMotorcycleType.length > OPTION_MAX_LENGTH) {
-            return "El tipo de moto no debe superar los 30 caracteres."
+            return "El tipo de moto no debe superar 30 caracteres."
         }
 
         if (!ALLOWED_MOTORCYCLE_TYPES.contains(normalizedMotorcycleType)) {
@@ -95,17 +100,17 @@ object PlayerValidators {
     }
 
     fun formatPersonName(value: String): String {
-        val singleSpacedValue = value
+        val cleanedValue = value
+            .replace(Regex("[^A-Za-zÁÉÍÓÚáéíóúÑñ ]"), "")
             .replace(Regex("\\s+"), " ")
             .trimStart()
 
-        val limitedSpaceValue = keepOnlyOneSpace(singleSpacedValue)
+        val limitedWordsValue = keepOnlyTwoWords(cleanedValue)
 
-        return limitedSpaceValue
-            .lowercase()
+        val formattedValue = limitedWordsValue
             .split(" ")
             .joinToString(" ") { word ->
-                word.replaceFirstChar { char ->
+                word.lowercase().replaceFirstChar { char ->
                     if (char.isLowerCase()) {
                         char.titlecase()
                     } else {
@@ -113,18 +118,26 @@ object PlayerValidators {
                     }
                 }
             }
+
+        return formattedValue
+            .take(DRIVER_NAME_MAX_LENGTH)
+            .trimEnd()
     }
 
-    private fun keepOnlyOneSpace(value: String): String {
-        val firstSpaceIndex = value.indexOf(' ')
+    private fun keepOnlyTwoWords(value: String): String {
+        val words = value
+            .split(" ")
+            .filter { it.isNotBlank() }
+            .take(2)
 
-        if (firstSpaceIndex == -1) {
-            return value
+        val endsWithSpace = value.endsWith(" ") && words.size < 2
+
+        return buildString {
+            append(words.joinToString(" "))
+
+            if (endsWithSpace && isNotBlank()) {
+                append(" ")
+            }
         }
-
-        val beforeSpace = value.substring(0, firstSpaceIndex + 1)
-        val afterSpace = value.substring(firstSpaceIndex + 1).replace(" ", "")
-
-        return beforeSpace + afterSpace
     }
 }

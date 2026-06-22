@@ -1,29 +1,32 @@
 package ni.edu.uam.nightbiteapp.ui.screens
 
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,24 +39,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.ui.components.buttons.NightPrimaryButton
 import ni.edu.uam.nightbiteapp.ui.components.cards.NightBaseCard
 import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.fields.NightTextField
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
-import ni.edu.uam.nightbiteapp.ui.design.NightDimensions
 import ni.edu.uam.nightbiteapp.ui.design.NightShapes
+import ni.edu.uam.nightbiteapp.ui.design.NightSizes
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
-import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
@@ -67,7 +74,6 @@ fun GenderSelectionScreen(
     onExitApp: () -> Unit = {},
     showWelcomeBackMessage: Boolean = false
 ) {
-    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
     var driverNameTouched by remember {
@@ -88,6 +94,10 @@ fun GenderSelectionScreen(
 
     var showWelcomeDialog by remember(showWelcomeBackMessage) {
         mutableStateOf(showWelcomeBackMessage)
+    }
+
+    var showBackExitHint by remember {
+        mutableStateOf(false)
     }
 
     var lastBackPressTime by remember {
@@ -111,12 +121,6 @@ fun GenderSelectionScreen(
 
     LaunchedEffect(uiState.isPlayerCreated) {
         if (uiState.isPlayerCreated) {
-            Toast.makeText(
-                context,
-                "¡Bienvenido a NightBite!",
-                Toast.LENGTH_SHORT
-            ).show()
-
             onPlayerCreated()
         }
     }
@@ -127,6 +131,13 @@ fun GenderSelectionScreen(
         }
     }
 
+    LaunchedEffect(showBackExitHint) {
+        if (showBackExitHint) {
+            delay(1600)
+            showBackExitHint = false
+        }
+    }
+
     BackHandler {
         val currentTime = System.currentTimeMillis()
 
@@ -134,29 +145,21 @@ fun GenderSelectionScreen(
             onExitApp()
         } else {
             lastBackPressTime = currentTime
-
-            Toast.makeText(
-                context,
-                "Retrocede nuevamente para salir",
-                Toast.LENGTH_SHORT
-            ).show()
+            showBackExitHint = true
         }
     }
 
     NightScreenContainer(
         background = NightBackgroundType.BluePattern,
         useScreenPadding = true,
-        scrollable = false,
+        scrollable = true,
         avoidKeyboard = true
-    ) { dimensions ->
+    ) { _ ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding(),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             LastStepsCard(
-                dimensions = dimensions,
                 driverName = uiState.driverName,
                 selectedGender = uiState.gender,
                 driverNameError = driverNameError,
@@ -182,13 +185,22 @@ fun GenderSelectionScreen(
                     } else {
                         viewModel.createPlayer()
                     }
-                }
+                },
+                modifier = Modifier.align(Alignment.Center)
+            )
+
+            NightInlineMessage(
+                visible = showBackExitHint,
+                message = "Retrocede nuevamente para salir",
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 28.dp)
             )
 
             if (showRequiredDialog) {
                 NightMessageDialog(
                     title = "Datos requeridos",
-                    message = "Completa los datos requeridos para finalizar.",
+                    message = "Completa los datos necesarios para finalizar tu registro.",
                     confirmText = "ENTENDIDO",
                     icon = Icons.Default.Warning,
                     iconColor = CheeseYellow,
@@ -216,7 +228,7 @@ fun GenderSelectionScreen(
             if (showWelcomeDialog) {
                 NightMessageDialog(
                     title = "Has vuelto",
-                    message = "Completa los últimos pasos para comenzar a jugar.",
+                    message = "Tu ruta nocturna te espera. Completa estos últimos pasos para comenzar a jugar.",
                     confirmText = "CONTINUAR",
                     icon = Icons.Default.Warning,
                     iconColor = CheeseYellow,
@@ -231,7 +243,6 @@ fun GenderSelectionScreen(
 
 @Composable
 private fun LastStepsCard(
-    dimensions: NightDimensions,
     driverName: String,
     selectedGender: String,
     driverNameError: String?,
@@ -240,155 +251,175 @@ private fun LastStepsCard(
     isLoading: Boolean,
     onDriverNameChange: (String) -> Unit,
     onGenderSelected: (String) -> Unit,
-    onAccept: () -> Unit
+    onAccept: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val cardWidth = dimensions.ageCheckCardWidth * 1.35f
-    val cardHeight = dimensions.ageCheckCardHeight * 1.18f
-    val contentWidth = cardWidth * 0.78f
-    val genderButtonWidth = contentWidth * 0.46f
+    val fieldWidth = 285.dp
+    val genderButtonWidth = 135.dp
+    val errorHeight = 16.dp
 
     NightBaseCard(
-        modifier = Modifier
-            .width(cardWidth)
-            .height(cardHeight)
-            .shadow(
-                elevation = 8.dp,
-                shape = NightShapes.dialog
-            ),
+        modifier = modifier.widthIn(
+            min = 390.dp,
+            max = NightSizes.loginCardWidth
+        ),
         fillMaxWidth = false,
-        containerColor = Color(0xFF7894EA),
+        containerColor = Color(0xFF7B92E8),
         contentColor = SmokeWhite,
-        borderColor = Color(0xFF4F65C7),
+        borderColor = Color(0xFF556DCE),
         elevation = 10.dp,
         contentPadding = PaddingValues(
-            horizontal = NightSpacing.large,
-            vertical = NightSpacing.medium
+            start = NightSpacing.section,
+            end = NightSpacing.section,
+            top = NightSpacing.extraLarge,
+            bottom = NightSpacing.extraLarge
         )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.Center
         ) {
-            LastStepsTitleBlock()
+            LastStepsTitle()
 
-            Column(
-                modifier = Modifier.width(contentWidth),
-                horizontalAlignment = Alignment.Start
+            Spacer(modifier = Modifier.height(NightSpacing.extraSmall))
+
+            Text(
+                text = "Termina la configuración de tu cuenta",
+                color = SmokeWhite,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(NightSpacing.large))
+
+            NightTextField(
+                value = driverName,
+                onValueChange = onDriverNameChange,
+                label = "Nombre",
+                icon = Icons.Default.Person,
+                enabled = !isLoading,
+                isError = driverNameError != null,
+                isSuccess = isDriverNameValid,
+                errorMessage = null,
+                reserveErrorSpace = false,
+                modifier = Modifier.width(fieldWidth)
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            FieldErrorText(
+                message = driverNameError,
+                width = fieldWidth,
+                height = errorHeight
+            )
+
+            Spacer(modifier = Modifier.height(NightSpacing.extraSmall))
+
+            Text(
+                text = "Seleccione su género",
+                color = SmokeWhite,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.width(fieldWidth),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(NightSpacing.small))
+
+            Row(
+                modifier = Modifier.width(fieldWidth),
+                horizontalArrangement = Arrangement.spacedBy(
+                    space = NightSpacing.medium,
+                    alignment = Alignment.CenterHorizontally
+                ),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Nombre",
-                    color = SmokeWhite,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                NightTextField(
-                    value = driverName,
-                    onValueChange = onDriverNameChange,
-                    label = "Ej: Hazell",
-                    icon = Icons.Default.Person,
+                GenderButton(
+                    text = "Femenino",
+                    selected = selectedGender == "Femenino",
                     enabled = !isLoading,
-                    isError = driverNameError != null,
-                    isSuccess = isDriverNameValid,
-                    errorMessage = driverNameError,
-                    reserveErrorSpace = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Text(
-                    text = "Género",
-                    color = SmokeWhite,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        space = NightSpacing.small,
-                        alignment = Alignment.CenterHorizontally
-                    ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    GenderButton(
-                        text = "Femenino",
-                        selected = selectedGender == "Femenino",
-                        enabled = !isLoading,
-                        width = genderButtonWidth,
-                        onClick = {
-                            onGenderSelected("Femenino")
-                        }
-                    )
-
-                    GenderButton(
-                        text = "Masculino",
-                        selected = selectedGender == "Masculino",
-                        enabled = !isLoading,
-                        width = genderButtonWidth,
-                        onClick = {
-                            onGenderSelected("Masculino")
-                        }
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(18.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    if (genderError != null) {
-                        Text(
-                            text = genderError,
-                            color = PizzaRed,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                    width = genderButtonWidth,
+                    onClick = {
+                        onGenderSelected("Femenino")
                     }
-                }
+                )
+
+                GenderButton(
+                    text = "Masculino",
+                    selected = selectedGender == "Masculino",
+                    enabled = !isLoading,
+                    width = genderButtonWidth,
+                    onClick = {
+                        onGenderSelected("Masculino")
+                    }
+                )
             }
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            FieldErrorText(
+                message = genderError,
+                width = fieldWidth,
+                height = errorHeight
+            )
+
+            Spacer(modifier = Modifier.height(NightSpacing.medium))
 
             NightPrimaryButton(
                 text = if (isLoading) "CREANDO..." else "FINALIZAR",
                 onClick = onAccept,
                 enabled = !isLoading,
-                modifier = Modifier.widthIn(
-                    min = contentWidth * 0.62f,
-                    max = contentWidth * 0.82f
-                )
+                modifier = Modifier
+                    .width(160.dp)
+                    .height(NightSizes.primaryButtonHeight)
             )
         }
     }
 }
 
 @Composable
-private fun LastStepsTitleBlock() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+private fun LastStepsTitle() {
+    Text(
+        text = "ÚLTIMOS PASOS",
+        color = SmokeWhite,
+        fontSize = 25.sp,
+        fontWeight = FontWeight.Black,
+        letterSpacing = 2.2.sp,
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.titleLarge.copy(
+            shadow = Shadow(
+                color = NightSurface,
+                offset = Offset(2f, 2f),
+                blurRadius = 3f
+            )
+        )
+    )
+}
+
+@Composable
+private fun FieldErrorText(
+    message: String?,
+    width: Dp,
+    height: Dp,
+    startPadding: Dp = 20.dp
+) {
+    Box(
+        modifier = Modifier
+            .width(width)
+            .height(height)
+            .padding(start = startPadding),
+        contentAlignment = Alignment.TopStart
     ) {
-        Text(
-            text = "Últimos pasos",
-            color = SmokeWhite,
-            fontSize = 24.sp,
-            fontFamily = LilitaOne,
-            fontWeight = FontWeight.Normal,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(2.dp))
-
-        Text(
-            text = "Completa tu cuenta",
-            color = SmokeWhite.copy(alpha = 0.9f),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
+        if (message != null) {
+            Text(
+                text = message,
+                color = PizzaRed,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
@@ -401,33 +432,28 @@ private fun GenderButton(
     onClick: () -> Unit
 ) {
     val animatedWidth by animateDpAsState(
-        targetValue = if (selected) width + 8.dp else width,
+        targetValue = if (selected) width + 6.dp else width,
         label = "genderButtonWidth"
-    )
-
-    val animatedHeight by animateDpAsState(
-        targetValue = if (selected) 42.dp else 36.dp,
-        label = "genderButtonHeight"
     )
 
     val animatedColor by animateColorAsState(
         targetValue = if (selected) {
-            Color(0xFF35269B)
+            Color(0xFF3E2EA8)
         } else {
-            Color(0xFF5E55C8)
+            Color(0xFF6A5ED5)
         },
         label = "genderButtonColor"
     )
 
     val animatedElevation by animateDpAsState(
-        targetValue = if (selected) 7.dp else 2.dp,
+        targetValue = if (selected) 7.dp else 3.dp,
         label = "genderButtonElevation"
     )
 
     Box(
         modifier = Modifier
             .width(animatedWidth)
-            .height(animatedHeight)
+            .height(NightSizes.primaryButtonHeight)
             .shadow(
                 elevation = animatedElevation,
                 shape = NightShapes.button
@@ -444,10 +470,58 @@ private fun GenderButton(
         Text(
             text = text,
             color = SmokeWhite,
-            fontSize = if (selected) 13.sp else 12.sp,
-            fontFamily = LilitaOne,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Black,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+private fun NightInlineMessage(
+    visible: Boolean,
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier
+                .shadow(
+                    elevation = 8.dp,
+                    shape = NightShapes.button
+                )
+                .background(
+                    color = Color(0xEE21143F),
+                    shape = NightShapes.button
+                )
+                .padding(
+                    horizontal = NightSpacing.large,
+                    vertical = NightSpacing.medium
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.icono_splash),
+                contentDescription = null,
+                modifier = Modifier.size(22.dp),
+                contentScale = ContentScale.Fit
+            )
+
+            Spacer(modifier = Modifier.width(NightSpacing.small))
+
+            Text(
+                text = message,
+                color = SmokeWhite,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 

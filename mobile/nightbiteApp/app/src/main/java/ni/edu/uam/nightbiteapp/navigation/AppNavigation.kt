@@ -45,6 +45,8 @@ import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModelFactory
+import android.widget.Toast
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun AppNavigation() {
@@ -74,6 +76,10 @@ fun AppNavigation() {
     }
 
     var showLastStepsWelcomeMessage by remember {
+        mutableStateOf(false)
+    }
+
+    var showHomeWelcomeToast by remember {
         mutableStateOf(false)
     }
 
@@ -160,6 +166,7 @@ fun AppNavigation() {
 
                     if (user.player == null) {
                         showLastStepsWelcomeMessage = !isFreshRegisterLogin
+                        showHomeWelcomeToast = true
 
                         navController.navigate(Routes.GENDER_SELECTION) {
                             popUpTo(Routes.LOGIN) {
@@ -169,6 +176,7 @@ fun AppNavigation() {
                         }
                     } else {
                         showLastStepsWelcomeMessage = false
+                        showHomeWelcomeToast = true
 
                         navController.navigate(Routes.HOME) {
                             popUpTo(Routes.LOGIN) {
@@ -253,6 +261,19 @@ fun AppNavigation() {
         }
 
         composable(Routes.HOME) {
+
+            LaunchedEffect(showHomeWelcomeToast) {
+                if (showHomeWelcomeToast) {
+                    Toast.makeText(
+                        context,
+                        "¡Bienvenido a NightBite!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    showHomeWelcomeToast = false
+                }
+            }
+
             HomeScreen(
                 userId = activeUserId ?: userSession.userId,
                 userSession = userSession,

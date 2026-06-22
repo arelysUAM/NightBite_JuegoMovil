@@ -20,11 +20,14 @@ class PlayerCreationViewModel(
     private val _uiState = MutableStateFlow(PlayerCreationUiState())
     val uiState: StateFlow<PlayerCreationUiState> = _uiState
 
-    val genderOptions = listOf("Femenino", "Masculino")
+    val genderOptions = listOf(
+        "Femenino",
+        "Masculino"
+    )
 
     fun onDriverNameChange(value: String) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { currentState ->
+            currentState.copy(
                 driverName = PlayerValidators.formatPersonName(value),
                 errorMessage = null
             )
@@ -32,8 +35,17 @@ class PlayerCreationViewModel(
     }
 
     fun onGenderSelected(value: String) {
-        _uiState.update {
-            it.copy(
+        if (!genderOptions.contains(value)) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    errorMessage = "El género seleccionado no es válido."
+                )
+            }
+            return
+        }
+
+        _uiState.update { currentState ->
+            currentState.copy(
                 gender = value,
                 errorMessage = null
             )
@@ -47,14 +59,16 @@ class PlayerCreationViewModel(
             return
         }
 
-        val nameError = PlayerValidators.validateDriverName(currentState.driverName)
+        val normalizedDriverName = currentState.driverName.trim()
+        val normalizedGender = currentState.gender.trim()
 
+        val nameError = PlayerValidators.validateDriverName(normalizedDriverName)
         if (nameError != null) {
             showError(nameError)
             return
         }
 
-        val genderError = PlayerValidators.validateGender(currentState.gender)
+        val genderError = PlayerValidators.validateGender(normalizedGender)
         if (genderError != null) {
             showError(genderError)
             return
@@ -62,8 +76,8 @@ class PlayerCreationViewModel(
 
         viewModelScope.launch {
             try {
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    state.copy(
                         isLoading = true,
                         errorMessage = null
                     )
@@ -73,8 +87,8 @@ class PlayerCreationViewModel(
                 val userId = session.userId
 
                 if (userId == null) {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { state ->
+                        state.copy(
                             isLoading = false,
                             errorMessage = "No se encontró una sesión activa. Inicia sesión nuevamente."
                         )
@@ -84,8 +98,8 @@ class PlayerCreationViewModel(
 
                 val playerRequest = PlayerRequest(
                     userAccountId = userId,
-                    driverName = currentState.driverName.trim(),
-                    gender = currentState.gender,
+                    driverName = normalizedDriverName,
+                    gender = normalizedGender,
                     helmetColor = PlayerValidators.DEFAULT_HELMET_COLOR,
                     motorcycleType = PlayerValidators.DEFAULT_MOTORCYCLE_TYPE
                 )
@@ -93,10 +107,11 @@ class PlayerCreationViewModel(
                 val response = playerRepository.createPlayer(playerRequest)
 
                 if (response.isSuccessful && response.body() != null) {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { state ->
+                        state.copy(
                             isLoading = false,
-                            isPlayerCreated = true
+                            isPlayerCreated = true,
+                            errorMessage = null
                         )
                     }
                     return@launch
@@ -108,24 +123,25 @@ class PlayerCreationViewModel(
                     response.code() == 400 &&
                     errorBody.contains("ya tiene una ficha", ignoreCase = true)
                 ) {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { state ->
+                        state.copy(
                             isLoading = false,
-                            isPlayerCreated = true
+                            isPlayerCreated = true,
+                            errorMessage = null
                         )
                     }
                     return@launch
                 }
 
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    state.copy(
                         isLoading = false,
                         errorMessage = "No se pudo completar la configuración de la cuenta."
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    state.copy(
                         isLoading = false,
                         errorMessage = "Error de conexión con la API."
                     )
@@ -135,51 +151,18 @@ class PlayerCreationViewModel(
     }
 
     fun clearError() {
-        _uiState.update {
-            it.copy(errorMessage = null)
+        _uiState.update { currentState ->
+            currentState.copy(
+                errorMessage = null
+            )
         }
     }
 
     private fun showError(message: String) {
-        _uiState.update {
-            it.copy(errorMessage = message)
+        _uiState.update { currentState ->
+            currentState.copy(
+                errorMessage = message
+            )
         }
-    }
-
-    private fun validateDriverName(value: String): String? {
-        val cleanedValue = value.trim()
-
-        if (cleanedValue.isBlank()) {
-            return "Ingresa tu nombre para continuar."
-        }
-
-        if (cleanedValue.length > 80) {
-            return "El nombre no debe superar los 80 caracteres."
-        }
-
-        if (!cleanedValue.matches(Regex("^[A-Za-zÁÉÍÓÚáéíóúÑñ]+$"))) {
-            return "El nombre solo puede contener letras."
-        }
-
-        return null
-    }
-
-    private fun formatDriverName(value: String): String {
-        val cleanedValue = value
-            .replace(" ", "")
-            .lowercase()
-
-        return cleanedValue.replaceFirstChar { char ->
-            if (char.isLowerCase()) {
-                char.titlecase()
-            } else {
-                char.toString()
-            }
-        }
-    }
-
-    companion object {
-        private const val DEFAULT_HELMET_COLOR = "Negro"
-        private const val DEFAULT_MOTORCYCLE_TYPE = "Delivery"
     }
 }

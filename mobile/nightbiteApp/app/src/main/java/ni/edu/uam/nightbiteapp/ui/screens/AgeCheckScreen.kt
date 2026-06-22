@@ -1,6 +1,7 @@
 package ni.edu.uam.nightbiteapp.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -32,7 +34,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -43,30 +47,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.R
-import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.buttons.NightPrimaryButton
+import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
 import ni.edu.uam.nightbiteapp.ui.design.NightShapes
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
-import ni.edu.uam.nightbiteapp.ui.theme.DarkText
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
-import ni.edu.uam.nightbiteapp.ui.theme.LoginTabCyan
+import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import java.util.Calendar
-import androidx.compose.foundation.background
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Shadow
-import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 
-/**
- * Pantalla para verificar la edad antes de permitir crear una cuenta.
- *
- * Usa NightScreenContainer para conservar el fondo base, el ajuste por teclado
- * y las dimensiones responsivas de forma estándar.
- */
 @Composable
 fun AgeCheckScreen(
     onAgeApproved: (Int) -> Unit,
@@ -111,7 +103,7 @@ fun AgeCheckScreen(
     val selectedYear = years[selectedIndex]
 
     NightScreenContainer(
-        background = NightBackgroundType.None,
+        background = NightBackgroundType.BluePattern,
         useScreenPadding = true,
         scrollable = false,
         avoidKeyboard = true
@@ -185,8 +177,8 @@ private fun AgeCheckCard(
                 ),
             shape = NightShapes.dialog,
             colors = CardDefaults.cardColors(
-                containerColor = LoginTabCyan,
-                contentColor = DarkText
+                containerColor = Color(0xFF7B92E8),
+                contentColor = SmokeWhite
             ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 10.dp
@@ -246,7 +238,7 @@ private fun AgeCheckTitleBlock() {
     ) {
         Text(
             text = "VERIFICAR EDAD",
-            color = DarkText,
+            color = SmokeWhite,
             fontSize = 25.sp,
             fontFamily = LilitaOne,
             fontWeight = FontWeight.Normal,
@@ -254,9 +246,9 @@ private fun AgeCheckTitleBlock() {
             modifier = Modifier.fillMaxWidth(),
             style = MaterialTheme.typography.titleLarge.copy(
                 shadow = Shadow(
-                    color = NightSurface.copy(alpha = 0.55f),
+                    color = NightSurface,
                     offset = Offset(2f, 2f),
-                    blurRadius = 2f
+                    blurRadius = 3f
                 )
             )
         )
@@ -265,7 +257,7 @@ private fun AgeCheckTitleBlock() {
 
         Text(
             text = "Selecciona tu año de nacimiento",
-            color = DarkText.copy(alpha = 0.72f),
+            color = SmokeWhite.copy(alpha = 0.95f),
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
@@ -287,7 +279,7 @@ private fun YearPicker(
         modifier = Modifier
             .width(pickerWidth)
             .background(
-                color = Color(0xFF37A9AD),
+                color = Color(0xFF5F56CA),
                 shape = NightShapes.smallCard
             )
             .padding(
@@ -348,7 +340,7 @@ private fun YearItem(
             color = if (isSelected) {
                 SmokeWhite
             } else {
-                SmokeWhite.copy(alpha = 0.38f)
+                SmokeWhite.copy(alpha = 0.42f)
             },
             fontSize = if (isSelected) {
                 30.sp
@@ -364,7 +356,7 @@ private fun YearItem(
 @Composable
 private fun YearPickerDivider() {
     HorizontalDivider(
-        color = SmokeWhite,
+        color = SmokeWhite.copy(alpha = 0.95f),
         thickness = 2.dp
     )
 }
