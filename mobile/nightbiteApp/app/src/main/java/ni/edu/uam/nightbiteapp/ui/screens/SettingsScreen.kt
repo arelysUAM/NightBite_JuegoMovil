@@ -60,20 +60,20 @@ import ni.edu.uam.nightbiteapp.ui.design.SettingsDimensions
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsHeaderPurple
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsInnerPurple
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsPanelBlue
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsPanelBorderBlue
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsRowCream
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsRowText
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsSelectedTabPurple
+import ni.edu.uam.nightbiteapp.ui.theme.SettingsTabPurple
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 
 private enum class SettingsTab {
     GAME,
     ACCOUNT
 }
-
-private val SettingsPanelBlue = Color(0xFF7B92E8)
-private val SettingsHeaderPurple = Color(0xFF5F56CA)
-private val SettingsTabPurple = Color(0xFF6A5ED5)
-private val SettingsSelectedTabPurple = Color(0xFF3E2EA8)
-private val SettingsInnerPurple = Color(0xFF21143F)
-private val SettingsRowCream = Color(0xFFF7F1DE)
-private val SettingsRowText = Color(0xFF21143F)
 
 @Composable
 fun SettingsScreen(
@@ -170,7 +170,7 @@ private fun SettingsCard(
             .background(SettingsPanelBlue)
             .border(
                 width = 2.dp,
-                color = Color(0xFF556DCE),
+                color = SettingsPanelBorderBlue,
                 shape = NightShapes.panel
             )
     ) {

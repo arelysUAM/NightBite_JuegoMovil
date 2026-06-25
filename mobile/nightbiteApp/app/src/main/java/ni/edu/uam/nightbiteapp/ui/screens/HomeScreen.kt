@@ -67,7 +67,6 @@ fun HomeScreen(
     userId: Long?,
     userSession: UserSession,
     onNavigateToLevelIntro: (Int) -> Unit,
-    onNavigateToPlayerDetail: () -> Unit,
     onNavigateToPlayerCreation: () -> Unit,
     onNavigateToAchievements: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -151,21 +150,6 @@ fun HomeScreen(
                 layout = layout,
                 onOpenSettings = onNavigateToSettings,
                 onOpenAchievements = onNavigateToAchievements,
-                onOpenPlayer = {
-                    when {
-                        uiState.hasPlayer -> {
-                            onNavigateToPlayerDetail()
-                        }
-
-                        uiState.userLoadFailed -> {
-                            homeViewModel.loadHomeData(resolvedUserId)
-                        }
-
-                        else -> {
-                            showMissingPlayerDialog = true
-                        }
-                    }
-                },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(
@@ -315,7 +299,6 @@ private fun HomeSideMenu(
     layout: HomeLayout,
     onOpenSettings: () -> Unit,
     onOpenAchievements: () -> Unit,
-    onOpenPlayer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -335,13 +318,6 @@ private fun HomeSideMenu(
             label = "Logros",
             iconSize = layout.sideMenuIconSize,
             onClick = onOpenAchievements
-        )
-
-        HomeSideMenuItem(
-            drawableId = R.drawable.boton_planilla,
-            label = "Plantilla",
-            iconSize = layout.sideMenuIconSize,
-            onClick = onOpenPlayer
         )
     }
 }

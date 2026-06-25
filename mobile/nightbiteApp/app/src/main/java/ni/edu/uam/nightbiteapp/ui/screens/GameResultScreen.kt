@@ -1,346 +1,632 @@
 package ni.edu.uam.nightbiteapp.ui.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import ni.edu.uam.nightbiteapp.ui.components.cards.NightBaseCard
-import ni.edu.uam.nightbiteapp.ui.components.buttons.NightPrimaryButton
-import ni.edu.uam.nightbiteapp.ui.components.buttons.NightSecondaryButton
-import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import ni.edu.uam.nightbiteapp.R
+import ni.edu.uam.nightbiteapp.data.local.mock.GameResultsData
 import ni.edu.uam.nightbiteapp.ui.model.GameResultContent
+import ni.edu.uam.nightbiteapp.ui.model.GameResultPalette
 import ni.edu.uam.nightbiteapp.ui.model.GameResultType
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.ui.unit.Dp
-import ni.edu.uam.nightbiteapp.ui.design.getNightWindowSize
-import ni.edu.uam.nightbiteapp.ui.design.nightDimensionsFor
+import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
+import ni.edu.uam.nightbiteapp.ui.theme.ResultPurpleBody
+import ni.edu.uam.nightbiteapp.ui.theme.ResultPurpleCard
+import ni.edu.uam.nightbiteapp.ui.theme.ResultPurpleHeader
+import ni.edu.uam.nightbiteapp.ui.theme.ResultPurpleMetricBackground
+import ni.edu.uam.nightbiteapp.ui.theme.ResultPurpleTab
+import ni.edu.uam.nightbiteapp.ui.theme.ResultRedAccent
+import ni.edu.uam.nightbiteapp.ui.theme.ResultRedBody
+import ni.edu.uam.nightbiteapp.ui.theme.ResultRedCard
+import ni.edu.uam.nightbiteapp.ui.theme.ResultRedHeader
+import ni.edu.uam.nightbiteapp.ui.theme.ResultRedHeaderText
+import ni.edu.uam.nightbiteapp.ui.theme.ResultRedMetricBackground
+import ni.edu.uam.nightbiteapp.ui.theme.ResultRedTab
+import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 
-/**
- * Pantalla reutilizable para mostrar los resultados de una noche.
- *
- * Los datos mostrados dependen del nivel y del tipo de resultado recibido.
- */
 @Composable
 fun GameResultScreen(
+    levelId: Int,
     resultType: GameResultType,
-    content: GameResultContent,
+    stars: Int,
+    onContinueToNextLevel: () -> Unit,
     onRetryLevel: () -> Unit,
-    onContinue: () -> Unit,
     onBackToHome: () -> Unit
 ) {
-    val showContinueButton = shouldShowContinueButton(resultType)
-    val showRetryButton = shouldShowRetryButton(resultType)
+    val content = GameResultsData.getResultContent(
+        levelId = levelId,
+        resultType = resultType,
+        stars = stars
+    )
+
+    BackHandler {
+        onBackToHome()
+    }
 
     BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+        modifier = Modifier.fillMaxSize()
     ) {
-        val windowSize = getNightWindowSize(maxWidth)
-        val dimensions = nightDimensionsFor(windowSize)
+        val layout = resultLayoutFor(
+            maxWidth = maxWidth,
+            maxHeight = maxHeight
+        )
+
+        val colors = resultColorsFor(
+            palette = content.palette
+        )
+
+        ResultBackground(
+            palette = content.palette
+        )
+
+        ResultCard(
+            content = content,
+            resultType = resultType,
+            layout = layout,
+            colors = colors,
+            onContinueToNextLevel = onContinueToNextLevel,
+            onRetryLevel = onRetryLevel,
+            onBackToHome = onBackToHome,
+            modifier = Modifier.align(Alignment.Center)
+        )
+    }
+}
+
+@Composable
+private fun ResultBackground(
+    palette: GameResultPalette
+) {
+    val backgroundDrawable = when (palette) {
+        GameResultPalette.PURPLE -> R.drawable.fondo_estampado_morado
+        GameResultPalette.RED -> R.drawable.partida_perdida
+    }
+
+    Image(
+        painter = painterResource(id = backgroundDrawable),
+        contentDescription = "Fondo de resultado",
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop
+    )
+}
+
+@Composable
+private fun ResultCard(
+    content: GameResultContent,
+    resultType: GameResultType,
+    layout: ResultLayout,
+    colors: ResultCardColors,
+    onContinueToNextLevel: () -> Unit,
+    onRetryLevel: () -> Unit,
+    onBackToHome: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .width(layout.cardWidth)
+            .height(layout.cardHeight),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .width(layout.cardWidth)
+                .height(layout.cardBodyHeight)
+                .clip(RoundedCornerShape(24.dp))
+                .background(colors.cardBackground)
+                .border(
+                    width = 3.dp,
+                    color = colors.headerBackground,
+                    shape = RoundedCornerShape(24.dp)
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = layout.headerDepthOffset)
+                .width(layout.headerWidth)
+                .height(layout.headerHeight)
+                .clip(RoundedCornerShape(18.dp))
+                .background(colors.headerDepthBackground)
+        )
+
+        ResultHeader(
+            title = content.title,
+            layout = layout,
+            colors = colors,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .align(Alignment.BottomCenter)
+                .width(layout.cardWidth)
+                .height(layout.cardBodyHeight)
                 .padding(
-                    horizontal = dimensions.screenHorizontalPadding,
-                    vertical = dimensions.screenVerticalPadding
+                    start = layout.bodyHorizontalPadding,
+                    end = layout.bodyHorizontalPadding,
+                    top = layout.bodyTopPadding,
+                    bottom = layout.bodyBottomPadding
                 ),
-            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.widthIn(
-                    max = dimensions.cardMaxWidth
+            ResultSubtitle(
+                subtitle = content.subtitle,
+                message = content.message,
+                layout = layout,
+                colors = colors
+            )
+
+            Spacer(modifier = Modifier.height(layout.subtitleToStarsSpacing))
+
+            Image(
+                painter = painterResource(
+                    id = starsDrawableFor(content.safeStars)
                 ),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                ResultHeader(
-                    resultType = resultType,
-                    content = content,
-                    itemSpacing = dimensions.itemSpacing
-                )
+                contentDescription = "Resultado de estrellas",
+                modifier = Modifier
+                    .width(layout.starsWidth)
+                    .height(layout.starsHeight),
+                contentScale = ContentScale.Fit
+            )
 
-                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
+            Spacer(modifier = Modifier.height(layout.starsToMetricsSpacing))
 
-                content.stars?.let { stars ->
-                    StarRating(stars = stars)
+            ResultMetricsBlock(
+                content = content,
+                layout = layout,
+                colors = colors
+            )
 
-                    Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
-                }
+            Spacer(modifier = Modifier.height(layout.metricsToActionsSpacing))
 
-                ResultMessageCard(content = content)
-
-                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
-
-                ResultDetailsCard(content = content)
-
-                content.rewardMessage?.let { reward ->
-                    Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
-
-                    RewardCard(message = reward)
-                }
-
-                content.illustrationDescription?.let { description ->
-                    Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
-
-                    IllustrationPlaceholder(description = description)
-                }
-
-                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
-
-                ResultActions(
-                    resultType = resultType,
-                    showContinueButton = showContinueButton,
-                    showRetryButton = showRetryButton,
-                    itemSpacing = dimensions.itemSpacing,
-                    onContinue = onContinue,
-                    onRetryLevel = onRetryLevel,
-                    onBackToHome = onBackToHome
-                )
-
-                Spacer(modifier = Modifier.height(dimensions.sectionSpacing))
-            }
+            ResultActions(
+                content = content,
+                resultType = resultType,
+                layout = layout,
+                onContinueToNextLevel = onContinueToNextLevel,
+                onRetryLevel = onRetryLevel,
+                onBackToHome = onBackToHome
+            )
         }
     }
 }
 
 @Composable
 private fun ResultHeader(
-    resultType: GameResultType,
-    content: GameResultContent,
-    itemSpacing: Dp
+    title: String,
+    layout: ResultLayout,
+    colors: ResultCardColors,
+    modifier: Modifier = Modifier
 ) {
-    val icon = when (resultType) {
-        GameResultType.TUTORIAL_THREE_STARS,
-        GameResultType.TUTORIAL_TWO_STARS,
-        GameResultType.TUTORIAL_ONE_STAR,
-        GameResultType.VICTORY,
-        GameResultType.FINAL_VICTORY -> Icons.Default.EmojiEvents
-
-        else -> Icons.Default.Warning
+    Box(
+        modifier = modifier
+            .width(layout.headerWidth)
+            .height(layout.headerHeight)
+            .clip(RoundedCornerShape(18.dp))
+            .background(colors.headerBackground),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = title.uppercase(),
+            color = colors.headerText,
+            fontSize = layout.titleSize,
+            fontFamily = LilitaOne,
+            fontWeight = FontWeight.Normal,
+            letterSpacing = 0.8.sp,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.headlineLarge.copy(
+                shadow = Shadow(
+                    color = colors.titleShadow,
+                    offset = Offset(2f, 2f),
+                    blurRadius = 2f
+                )
+            )
+        )
     }
-
-    Icon(
-        imageVector = icon,
-        contentDescription = "Resultado de la jornada",
-        tint = CheeseYellow
-    )
-
-    Spacer(modifier = Modifier.height(itemSpacing))
-
-    Text(
-        text = content.title,
-        style = MaterialTheme.typography.headlineMedium,
-        textAlign = TextAlign.Center
-    )
-
-    Spacer(modifier = Modifier.height(itemSpacing))
-
-    Text(
-        text = content.subtitle,
-        style = MaterialTheme.typography.titleMedium,
-        textAlign = TextAlign.Center
-    )
 }
 
 @Composable
-private fun StarRating(
-    stars: Int
+private fun ResultSubtitle(
+    subtitle: String,
+    message: String,
+    layout: ResultLayout,
+    colors: ResultCardColors
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = subtitle,
+            color = colors.primaryText,
+            fontSize = layout.subtitleSize,
+            fontFamily = LilitaOne,
+            fontWeight = FontWeight.Normal,
+            textAlign = TextAlign.Center,
+            lineHeight = layout.subtitleLineHeight
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = message,
+            color = colors.secondaryText,
+            fontSize = layout.messageSize,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            lineHeight = layout.messageLineHeight,
+            modifier = Modifier.width(layout.messageWidth)
+        )
+    }
+}
+
+@Composable
+private fun ResultMetricsBlock(
+    content: GameResultContent,
+    layout: ResultLayout,
+    colors: ResultCardColors
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
+        modifier = Modifier
+            .width(layout.metricsWidth)
+            .height(layout.metricsHeight),
+        horizontalArrangement = Arrangement.spacedBy(
+            space = layout.metricSpacing,
+            alignment = Alignment.CenterHorizontally
+        ),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        repeat(3) { index ->
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Estrella ${index + 1}",
-                tint = if (index < stars) {
-                    CheeseYellow
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
-                }
-            )
-        }
-    }
-}
+        ResultMetric(
+            label = "TIEMPO",
+            value = content.timeText,
+            width = layout.metricWidth,
+            colors = colors
+        )
 
-@Composable
-private fun ResultMessageCard(
-    content: GameResultContent
-) {
-    NightBaseCard {
-        Text(
-            text = content.message,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+        ResultMetric(
+            label = "PEDIDOS",
+            value = content.ordersText,
+            width = layout.metricWidth,
+            colors = colors
+        )
+
+        ResultMetric(
+            label = "ESTRELLAS",
+            value = "${content.safeStars}/3",
+            width = layout.metricWidth,
+            colors = colors
         )
     }
 }
 
 @Composable
-private fun ResultDetailsCard(
-    content: GameResultContent
+private fun ResultMetric(
+    label: String,
+    value: String,
+    width: Dp,
+    colors: ResultCardColors
 ) {
-    if (content.details.isEmpty()) {
-        return
-    }
-
-    NightBaseCard {
+    Column(
+        modifier = Modifier
+            .width(width)
+            .clip(RoundedCornerShape(14.dp))
+            .background(colors.metricBackground)
+            .padding(
+                horizontal = 8.dp,
+                vertical = 8.dp
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
-            text = "Resumen de la jornada",
-            style = MaterialTheme.typography.titleMedium
+            text = label,
+            color = colors.metricLabel,
+            fontSize = 10.sp,
+            fontFamily = LilitaOne,
+            fontWeight = FontWeight.Normal,
+            letterSpacing = 0.5.sp,
+            textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(NightSpacing.medium))
+        Spacer(modifier = Modifier.height(3.dp))
 
-        content.details.forEach { detail ->
-            Text(
-                text = "• $detail",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(modifier = Modifier.height(NightSpacing.extraSmall))
-        }
-    }
-}
-
-@Composable
-private fun RewardCard(
-    message: String
-) {
-    NightBaseCard {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.EmojiEvents,
-                contentDescription = "Recompensa",
-                tint = CheeseYellow
-            )
-
-            Spacer(modifier = Modifier.padding(horizontal = NightSpacing.small))
-
-            Text(
-                text = message,
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
-    }
-}
-
-@Composable
-private fun IllustrationPlaceholder(
-    description: String
-) {
-    NightBaseCard {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Ilustración pendiente",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Spacer(modifier = Modifier.height(NightSpacing.small))
-
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
-        }
+        Text(
+            text = value,
+            color = colors.metricValue,
+            fontSize = 15.sp,
+            fontFamily = LilitaOne,
+            fontWeight = FontWeight.Normal,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
 @Composable
 private fun ResultActions(
+    content: GameResultContent,
     resultType: GameResultType,
-    showContinueButton: Boolean,
-    showRetryButton: Boolean,
-    itemSpacing: Dp,
-    onContinue: () -> Unit,
+    layout: ResultLayout,
+    onContinueToNextLevel: () -> Unit,
     onRetryLevel: () -> Unit,
     onBackToHome: () -> Unit
 ) {
-    if (showContinueButton) {
-        NightPrimaryButton(
-            text = continueButtonText(resultType),
-            onClick = onContinue,
-            modifier = Modifier.fillMaxWidth()
-        )
+    Row(
+        modifier = Modifier.width(layout.actionsWidth),
+        horizontalArrangement = Arrangement.spacedBy(
+            space = layout.actionSpacing,
+            alignment = Alignment.CenterHorizontally
+        ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (content.showRetryButton) {
+            ResultImageButton(
+                drawableId = R.drawable.boton_reintentar,
+                contentDescription = "Reintentar nivel",
+                size = layout.sideActionButtonSize,
+                onClick = onRetryLevel
+            )
+        }
 
-        Spacer(modifier = Modifier.height(itemSpacing))
+        if (content.showContinueButton) {
+            ResultImageButton(
+                drawableId = R.drawable.boton_siguiente,
+                contentDescription = continueButtonDescription(resultType),
+                size = layout.continueActionButtonSize,
+                onClick = onContinueToNextLevel
+            )
+        }
+
+        if (content.showHomeButton) {
+            ResultImageButton(
+                drawableId = R.drawable.boton_home,
+                contentDescription = "Volver al Home",
+                size = layout.sideActionButtonSize,
+                onClick = onBackToHome
+            )
+        }
+    }
+}
+
+@Composable
+private fun ResultImageButton(
+    @DrawableRes drawableId: Int,
+    contentDescription: String,
+    size: Dp,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember {
+        MutableInteractionSource()
     }
 
-    if (showRetryButton) {
-        NightPrimaryButton(
-            text = "Intentar nuevamente",
-            onClick = onRetryLevel,
-            modifier = Modifier.fillMaxWidth()
-        )
+    val isPressed by interactionSource.collectIsPressedAsState()
 
-        Spacer(modifier = Modifier.height(itemSpacing))
-    }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.88f else 1f,
+        label = "resultImageButtonScale"
+    )
 
-    NightSecondaryButton(
-        text = "Volver al mapa",
-        onClick = onBackToHome,
-        modifier = Modifier.fillMaxWidth()
+    val alpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.78f else 1f,
+        label = "resultImageButtonAlpha"
+    )
+
+    Image(
+        painter = painterResource(id = drawableId),
+        contentDescription = contentDescription,
+        modifier = Modifier
+            .size(size)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
+                onClick()
+            },
+        contentScale = ContentScale.Fit
     )
 }
 
-private fun shouldShowContinueButton(
-    resultType: GameResultType
-): Boolean {
-    return when (resultType) {
-        GameResultType.TUTORIAL_THREE_STARS,
-        GameResultType.VICTORY,
-        GameResultType.FINAL_VICTORY -> true
-
-        else -> false
+@DrawableRes
+private fun starsDrawableFor(
+    stars: Int
+): Int {
+    return when (stars.coerceIn(0, 3)) {
+        0 -> R.drawable.estrellas_0
+        1 -> R.drawable.estrellas_1
+        2 -> R.drawable.estrellas_2
+        else -> R.drawable.estrellas_3
     }
 }
 
-private fun shouldShowRetryButton(
-    resultType: GameResultType
-): Boolean {
-    return when (resultType) {
-        GameResultType.TUTORIAL_THREE_STARS,
-        GameResultType.VICTORY,
-        GameResultType.FINAL_VICTORY -> false
-
-        else -> true
-    }
-}
-
-private fun continueButtonText(
+private fun continueButtonDescription(
     resultType: GameResultType
 ): String {
-    return when (resultType) {
-        GameResultType.FINAL_VICTORY -> "Finalizar"
-        else -> "Continuar"
+    return if (resultType == GameResultType.FINAL_WIN) {
+        "Finalizar juego"
+    } else {
+        "Ir al siguiente nivel"
+    }
+}
+
+private data class ResultLayout(
+    val cardWidth: Dp,
+    val cardHeight: Dp,
+    val cardBodyHeight: Dp,
+    val headerWidth: Dp,
+    val headerHeight: Dp,
+    val headerDepthOffset: Dp,
+    val bodyHorizontalPadding: Dp,
+    val bodyTopPadding: Dp,
+    val bodyBottomPadding: Dp,
+    val titleSize: TextUnit,
+    val subtitleSize: TextUnit,
+    val subtitleLineHeight: TextUnit,
+    val messageSize: TextUnit,
+    val messageLineHeight: TextUnit,
+    val messageWidth: Dp,
+    val subtitleToStarsSpacing: Dp,
+    val starsWidth: Dp,
+    val starsHeight: Dp,
+    val starsToMetricsSpacing: Dp,
+    val metricsWidth: Dp,
+    val metricsHeight: Dp,
+    val metricWidth: Dp,
+    val metricSpacing: Dp,
+    val metricsToActionsSpacing: Dp,
+    val actionsWidth: Dp,
+    val actionSpacing: Dp,
+    val sideActionButtonSize: Dp,
+    val continueActionButtonSize: Dp
+)
+
+private fun resultLayoutFor(
+    maxWidth: Dp,
+    maxHeight: Dp
+): ResultLayout {
+    val compactHeight = maxHeight < 390.dp
+
+    val cardWidth = (maxWidth * 0.56f).coerceIn(
+        minimumValue = 520.dp,
+        maximumValue = 650.dp
+    )
+
+    val cardHeight = if (compactHeight) {
+        318.dp
+    } else {
+        350.dp
+    }.coerceAtMost(maxHeight - 24.dp)
+
+    val cardBodyHeight = cardHeight - if (compactHeight) {
+        34.dp
+    } else {
+        38.dp
+    }
+
+    val metricSpacing = if (compactHeight) 12.dp else 16.dp
+
+    val metricsWidth = cardWidth * 0.74f
+
+    val metricWidth =
+        ((metricsWidth - (metricSpacing * 2)) / 3).coerceIn(
+            minimumValue = 105.dp,
+            maximumValue = 135.dp
+        )
+
+    return ResultLayout(
+        cardWidth = cardWidth,
+        cardHeight = cardHeight,
+        cardBodyHeight = cardBodyHeight,
+        headerWidth = if (compactHeight) 260.dp else 292.dp,
+        headerHeight = if (compactHeight) 54.dp else 62.dp,
+        headerDepthOffset = if (compactHeight) 7.dp else 8.dp,
+        bodyHorizontalPadding = if (compactHeight) 34.dp else 42.dp,
+        bodyTopPadding = if (compactHeight) 42.dp else 48.dp,
+        bodyBottomPadding = if (compactHeight) 16.dp else 20.dp,
+        titleSize = if (compactHeight) 25.sp else 28.sp,
+        subtitleSize = if (compactHeight) 18.sp else 20.sp,
+        subtitleLineHeight = if (compactHeight) 20.sp else 22.sp,
+        messageSize = if (compactHeight) 11.sp else 12.sp,
+        messageLineHeight = if (compactHeight) 13.sp else 14.sp,
+        messageWidth = cardWidth * 0.78f,
+        subtitleToStarsSpacing = if (compactHeight) 8.dp else 10.dp,
+        starsWidth = if (compactHeight) 170.dp else 190.dp,
+        starsHeight = if (compactHeight) 34.dp else 38.dp,
+        starsToMetricsSpacing = if (compactHeight) 10.dp else 12.dp,
+        metricsWidth = metricsWidth,
+        metricsHeight = if (compactHeight) 50.dp else 58.dp,
+        metricWidth = metricWidth,
+        metricSpacing = metricSpacing,
+        metricsToActionsSpacing = if (compactHeight) 10.dp else 14.dp,
+        actionsWidth = cardWidth * 0.46f,
+        actionSpacing = if (compactHeight) 18.dp else 22.dp,
+        sideActionButtonSize = if (compactHeight) 48.dp else 54.dp,
+        continueActionButtonSize = if (compactHeight) 64.dp else 72.dp
+    )
+}
+
+private data class ResultCardColors(
+    val cardBackground: Color,
+    val headerBackground: Color,
+    val headerDepthBackground: Color,
+    val headerText: Color,
+    val titleShadow: Color,
+    val primaryText: Color,
+    val secondaryText: Color,
+    val metricBackground: Color,
+    val metricLabel: Color,
+    val metricValue: Color
+)
+
+private fun resultColorsFor(
+    palette: GameResultPalette
+): ResultCardColors {
+    return when (palette) {
+        GameResultPalette.PURPLE -> ResultCardColors(
+            cardBackground = ResultPurpleCard,
+            headerBackground = ResultPurpleHeader,
+            headerDepthBackground = ResultPurpleTab,
+            headerText = SmokeWhite,
+            titleShadow = Color.Black.copy(alpha = 0.35f),
+            primaryText = SmokeWhite,
+            secondaryText = SmokeWhite.copy(alpha = 0.9f),
+            metricBackground = ResultPurpleMetricBackground,
+            metricLabel = CheeseYellow,
+            metricValue = SmokeWhite
+        )
+
+        GameResultPalette.RED -> ResultCardColors(
+            cardBackground = ResultRedCard,
+            headerBackground = ResultRedHeader,
+            headerDepthBackground = ResultRedTab,
+            headerText = ResultRedHeaderText,
+            titleShadow = Color.Black.copy(alpha = 0.3f),
+            primaryText = SmokeWhite,
+            secondaryText = SmokeWhite.copy(alpha = 0.92f),
+            metricBackground = ResultRedMetricBackground,
+            metricLabel = ResultRedAccent,
+            metricValue = SmokeWhite
+        )
     }
 }

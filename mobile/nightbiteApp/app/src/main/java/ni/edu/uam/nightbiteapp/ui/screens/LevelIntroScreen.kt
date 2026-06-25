@@ -25,11 +25,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -47,24 +45,24 @@ import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
 import ni.edu.uam.nightbiteapp.ui.design.NightShapes
 import ni.edu.uam.nightbiteapp.ui.design.NightSizes
+import ni.edu.uam.nightbiteapp.ui.model.LevelIntroContent
 import ni.edu.uam.nightbiteapp.ui.model.NightLevel
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
+import ni.edu.uam.nightbiteapp.ui.theme.IntroDataBorder
+import ni.edu.uam.nightbiteapp.ui.theme.IntroEnemyBg
+import ni.edu.uam.nightbiteapp.ui.theme.IntroHeaderPurple
+import ni.edu.uam.nightbiteapp.ui.theme.IntroHeaderShadow
+import ni.edu.uam.nightbiteapp.ui.theme.IntroInfoWhite
+import ni.edu.uam.nightbiteapp.ui.theme.IntroLeftPurple
+import ni.edu.uam.nightbiteapp.ui.theme.IntroOuterPurple
+import ni.edu.uam.nightbiteapp.ui.theme.IntroRightPurple
+import ni.edu.uam.nightbiteapp.ui.theme.IntroTextDark
+import ni.edu.uam.nightbiteapp.ui.theme.IntroTextPurple
+import ni.edu.uam.nightbiteapp.ui.theme.IntroWarningBg
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
-
-private val IntroOuterPurple = Color(0xFF8B78D5)
-private val IntroLeftPurple = Color(0xFF7156B6)
-private val IntroRightPurple = Color(0xFF6047A0)
-private val IntroHeaderPurple = Color(0xFF6A4CB0)
-private val IntroHeaderShadow = Color(0xFF3E256F)
-private val IntroEnemyBg = Color(0xFF1D153B)
-private val IntroInfoWhite = Color(0xFFF6F3FB)
-private val IntroTextDark = Color(0xFF1D1547)
-private val IntroTextPurple = Color(0xFF432D7D)
-private val IntroWarningBg = Color(0xFFFFC8CE)
-private val IntroDataBorder = Color(0xFF3E256F)
 
 @Composable
 fun LevelIntroScreen(
@@ -79,9 +77,7 @@ fun LevelIntroScreen(
         return
     }
 
-    val content = remember(level.id) {
-        levelIntroContent(level.id)
-    }
+    val content = level.introContent
 
     NightScreenContainer(
         background = NightBackgroundType.PurplePattern,
@@ -113,7 +109,6 @@ fun LevelIntroScreen(
                 maxCardWidth
             }
 
-            // No se cambia el alto, solo se ajusta el ancho.
             val cardHeight = if (compact) {
                 320.dp
             } else {
@@ -544,62 +539,4 @@ private fun LevelNotFoundDialog(
         onConfirm = onBackToHome,
         onDismiss = onBackToHome
     )
-}
-
-private data class LevelIntroContent(
-    val enemyImageRes: Int,
-    val enemyTitle: String,
-    val alertMessage: String,
-    val difficulty: String,
-    val behavior: String,
-    val tip: String
-)
-
-private fun levelIntroContent(levelId: Int): LevelIntroContent {
-    return when (levelId) {
-        1 -> LevelIntroContent(
-            enemyImageRes = R.drawable.sombras_lv2,
-            enemyTitle = "Sombras errantes",
-            alertMessage = "Se detectó actividad inusual en la zona. Evita el contacto visual prolongado.",
-            difficulty = "Baja",
-            behavior = "Siguen rutas fijas en zonas oscuras. Pueden bloquear caminos si no calculas bien tu ruta.",
-            tip = "Observa su recorrido antes de avanzar. Evita calles con poca luz y no improvises giros innecesarios."
-        )
-
-        2 -> LevelIntroContent(
-            enemyImageRes = R.drawable.lobos_lv3,
-            enemyTitle = "Lobos callejeros",
-            alertMessage = "Se oyen ladridos cerca de la ruta. Si escuchas garras, acelera.",
-            difficulty = "Media",
-            behavior = "Parecen patrullar las calles. Son rápidos y no se cansan fácil.",
-            tip = "No te acerques demasiado y evita calles sin salida. Si uno te detecta, busca una ruta abierta para escapar."
-        )
-
-        3 -> LevelIntroContent(
-            enemyImageRes = R.drawable.deformes_lv4,
-            enemyTitle = "Clientes deformes",
-            alertMessage = "Algunos clientes son demasiado impacientes para esperar por su pedido, así que salen por él.",
-            difficulty = "Alta",
-            behavior = "Permanecen quietos hasta que entras en su rango. No te acerques demasiado.",
-            tip = "Entrega rápido y mantén distancia. Si uno comienza a moverse, no te quedes cerca."
-        )
-
-        4 -> LevelIntroContent(
-            enemyImageRes = R.drawable.repartidores_lv5,
-            enemyTitle = "Repartidores perdidos",
-            alertMessage = "Si no completas tu jornada, podrías terminar trabajando para esta dimensión igual que ellos.",
-            difficulty = "Muy alta",
-            behavior = "Intentan quitarte los pedidos para entregarlos ellos, aferrados a la esperanza de volver a casa.",
-            tip = "Protege tus pedidos y no entres en su ruta. Si se acercan demasiado, cambia de dirección antes de que te alcancen."
-        )
-
-        else -> LevelIntroContent(
-            enemyImageRes = R.drawable.sombras_lv2,
-            enemyTitle = "Actividad desconocida",
-            alertMessage = "La noche presenta anomalías. Mantente alerta.",
-            difficulty = "Desconocida",
-            behavior = "No se ha identificado un patrón estable.",
-            tip = "Avanza con cautela y prioriza salir de la zona."
-        )
-    }
 }

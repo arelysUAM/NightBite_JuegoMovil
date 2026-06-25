@@ -25,6 +25,7 @@ class SessionManager(
         private val EMAIL = stringPreferencesKey("email")
         private val AGE = intPreferencesKey("age")
         private val HAS_PLAYER = booleanPreferencesKey("has_player")
+        private val PLAYER_GENDER = stringPreferencesKey("player_gender")
         private val LAST_ACTIVE_TIME = longPreferencesKey("last_active_time")
     }
 
@@ -36,7 +37,8 @@ class SessionManager(
                 username = preferences[USERNAME] ?: "",
                 email = preferences[EMAIL] ?: "",
                 age = preferences[AGE],
-                hasPlayer = preferences[HAS_PLAYER] ?: false
+                hasPlayer = preferences[HAS_PLAYER] ?: false,
+                playerGender = preferences[PLAYER_GENDER] ?: ""
             )
         }
 
@@ -50,12 +52,19 @@ class SessionManager(
             preferences[EMAIL] = user.email
             preferences[AGE] = user.age
             preferences[HAS_PLAYER] = user.player != null
+            preferences[PLAYER_GENDER] = user.player?.gender.orEmpty()
         }
     }
 
-    suspend fun markPlayerCreated() {
+    suspend fun markPlayerCreated(
+        gender: String = ""
+    ) {
         context.sessionDataStore.edit { preferences ->
             preferences[HAS_PLAYER] = true
+
+            if (gender.isNotBlank()) {
+                preferences[PLAYER_GENDER] = gender
+            }
         }
     }
 

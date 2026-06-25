@@ -1,39 +1,99 @@
 package ni.edu.uam.nightbiteapp.ui.model
 
 /**
- * Contenido que se mostrará en una pantalla de resultado.
+ * Paleta visual que debe usar la pantalla de resultado.
  *
- * Este modelo separa la información narrativa y visual
- * de la lógica de navegación de GameResultScreen.
+ * PURPLE:
+ * - Fondo fondo_estampado_morado.png
+ * - Resultado superado o completado
+ *
+ * RED:
+ * - Fondo partida_perdida.png
+ * - Resultado perdido o final negativo
+ */
+enum class GameResultPalette {
+    PURPLE,
+    RED
+}
+
+/**
+ * Modelo visual para una pantalla de resultado.
+ *
+ * Este contenido no calcula la lógica del juego.
+ * Solo guarda lo que la pantalla debe mostrar:
+ * título, subtítulo, estrellas, tiempo, pedidos, paleta y botones.
  */
 data class GameResultContent(
     val title: String,
     val subtitle: String,
     val message: String,
-    val details: List<String> = emptyList(),
 
     /**
-     * Cantidad de estrellas obtenidas durante el tutorial.
-     * Es null para las noches normales y la noche final.
+     * Estrellas obtenidas en la jornada.
      */
     val stars: Int? = null,
 
     /**
-     * Texto relacionado con una recompensa:
-     * medalla, desbloqueo de nivel o paga final.
+     * Datos temporales para mostrar en la pantalla de resultado.
+     * Más adelante vendrán del gameplay real.
+     */
+    val timeText: String = "0:00",
+    val completedOrders: Int = 0,
+    val totalOrders: Int = 8,
+
+    /**
+     * Paleta visual de la pantalla.
+     */
+    val palette: GameResultPalette = GameResultPalette.PURPLE,
+
+    /**
+     * Resumen narrativo o técnico del resultado.
+     */
+    val details: List<String> = emptyList(),
+
+    /**
+     * Recompensa o consecuencia del resultado.
+     * Ejemplo: "Noche 2 desbloqueada".
      */
     val rewardMessage: String? = null,
 
     /**
-     * Describe la ilustración que se agregará después.
-     *
-     * Por ahora puede mostrarse como texto temporal.
+     * Descripción temporal para ilustraciones pendientes.
      */
     val illustrationDescription: String? = null,
 
     /**
-     * Permite distinguir visualmente los resultados
-     * correspondientes a la noche final.
+     * Marca resultados correspondientes al nivel final.
      */
-    val isFinalResult: Boolean = false
-)
+    val isFinalResult: Boolean = false,
+
+    /**
+     * Control visual de botones.
+     *
+     * showContinueButton representa el botón "Siguiente".
+     */
+    val showContinueButton: Boolean = false,
+    val showRetryButton: Boolean = true,
+    val showHomeButton: Boolean = true
+) {
+    val safeStars: Int
+        get() = (stars ?: 0).coerceIn(0, 3)
+
+    val safeCompletedOrders: Int
+        get() = completedOrders.coerceIn(0, totalOrders.coerceAtLeast(0))
+
+    val safeTotalOrders: Int
+        get() = totalOrders.coerceAtLeast(0)
+
+    val ordersText: String
+        get() = "$safeCompletedOrders/$safeTotalOrders"
+
+    val isPerfectResult: Boolean
+        get() = safeStars == 3
+
+    val usesPurplePalette: Boolean
+        get() = palette == GameResultPalette.PURPLE
+
+    val usesRedPalette: Boolean
+        get() = palette == GameResultPalette.RED
+}

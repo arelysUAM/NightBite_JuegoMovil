@@ -1,16 +1,22 @@
 package ni.edu.uam.nightbiteapp.navigation
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -33,11 +39,13 @@ import ni.edu.uam.nightbiteapp.ui.screens.GenderSelectionScreen
 import ni.edu.uam.nightbiteapp.ui.screens.HomeScreen
 import ni.edu.uam.nightbiteapp.ui.screens.LevelIntroScreen
 import ni.edu.uam.nightbiteapp.ui.screens.LoginScreen
+import ni.edu.uam.nightbiteapp.ui.screens.PasswordScreen
+import ni.edu.uam.nightbiteapp.ui.screens.AchievementsScreen
 import ni.edu.uam.nightbiteapp.ui.screens.PlayerCreationScreen
-import ni.edu.uam.nightbiteapp.ui.screens.PlayerDetailScreen
 import ni.edu.uam.nightbiteapp.ui.screens.RegisterScreen
 import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
 import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
+import ni.edu.uam.nightbiteapp.ui.screens.TutorialLoadingScreen
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModelFactory
@@ -45,14 +53,7 @@ import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModelFactory
-import android.widget.Toast
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.DisposableEffect
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import ni.edu.uam.nightbiteapp.ui.screens.PasswordScreen
-import ni.edu.uam.nightbiteapp.ui.screens.TutorialLoadingScreen
+import ni.edu.uam.nightbiteapp.ui.screens.WantedPosterTransitionScreen
 
 @Composable
 fun AppNavigation() {
@@ -302,9 +303,12 @@ fun AppNavigation() {
         }
 
         composable(Routes.GENDER_SELECTION) {
-            val playerCreationViewModel: PlayerCreationViewModel = viewModel(
-                factory = PlayerCreationViewModelFactory(sessionManager)
-            )
+            val playerCreationViewModel: PlayerCreationViewModel =
+                viewModel(
+                    factory = PlayerCreationViewModelFactory(sessionManager)
+                )
+
+            val playerCreationUiState by playerCreationViewModel.uiState.collectAsState()
 
             GenderSelectionScreen(
                 viewModel = playerCreationViewModel,
@@ -316,7 +320,9 @@ fun AppNavigation() {
                     showLastStepsWelcomeMessage = false
 
                     coroutineScope.launch {
-                        sessionManager.markPlayerCreated()
+                        sessionManager.markPlayerCreated(
+                            gender = playerCreationUiState.gender
+                        )
                     }
 
                     navController.navigate(Routes.HOME) {
@@ -330,7 +336,6 @@ fun AppNavigation() {
         }
 
         composable(Routes.HOME) {
-
             LaunchedEffect(showHomeWelcomeToast) {
                 if (showHomeWelcomeToast) {
                     Toast.makeText(
@@ -353,14 +358,11 @@ fun AppNavigation() {
                         navController.navigate(Routes.levelIntro(levelId))
                     }
                 },
-                onNavigateToPlayerDetail = {
-                    navController.navigate(Routes.PLAYER_DETAIL)
-                },
                 onNavigateToPlayerCreation = {
                     navController.navigate(Routes.PLAYER_CREATION)
                 },
                 onNavigateToAchievements = {
-                    // Pendiente: crear pantalla de logros.
+                    navController.navigate(Routes.ACHIEVEMENTS)
                 },
                 onNavigateToSettings = {
                     navController.navigate(Routes.SETTINGS)
@@ -439,17 +441,70 @@ fun AppNavigation() {
             )
         ) { backStackEntry ->
             val levelId = backStackEntry.arguments?.getInt("levelId") ?: 0
+            val currentUserId = activeUserId ?: userSession.userId
+
+            fun savePlaceholderResult(
+                resultType: GameResultType,
+                stars: Int
+            ) {
+                val resultContent = GameResultsData.getResultContent(
+                    levelId = levelId,
+                    resultType = resultType,
+                    stars = stars
+                )
+
+                val starsToSave = resultContent.safeStars
+
+                NightProgressData.saveLevelStars(
+                    userId = currentUserId,
+                    levelId = levelId,
+                    stars = starsToSave
+                )
+
+                val shouldUnlockNextLevel =
+                    resultType.unlocksNextLevel &&
+                            starsToSave == 3 &&
+                            levelId < 4
+
+                if (shouldUnlockNextLevel) {
+                    NightProgressData.unlockNextLevel(
+                        userId = currentUserId,
+                        completedLevelId = levelId
+                    )
+                }
+            }
 
             GamePlaceholderScreen(
                 levelId = levelId,
                 onNavigateToResult = { resultType, stars ->
-                    navController.navigate(
-                        Routes.gameResult(
-                            levelId = levelId,
-                            resultType = resultType.name,
-                            stars = stars
-                        )
+                    savePlaceholderResult(
+                        resultType = resultType,
+                        stars = stars
                     )
+
+                    val shouldShowWantedPoster =
+                        shouldShowWantedPosterTransition(
+                            levelId = levelId,
+                            resultType = resultType
+                        )
+
+                    if (shouldShowWantedPoster) {
+                        navController.navigate(
+                            Routes.wantedPosterTransition(
+                                levelId = levelId,
+                                resultType = resultType.name,
+                                stars = stars
+                            )
+                        )
+                    } else {
+                        navController.navigate(
+                            Routes.gameResult(
+                                levelId = levelId,
+                                resultType = resultType.name,
+                                stars = stars
+                            )
+                        )
+                    }
                 },
                 onRestartLevel = {
                     navController.navigate(
@@ -460,6 +515,50 @@ fun AppNavigation() {
                 },
                 onBackToHome = {
                     navigateBackToHome()
+                }
+            )
+        }
+
+        composable(
+            route = Routes.WANTED_POSTER_TRANSITION,
+            arguments = listOf(
+                navArgument("levelId") {
+                    type = NavType.IntType
+                },
+                navArgument("resultType") {
+                    type = NavType.StringType
+                },
+                navArgument("stars") {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStackEntry ->
+            val levelId = backStackEntry.arguments?.getInt("levelId") ?: 0
+
+            val resultTypeName =
+                backStackEntry.arguments?.getString("resultType")
+                    ?: GameResultType.LEVEL_OUT_OF_LIVES.name
+
+            val stars = backStackEntry.arguments
+                ?.getInt("stars")
+                ?.coerceIn(0, 3)
+                ?: 0
+
+            WantedPosterTransitionScreen(
+                playerGender = userSession.playerGender,
+                onTransitionFinished = {
+                    navController.navigate(
+                        Routes.gameResult(
+                            levelId = levelId,
+                            resultType = resultTypeName,
+                            stars = stars
+                        )
+                    ) {
+                        popUpTo(Routes.WANTED_POSTER_TRANSITION) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -514,41 +613,53 @@ fun AppNavigation() {
                     stars = earnedStars
                 )
 
-                val isSuccessfulResult =
-                    resultType == GameResultType.VICTORY ||
-                            resultType == GameResultType.FINAL_VICTORY ||
-                            resultType == GameResultType.TUTORIAL_THREE_STARS ||
-                            resultType == GameResultType.TUTORIAL_TWO_STARS ||
-                            resultType == GameResultType.TUTORIAL_ONE_STAR
-
+                val currentUserId = activeUserId ?: userSession.userId
+                val starsToSave = resultContent.safeStars
                 val shouldUnlockNextLevel =
-                    isSuccessfulResult && earnedStars == 3
+                    resultType.unlocksNextLevel && starsToSave == 3
+
+                fun saveResultProgress() {
+                    if (resultType.shouldSaveStars) {
+                        NightProgressData.saveLevelStars(
+                            userId = currentUserId,
+                            levelId = levelId,
+                            stars = starsToSave
+                        )
+                    }
+                }
+
+                fun unlockNextLevelIfNeeded() {
+                    if (shouldUnlockNextLevel) {
+                        NightProgressData.unlockNextLevel(
+                            userId = currentUserId,
+                            completedLevelId = levelId
+                        )
+                    }
+                }
+
+                LaunchedEffect(
+                    currentUserId,
+                    levelId,
+                    resultType,
+                    starsToSave
+                ) {
+                    saveResultProgress()
+                }
 
                 GameResultScreen(
+                    levelId = levelId,
                     resultType = resultType,
-                    content = resultContent,
+                    stars = earnedStars,
                     onRetryLevel = {
+                        saveResultProgress()
+
                         navController.popBackStack()
                     },
-                    onContinue = {
-                        val currentUserId = activeUserId ?: userSession.userId
+                    onContinueToNextLevel = {
+                        saveResultProgress()
+                        unlockNextLevelIfNeeded()
 
-                        if (isSuccessfulResult) {
-                            NightProgressData.saveLevelStars(
-                                userId = currentUserId,
-                                levelId = levelId,
-                                stars = earnedStars
-                            )
-                        }
-
-                        if (shouldUnlockNextLevel) {
-                            NightProgressData.unlockNextLevel(
-                                userId = currentUserId,
-                                completedLevelId = levelId
-                            )
-                        }
-
-                        if (resultType == GameResultType.FINAL_VICTORY) {
+                        if (resultType == GameResultType.FINAL_WIN) {
                             navigateBackToHome()
                         } else if (shouldUnlockNextLevel) {
                             val nextLevelId = levelId + 1
@@ -565,23 +676,25 @@ fun AppNavigation() {
                         }
                     },
                     onBackToHome = {
+                        saveResultProgress()
+
                         navigateBackToHome()
                     }
                 )
             }
         }
 
-        composable(Routes.PLAYER_DETAIL) {
-            PlayerDetailScreen(
-                userId = activeUserId ?: userSession.userId,
+        composable(Routes.ACHIEVEMENTS) {
+            AchievementsScreen(
+                userSession = userSession,
+                currentLevel = NightProgressData.getMaxUnlockedLevel(
+                    activeUserId ?: userSession.userId
+                ) + 1,
+                starsByLevel = NightProgressData.getStarsByLevel(
+                    activeUserId ?: userSession.userId
+                ),
                 onBackToHome = {
                     navController.popBackStack()
-                },
-                onNavigateToPlayerCreation = {
-                    navController.navigate(Routes.PLAYER_CREATION)
-                },
-                onEditPlayer = {
-                    // Pendiente.
                 }
             )
         }
@@ -594,10 +707,11 @@ fun AppNavigation() {
             PlayerCreationScreen(
                 viewModel = playerCreationViewModel,
                 onPlayerCreated = {
-                    navController.navigate(Routes.PLAYER_DETAIL) {
+                    navController.navigate(Routes.HOME) {
                         popUpTo(Routes.PLAYER_CREATION) {
                             inclusive = true
                         }
+                        launchSingleTop = true
                     }
                 },
                 onBackToHome = {
@@ -771,16 +885,17 @@ fun AppNavigation() {
     }
 }
 
-private fun tutorialStarsForResult(
+private fun shouldShowWantedPosterTransition(
+    levelId: Int,
     resultType: GameResultType
-): Int? {
-    return when (resultType) {
-        GameResultType.TUTORIAL_THREE_STARS -> 3
-        GameResultType.TUTORIAL_TWO_STARS -> 2
-        GameResultType.TUTORIAL_ONE_STAR -> 1
-        GameResultType.FIRED -> 0
-        else -> null
-    }
+): Boolean {
+    val isOutOfLivesResult =
+        resultType == GameResultType.LEVEL_OUT_OF_LIVES ||
+                resultType == GameResultType.FINAL_OUT_OF_LIVES
+
+    val isAfterTutorial = levelId in 1..4
+
+    return isAfterTutorial && isOutOfLivesResult
 }
 
 private const val INACTIVITY_LIMIT_MILLIS = 5 * 60 * 1000L

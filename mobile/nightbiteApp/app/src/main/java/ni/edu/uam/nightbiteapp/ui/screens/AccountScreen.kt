@@ -59,20 +59,19 @@ import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
 import ni.edu.uam.nightbiteapp.ui.design.NightShapes
 import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.design.SettingsDimensions
+import ni.edu.uam.nightbiteapp.ui.theme.AccountBorderBlue
+import ni.edu.uam.nightbiteapp.ui.theme.AccountButtonPurple
+import ni.edu.uam.nightbiteapp.ui.theme.AccountFieldCream
+import ni.edu.uam.nightbiteapp.ui.theme.AccountFieldText
+import ni.edu.uam.nightbiteapp.ui.theme.AccountHeaderPurple
+import ni.edu.uam.nightbiteapp.ui.theme.AccountInnerPurple
+import ni.edu.uam.nightbiteapp.ui.theme.AccountPanelBlue
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModel
-
-private val AccountPanelBlue = Color(0xFF7B92E8)
-private val AccountHeaderPurple = Color(0xFF5F56CA)
-private val AccountButtonPurple = Color(0xFF3E2EA8)
-private val AccountInnerPurple = Color(0xFF21143F)
-private val AccountFieldCream = Color(0xFFF7F1DE)
-private val AccountFieldText = Color(0xFF21143F)
-private val AccountBorderBlue = Color(0xFF556DCE)
 
 @Composable
 fun AccountScreen(
@@ -117,8 +116,6 @@ fun AccountScreen(
             val cardHeight =
                 350.dp.coerceAtMost(maxHeight - 10.dp)
 
-            val compactHeight = false
-
             Image(
                 painter = painterResource(id = R.drawable.boton_volver),
                 contentDescription = "Volver",
@@ -136,7 +133,6 @@ fun AccountScreen(
                     .align(Alignment.Center)
                     .width(cardWidth)
                     .height(cardHeight),
-                compactHeight = compactHeight,
                 username = uiState.username,
                 email = uiState.email,
                 age = uiState.age,
@@ -194,7 +190,6 @@ fun AccountScreen(
 @Composable
 private fun AccountInfoCard(
     modifier: Modifier,
-    compactHeight: Boolean,
     username: String,
     email: String,
     age: String,
@@ -275,6 +270,16 @@ private fun AccountInfoCard(
             )
 
             Spacer(modifier = Modifier.height(NightSpacing.medium))
+
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage,
+                    color = PizzaRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
@@ -380,7 +385,7 @@ private fun EditableAccountPanel(
             value = username,
             enabled = isEditing && !isLoading,
             errorMessage = usernameError,
-            onValueChange = onUsernameChange,
+            onValueChange = onUsernameChange
         )
 
         Spacer(modifier = Modifier.height(2.dp))
@@ -451,6 +456,7 @@ private fun AccountFieldGroup(
         )
     }
 }
+
 @Composable
 private fun AccountGenderGroup(
     labelWidth: Dp,
@@ -500,6 +506,7 @@ private fun AccountFieldLabel(
         modifier = Modifier.width(width)
     )
 }
+
 @Composable
 private fun AccountSmallTextField(
     value: String,
@@ -548,6 +555,7 @@ private fun AccountSmallTextField(
             )
     )
 }
+
 @Composable
 private fun AccountGenderDropdown(
     selectedGender: String,
@@ -630,6 +638,7 @@ private fun AccountGenderDropdown(
         }
     }
 }
+
 @Composable
 private fun AccountFieldError(
     errorMessage: String?,

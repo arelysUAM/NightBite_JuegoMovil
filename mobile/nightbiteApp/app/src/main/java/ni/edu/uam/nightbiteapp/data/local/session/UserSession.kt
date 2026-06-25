@@ -6,5 +6,6 @@ data class UserSession(
     val username: String = "",
     val email: String = "",
     val age: Int? = null,
-    val hasPlayer: Boolean = false
+    val hasPlayer: Boolean = false,
+    val playerGender: String = ""
 )
