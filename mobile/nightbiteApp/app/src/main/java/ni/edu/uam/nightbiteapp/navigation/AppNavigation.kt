@@ -59,6 +59,8 @@ import ni.edu.uam.nightbiteapp.game.TutorialGameResult
 import androidx.compose.runtime.key
 import ni.edu.uam.nightbiteapp.data.local.database.NightBiteDatabase
 import ni.edu.uam.nightbiteapp.data.repository.GameProgressRepository
+import ni.edu.uam.nightbiteapp.data.remote.RetrofitClient
+import ni.edu.uam.nightbiteapp.data.repository.ProgressSyncRepository
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -71,11 +73,22 @@ fun AppNavigation() {
         SessionManager(context.applicationContext)
     }
 
-    val gameProgressRepository = remember {
-        GameProgressRepository(
-            NightBiteDatabase
-                .getDatabase(context.applicationContext)
-                .gameProgressDao()
+    val nightBiteDatabase = remember(context) {
+        NightBiteDatabase.getDatabase(context.applicationContext)
+    }
+
+    val gameProgressDao = remember(nightBiteDatabase) {
+        nightBiteDatabase.gameProgressDao()
+    }
+
+    val gameProgressRepository = remember(gameProgressDao) {
+        GameProgressRepository(gameProgressDao)
+    }
+
+    val progressSyncRepository = remember(gameProgressDao) {
+        ProgressSyncRepository(
+            gameProgressDao = gameProgressDao,
+            apiService = RetrofitClient.apiService
         )
     }
 
@@ -723,6 +736,10 @@ fun AppNavigation() {
                                 userId = currentUserId,
                                 completedLevelId = levelId
                             )
+                        }
+
+                        if (currentUserId != 0L) {
+                            progressSyncRepository.syncProgress(currentUserId)
                         }
 
                         homeRefreshKey += 1

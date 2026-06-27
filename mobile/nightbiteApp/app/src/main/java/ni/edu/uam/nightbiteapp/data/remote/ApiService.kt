@@ -18,6 +18,8 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import ni.edu.uam.nightbiteapp.data.remote.dto.ProgressResponse
+import ni.edu.uam.nightbiteapp.data.remote.dto.ProgressSyncRequest
 
 /**
  * Define los endpoints remotos que Android consumirá desde la API de Spring Boot.
@@ -96,4 +98,15 @@ interface ApiService {
     suspend fun deleteUser(
         @Path("id") id: Long
     ): Response<MessageResponse>
+
+    @GET("api/progress/account/{userAccountId}")
+    suspend fun getProgressByUserAccountId(
+        @Path("userAccountId") userAccountId: Long
+    ): Response<ProgressResponse>
+
+    @PUT("api/progress/account/{userAccountId}/sync")
+    suspend fun syncProgress(
+        @Path("userAccountId") userAccountId: Long,
+        @Body request: ProgressSyncRequest
+    ): Response<ProgressResponse>
 }

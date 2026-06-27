@@ -79,6 +79,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import ni.edu.uam.nightbiteapp.data.local.database.NightBiteDatabase
 import ni.edu.uam.nightbiteapp.data.repository.GameProgressRepository
 import androidx.compose.ui.zIndex
+import ni.edu.uam.nightbiteapp.data.remote.RetrofitClient
+import ni.edu.uam.nightbiteapp.data.repository.ProgressSyncRepository
 
 
 @Suppress("UNUSED_PARAMETER")
@@ -103,11 +105,22 @@ fun HomeScreen(
     val resolvedUserId = userId ?: userSession.userId
     val safeUserId = resolvedUserId ?: 0L
 
-    val gameProgressRepository = remember(context) {
-        GameProgressRepository(
-            NightBiteDatabase
-                .getDatabase(context.applicationContext)
-                .gameProgressDao()
+    val nightBiteDatabase = remember(context) {
+        NightBiteDatabase.getDatabase(context.applicationContext)
+    }
+
+    val gameProgressDao = remember(nightBiteDatabase) {
+        nightBiteDatabase.gameProgressDao()
+    }
+
+    val gameProgressRepository = remember(gameProgressDao) {
+        GameProgressRepository(gameProgressDao)
+    }
+
+    val progressSyncRepository = remember(gameProgressDao) {
+        ProgressSyncRepository(
+            gameProgressDao = gameProgressDao,
+            apiService = RetrofitClient.apiService
         )
     }
 
@@ -167,6 +180,10 @@ fun HomeScreen(
 
     LaunchedEffect(resolvedUserId) {
         homeViewModel.loadHomeData(resolvedUserId)
+
+        if (safeUserId != 0L) {
+            progressSyncRepository.syncProgress(safeUserId)
+        }
     }
 
     DisposableEffect(lifecycleOwner, resolvedUserId) {
