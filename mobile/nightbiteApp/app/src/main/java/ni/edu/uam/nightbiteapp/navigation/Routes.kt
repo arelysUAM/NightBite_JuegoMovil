@@ -21,6 +21,7 @@ object Routes {
     const val ACHIEVEMENTS = "achievements"
 
     const val TUTORIAL_LOADING = "tutorial_loading"
+    const val TUTORIAL_GAME = "tutorial_game"
 
     const val LEVEL_INTRO = "level_intro/{levelId}"
     const val GAME_PLACEHOLDER = "game_placeholder/{levelId}"

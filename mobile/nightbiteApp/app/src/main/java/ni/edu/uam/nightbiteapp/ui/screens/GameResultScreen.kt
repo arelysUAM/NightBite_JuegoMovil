@@ -67,10 +67,14 @@ fun GameResultScreen(
     levelId: Int,
     resultType: GameResultType,
     stars: Int,
+    runtimeTimeText: String? = null,
+    runtimeCompletedOrders: Int? = null,
+    runtimeTotalOrders: Int? = null,
+    runtimeAverageDeliveryTimeText: String? = null,
     onContinueToNextLevel: () -> Unit,
     onRetryLevel: () -> Unit,
     onBackToHome: () -> Unit
-) {
+){
     val content = GameResultsData.getResultContent(
         levelId = levelId,
         resultType = resultType,
@@ -102,7 +106,11 @@ fun GameResultScreen(
             resultType = resultType,
             layout = layout,
             colors = colors,
+            runtimeTimeText = runtimeTimeText,
+            runtimeCompletedOrders = runtimeCompletedOrders,
+            runtimeTotalOrders = runtimeTotalOrders,
             onContinueToNextLevel = onContinueToNextLevel,
+            runtimeAverageDeliveryTimeText = runtimeAverageDeliveryTimeText,
             onRetryLevel = onRetryLevel,
             onBackToHome = onBackToHome,
             modifier = Modifier.align(Alignment.Center)
@@ -133,6 +141,10 @@ private fun ResultCard(
     resultType: GameResultType,
     layout: ResultLayout,
     colors: ResultCardColors,
+    runtimeTimeText: String?,
+    runtimeCompletedOrders: Int?,
+    runtimeTotalOrders: Int?,
+    runtimeAverageDeliveryTimeText: String?,
     onContinueToNextLevel: () -> Unit,
     onRetryLevel: () -> Unit,
     onBackToHome: () -> Unit,
@@ -213,7 +225,11 @@ private fun ResultCard(
             ResultMetricsBlock(
                 content = content,
                 layout = layout,
-                colors = colors
+                colors = colors,
+                runtimeTimeText = runtimeTimeText,
+                runtimeCompletedOrders = runtimeCompletedOrders,
+                runtimeTotalOrders = runtimeTotalOrders,
+                runtimeAverageDeliveryTimeText = runtimeAverageDeliveryTimeText
             )
 
             Spacer(modifier = Modifier.height(layout.metricsToActionsSpacing))
@@ -302,8 +318,18 @@ private fun ResultSubtitle(
 private fun ResultMetricsBlock(
     content: GameResultContent,
     layout: ResultLayout,
-    colors: ResultCardColors
-) {
+    colors: ResultCardColors,
+    runtimeTimeText: String?,
+    runtimeCompletedOrders: Int?,
+    runtimeTotalOrders: Int?,
+    runtimeAverageDeliveryTimeText: String?
+){
+
+    val ordersText = runtimeOrdersText(
+        completedOrders = runtimeCompletedOrders,
+        totalOrders = runtimeTotalOrders
+    ) ?: content.ordersText
+
     Row(
         modifier = Modifier
             .width(layout.metricsWidth)
@@ -316,21 +342,21 @@ private fun ResultMetricsBlock(
     ) {
         ResultMetric(
             label = "TIEMPO",
-            value = content.timeText,
+            value = runtimeTimeText ?: content.timeText,
             width = layout.metricWidth,
             colors = colors
         )
 
         ResultMetric(
             label = "PEDIDOS",
-            value = content.ordersText,
+            value = ordersText,
             width = layout.metricWidth,
             colors = colors
         )
 
         ResultMetric(
-            label = "ESTRELLAS",
-            value = "${content.safeStars}/3",
+            label = "PROM. ENTREGA",
+            value = runtimeAverageDeliveryTimeText ?: "--",
             width = layout.metricWidth,
             colors = colors
         )
@@ -477,6 +503,21 @@ private fun starsDrawableFor(
         2 -> R.drawable.estrellas_2
         else -> R.drawable.estrellas_3
     }
+}
+
+private fun runtimeOrdersText(
+    completedOrders: Int?,
+    totalOrders: Int?
+): String? {
+    if (completedOrders == null || totalOrders == null) return null
+
+    val safeTotalOrders = totalOrders.coerceAtLeast(0)
+    val safeCompletedOrders = completedOrders.coerceIn(
+        minimumValue = 0,
+        maximumValue = safeTotalOrders
+    )
+
+    return "$safeCompletedOrders/$safeTotalOrders"
 }
 
 private fun continueButtonDescription(
