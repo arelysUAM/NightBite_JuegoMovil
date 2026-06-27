@@ -42,4 +42,14 @@ public class ProgressController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/account/{userAccountId}/reset")
+    public ResponseEntity<ProgressResponse> resetProgress(
+            @PathVariable Long userAccountId
+    ) {
+        ProgressResponse response =
+                progressService.resetProgress(userAccountId);
+
+        return ResponseEntity.ok(response);
+    }
 }

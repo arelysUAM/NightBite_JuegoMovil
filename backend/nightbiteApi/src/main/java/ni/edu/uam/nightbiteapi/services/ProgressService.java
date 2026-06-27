@@ -15,6 +15,7 @@ import ni.edu.uam.nightbiteapi.repositories.PlayerProgressRepository;
 import ni.edu.uam.nightbiteapi.repositories.UserAccountRepository;
 import ni.edu.uam.nightbiteapi.repositories.UserBadgeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -95,6 +96,25 @@ public class ProgressService {
         return buildProgressResponse(
                 userAccount,
                 updatedProgress
+        );
+    }
+
+    @Transactional
+    public ProgressResponse resetProgress(Long userAccountId) {
+        UserAccount userAccount = getUserAccountOrThrow(userAccountId);
+
+        levelResultRepository.deleteByUserAccountId(userAccountId);
+        userBadgeRepository.deleteByUserAccountId(userAccountId);
+
+        PlayerProgress progress = getOrCreateProgress(userAccount);
+        progress.setMaxUnlockedLevel(0);
+
+        PlayerProgress resetProgress =
+                playerProgressRepository.save(progress);
+
+        return buildProgressResponse(
+                userAccount,
+                resetProgress
         );
     }
 

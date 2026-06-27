@@ -19,4 +19,6 @@ public interface UserBadgeRepository extends JpaRepository<UserBadge, Long> {
             Long userAccountId,
             Integer levelId
     );
+
+    void deleteByUserAccountId(Long userAccountId);
 }

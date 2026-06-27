@@ -14,4 +14,6 @@ public interface LevelResultRepository extends JpaRepository<LevelResult, Long> 
             Long userAccountId,
             Integer levelId
     );
+
+    void deleteByUserAccountId(Long userAccountId);
 }
