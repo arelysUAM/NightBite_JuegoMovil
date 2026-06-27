@@ -3,11 +3,14 @@ package ni.edu.uam.nightbiteapp.ui.screens
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,7 +19,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +42,6 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -50,16 +55,29 @@ import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightBackgroundType
 import ni.edu.uam.nightbiteapp.ui.components.layout.NightScreenContainer
 import ni.edu.uam.nightbiteapp.ui.design.NightDimensions
-import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.model.NightLevel
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.viewmodel.HomeViewModel
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.draw.clip
 import androidx.lifecycle.Lifecycle
+import androidx.compose.material3.Icon
 import androidx.lifecycle.LifecycleEventObserver
+import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelDepthBlue
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelBadgeBackground
+import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelBadgeText
+import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelBodyBlue
+import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelBorderBlue
+import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelHeaderBlue
+import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelMessageText
+import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelOverlay
+import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelShadowBlue
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.zIndex
+
 
 @Suppress("UNUSED_PARAMETER")
 @Composable
@@ -86,6 +104,10 @@ fun HomeScreen(
 
     var showMissingPlayerDialog by remember {
         mutableStateOf(false)
+    }
+
+    var lockedLevelSelected by remember {
+        mutableStateOf<NightLevel?>(null)
     }
 
     LaunchedEffect(resolvedUserId) {
@@ -178,18 +200,22 @@ fun HomeScreen(
                     HomeLevelsRow(
                         levels = uiState.levels,
                         layout = layout,
-                        onOpenLevel = { levelId ->
+                        onLevelClick = { level ->
                             when {
-                                uiState.hasPlayer -> {
-                                    onNavigateToLevelIntro(levelId)
-                                }
-
                                 uiState.userLoadFailed -> {
                                     homeViewModel.loadHomeData(resolvedUserId)
                                 }
 
-                                else -> {
+                                !uiState.hasPlayer -> {
                                     showMissingPlayerDialog = true
+                                }
+
+                                level.isUnlocked -> {
+                                    onNavigateToLevelIntro(level.id)
+                                }
+
+                                else -> {
+                                    lockedLevelSelected = level
                                 }
                             }
                         }
@@ -205,6 +231,15 @@ fun HomeScreen(
                     },
                     onDismiss = {
                         showMissingPlayerDialog = false
+                    }
+                )
+            }
+
+            lockedLevelSelected?.let { lockedLevel ->
+                LockedLevelDialog(
+                    lockedLevel = lockedLevel,
+                    onDismiss = {
+                        lockedLevelSelected = null
                     }
                 )
             }
@@ -350,7 +385,7 @@ private fun HomeSideMenuItem(
 private fun HomeLevelsRow(
     levels: List<NightLevel>,
     layout: HomeLayout,
-    onOpenLevel: (Int) -> Unit
+    onLevelClick: (NightLevel) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -367,9 +402,7 @@ private fun HomeLevelsRow(
                     level = level,
                     layout = layout,
                     onClick = {
-                        if (level.isUnlocked) {
-                            onOpenLevel(level.id)
-                        }
+                        onLevelClick(level)
                     }
                 )
             }
@@ -398,11 +431,9 @@ private fun HomeLevelItem(
         modifier = Modifier
             .width(layout.levelItemWidth)
             .height(layout.levelItemHeight)
-            .clickable(
-                enabled = level.isUnlocked
-            ) {
-                onClick()
-            },
+            .clickable {
+            onClick()
+        },
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -479,6 +510,173 @@ private fun MissingPlayerDialog(
         onConfirm = onCreatePlayer,
         onDismiss = onDismiss
     )
+}
+
+@Composable
+private fun LockedLevelDialog(
+    lockedLevel: NightLevel,
+    onDismiss: () -> Unit
+) {
+    val lockedLevelNumber = lockedLevel.id + 1
+    val previousLevelNumber = lockedLevel.id.coerceAtLeast(1)
+
+    BackHandler {
+        onDismiss()
+    }
+
+    val overlayInteractionSource = remember {
+        MutableInteractionSource()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(10f)
+            .background(LockedLevelOverlay)
+            .clickable(
+                interactionSource = overlayInteractionSource,
+                indication = null
+            ) {
+                // No hace nada.
+                // Solo consume el click para que no se pueda tocar el Home detrás.
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .width(270.dp)
+                .height(260.dp),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .offset(y = 8.dp)
+                    .width(222.dp)
+                    .height(212.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(LockedLevelDepthBlue)
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .width(222.dp)
+                    .height(212.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(LockedLevelBodyBlue)
+                    .border(
+                        width = 2.dp,
+                        color = LockedLevelBorderBlue,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            start = 14.dp,
+                            end = 14.dp,
+                            top = 28.dp,
+                            bottom = 12.dp
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(66.dp)
+                            .clip(CircleShape)
+                            .background(LockedLevelBadgeBackground),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Jornada bloqueada",
+                            tint = LockedLevelBadgeText,
+                            modifier = Modifier.size(38.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .width(132.dp)
+                            .height(34.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(LockedLevelBadgeBackground),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "BLOQUEADA",
+                            color = LockedLevelBadgeText,
+                            fontFamily = LilitaOne,
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "Entrega todos los pedidos del nivel $previousLevelNumber a tiempo para desbloquear esta jornada.",
+                        color = LockedLevelMessageText,
+                        textAlign = TextAlign.Center,
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp,
+                        maxLines = 4,
+                        modifier = Modifier.width(188.dp)
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .width(222.dp)
+                    .height(50.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(LockedLevelHeaderBlue)
+                    .border(
+                        width = 2.dp,
+                        color = LockedLevelBorderBlue,
+                        shape = RoundedCornerShape(10.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "JORNADA $lockedLevelNumber",
+                    color = SmokeWhite,
+                    fontFamily = LilitaOne,
+                    fontSize = 19.sp,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        shadow = Shadow(
+                            color = LockedLevelShadowBlue,
+                            offset = Offset(1.5f, 1.5f),
+                            blurRadius = 2f
+                        )
+                    )
+                )
+            }
+
+            Image(
+                painter = painterResource(id = R.drawable.boton_cancelar),
+                contentDescription = "Cerrar",
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(
+                        x = (-6).dp,
+                        y = (-12).dp
+                    )
+                    .size(52.dp)
+                    .clickable {
+                        onDismiss()
+                    },
+                contentScale = ContentScale.Fit
+            )
+        }
+    }
 }
 
 private fun homeLayoutFor(

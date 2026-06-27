@@ -113,7 +113,7 @@ fun AppNavigation() {
         }
     }
 
-    fun navigateToSafeRouteAfterInactivity(
+    fun navigateToStartAfterInactivity(
         session: UserSession
     ) {
         activeUserId = session.userId
@@ -122,13 +122,7 @@ fun AppNavigation() {
         showLastStepsWelcomeMessage = false
         showHomeWelcomeToast = false
 
-        val targetRoute = when {
-            !session.isLoggedIn -> Routes.START
-            session.hasPlayer -> Routes.HOME
-            else -> Routes.GENDER_SELECTION
-        }
-
-        navController.navigate(targetRoute) {
+        navController.navigate(Routes.START) {
             popUpTo(0) {
                 inclusive = true
             }
@@ -147,16 +141,16 @@ fun AppNavigation() {
 
                 Lifecycle.Event.ON_RESUME -> {
                     coroutineScope.launch {
-                        val lastActiveTime = sessionManager.getLastActiveTime()
-                        val currentTime = System.currentTimeMillis()
-                        val inactiveTime = currentTime - lastActiveTime
+                        val shouldResetNavigation =
+                            sessionManager.shouldResetNavigationByInactivity(
+                                inactivityLimitMillis = INACTIVITY_LIMIT_MILLIS
+                            )
 
-                        if (
-                            lastActiveTime > 0L &&
-                            inactiveTime >= INACTIVITY_LIMIT_MILLIS
-                        ) {
-                            navigateToSafeRouteAfterInactivity(userSession)
+                        if (shouldResetNavigation) {
+                            navigateToStartAfterInactivity(userSession)
                         }
+
+                        sessionManager.updateLastActiveTime()
                     }
                 }
 
@@ -898,4 +892,4 @@ private fun shouldShowWantedPosterTransition(
     return isAfterTutorial && isOutOfLivesResult
 }
 
-private const val INACTIVITY_LIMIT_MILLIS = 5 * 60 * 1000L
+private const val INACTIVITY_LIMIT_MILLIS = 10 * 60 * 1000L

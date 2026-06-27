@@ -53,6 +53,7 @@ class SessionManager(
             preferences[AGE] = user.age
             preferences[HAS_PLAYER] = user.player != null
             preferences[PLAYER_GENDER] = user.player?.gender.orEmpty()
+            preferences[LAST_ACTIVE_TIME] = System.currentTimeMillis()
         }
     }
 
@@ -65,6 +66,14 @@ class SessionManager(
             if (gender.isNotBlank()) {
                 preferences[PLAYER_GENDER] = gender
             }
+
+            preferences[LAST_ACTIVE_TIME] = System.currentTimeMillis()
+        }
+    }
+
+    suspend fun updateLastActiveTime() {
+        context.sessionDataStore.edit { preferences ->
+            preferences[LAST_ACTIVE_TIME] = System.currentTimeMillis()
         }
     }
 
@@ -77,11 +86,24 @@ class SessionManager(
     }
 
     suspend fun getLastActiveTime(): Long {
-        return context.sessionDataStore.data
-            .map { preferences ->
-                preferences[LAST_ACTIVE_TIME] ?: 0L
-            }
-            .first()
+        val preferences = context.sessionDataStore.data.first()
+
+        return preferences[LAST_ACTIVE_TIME] ?: 0L
+    }
+
+    suspend fun shouldResetNavigationByInactivity(
+        inactivityLimitMillis: Long
+    ): Boolean {
+        val lastActiveTime = getLastActiveTime()
+
+        if (lastActiveTime <= 0L) {
+            updateLastActiveTime()
+            return false
+        }
+
+        val elapsedTime = System.currentTimeMillis() - lastActiveTime
+
+        return elapsedTime >= inactivityLimitMillis
     }
 
     suspend fun clearSession() {

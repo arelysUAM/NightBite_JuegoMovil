@@ -108,3 +108,14 @@ val IntroTextDark = Color(0xFF1D1547)
 val IntroTextPurple = Color(0xFF432D7D)
 val IntroWarningBg = Color(0xFFFFC8CE)
 val IntroDataBorder = Color(0xFF3E256F)
+
+// HomeScreen - diálogo de nivel bloqueado
+val LockedLevelOverlay = Color(0xB3120E2E)
+val LockedLevelHeaderBlue = Color(0xFF4B86B6)
+val LockedLevelBodyBlue = Color(0xFF5A97C8)
+val LockedLevelBorderBlue = Color(0xFF2E6C98)
+val LockedLevelShadowBlue = Color(0xFF2C5A83)
+val LockedLevelBadgeBackground = Color(0xFFF2F2F2)
+val LockedLevelBadgeText = Color(0xFF3F719A)
+val LockedLevelMessageText = SmokeWhite
+val LockedLevelDepthBlue = Color(0xFF2E6C98)

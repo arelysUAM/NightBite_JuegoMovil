@@ -52,7 +52,6 @@ import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.ResultPurpleBody
 import ni.edu.uam.nightbiteapp.ui.theme.ResultPurpleCard
 import ni.edu.uam.nightbiteapp.ui.theme.ResultPurpleHeader
-import ni.edu.uam.nightbiteapp.ui.theme.ResultPurpleMetricBackground
 import ni.edu.uam.nightbiteapp.ui.theme.ResultPurpleTab
 import ni.edu.uam.nightbiteapp.ui.theme.ResultRedAccent
 import ni.edu.uam.nightbiteapp.ui.theme.ResultRedBody
@@ -558,27 +557,32 @@ private fun resultLayoutFor(
         cardWidth = cardWidth,
         cardHeight = cardHeight,
         cardBodyHeight = cardBodyHeight,
-        headerWidth = if (compactHeight) 260.dp else 292.dp,
+        headerWidth = if (compactHeight) 275.dp else 310.dp,
         headerHeight = if (compactHeight) 54.dp else 62.dp,
         headerDepthOffset = if (compactHeight) 7.dp else 8.dp,
+
         bodyHorizontalPadding = if (compactHeight) 34.dp else 42.dp,
-        bodyTopPadding = if (compactHeight) 42.dp else 48.dp,
-        bodyBottomPadding = if (compactHeight) 16.dp else 20.dp,
-        titleSize = if (compactHeight) 25.sp else 28.sp,
+        bodyTopPadding = if (compactHeight) 38.dp else 42.dp,
+        bodyBottomPadding = if (compactHeight) 8.dp else 12.dp,
+
+        titleSize = if (compactHeight) 22.sp else 25.sp,
         subtitleSize = if (compactHeight) 18.sp else 20.sp,
         subtitleLineHeight = if (compactHeight) 20.sp else 22.sp,
         messageSize = if (compactHeight) 11.sp else 12.sp,
         messageLineHeight = if (compactHeight) 13.sp else 14.sp,
         messageWidth = cardWidth * 0.78f,
-        subtitleToStarsSpacing = if (compactHeight) 8.dp else 10.dp,
-        starsWidth = if (compactHeight) 170.dp else 190.dp,
-        starsHeight = if (compactHeight) 34.dp else 38.dp,
-        starsToMetricsSpacing = if (compactHeight) 10.dp else 12.dp,
+
+        subtitleToStarsSpacing = if (compactHeight) 6.dp else 8.dp,
+        starsWidth = if (compactHeight) 190.dp else 215.dp,
+        starsHeight = if (compactHeight) 40.dp else 46.dp,
+        starsToMetricsSpacing = if (compactHeight) 16.dp else 20.dp,
+
         metricsWidth = metricsWidth,
         metricsHeight = if (compactHeight) 50.dp else 58.dp,
         metricWidth = metricWidth,
         metricSpacing = metricSpacing,
-        metricsToActionsSpacing = if (compactHeight) 10.dp else 14.dp,
+
+        metricsToActionsSpacing = if (compactHeight) 12.dp else 16.dp,
         actionsWidth = cardWidth * 0.46f,
         actionSpacing = if (compactHeight) 18.dp else 22.dp,
         sideActionButtonSize = if (compactHeight) 48.dp else 54.dp,
@@ -611,7 +615,7 @@ private fun resultColorsFor(
             titleShadow = Color.Black.copy(alpha = 0.35f),
             primaryText = SmokeWhite,
             secondaryText = SmokeWhite.copy(alpha = 0.9f),
-            metricBackground = ResultPurpleMetricBackground,
+            metricBackground = ResultPurpleHeader.copy(alpha = 0.32f),
             metricLabel = CheeseYellow,
             metricValue = SmokeWhite
         )
