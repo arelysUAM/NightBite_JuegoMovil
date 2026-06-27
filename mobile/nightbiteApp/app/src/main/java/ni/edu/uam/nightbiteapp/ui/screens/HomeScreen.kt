@@ -76,6 +76,8 @@ import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelMessageText
 import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelOverlay
 import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelShadowBlue
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import ni.edu.uam.nightbiteapp.data.local.database.NightBiteDatabase
+import ni.edu.uam.nightbiteapp.data.repository.GameProgressRepository
 import androidx.compose.ui.zIndex
 
 
@@ -99,6 +101,59 @@ fun HomeScreen(
 
     val uiState by homeViewModel.uiState.collectAsState()
     val resolvedUserId = userId ?: userSession.userId
+    val safeUserId = resolvedUserId ?: 0L
+
+    val gameProgressRepository = remember(context) {
+        GameProgressRepository(
+            NightBiteDatabase
+                .getDatabase(context.applicationContext)
+                .gameProgressDao()
+        )
+    }
+
+    val roomProgress by gameProgressRepository
+        .observeProgress(safeUserId)
+        .collectAsState(initial = null)
+
+    val roomLevelResults by gameProgressRepository
+        .observeLevelResults(safeUserId)
+        .collectAsState(initial = emptyList())
+
+    val roomStarsByLevel = remember(roomLevelResults) {
+        roomLevelResults.associate { result ->
+            result.levelId to result.bestStars.coerceIn(0, 3)
+        }
+    }
+
+    val roomMaxUnlockedLevel = roomProgress
+        ?.maxUnlockedLevel
+        ?.coerceIn(0, 4)
+        ?: 0
+
+    val levelsFromRoom = remember(
+        uiState.levels,
+        roomMaxUnlockedLevel,
+        roomStarsByLevel
+    ) {
+        uiState.levels.map { level ->
+            val isUnlockedByRoom = level.id <= roomMaxUnlockedLevel
+
+            level.copy(
+                isUnlocked = isUnlockedByRoom,
+                stars = if (isUnlockedByRoom) {
+                    roomStarsByLevel[level.id] ?: 0
+                } else {
+                    0
+                }
+            )
+        }
+    }
+
+    val hasLocalPlayer =
+        userSession.hasPlayer || userSession.playerGender.isNotBlank()
+
+    val canStartLevel =
+        uiState.hasPlayer || hasLocalPlayer
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -198,15 +253,15 @@ fun HomeScreen(
                     )
                 } else {
                     HomeLevelsRow(
-                        levels = uiState.levels,
+                        levels = levelsFromRoom,
                         layout = layout,
                         onLevelClick = { level ->
                             when {
-                                uiState.userLoadFailed -> {
+                                uiState.userLoadFailed && !canStartLevel -> {
                                     homeViewModel.loadHomeData(resolvedUserId)
                                 }
 
-                                !uiState.hasPlayer -> {
+                                !canStartLevel -> {
                                     showMissingPlayerDialog = true
                                 }
 

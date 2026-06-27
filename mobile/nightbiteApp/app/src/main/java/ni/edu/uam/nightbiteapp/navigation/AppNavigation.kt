@@ -57,6 +57,8 @@ import ni.edu.uam.nightbiteapp.ui.screens.WantedPosterTransitionScreen
 import ni.edu.uam.nightbiteapp.ui.screens.LibGdxTutorialScreen
 import ni.edu.uam.nightbiteapp.game.TutorialGameResult
 import androidx.compose.runtime.key
+import ni.edu.uam.nightbiteapp.data.local.database.NightBiteDatabase
+import ni.edu.uam.nightbiteapp.data.repository.GameProgressRepository
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -67,6 +69,14 @@ fun AppNavigation() {
 
     val sessionManager = remember {
         SessionManager(context.applicationContext)
+    }
+
+    val gameProgressRepository = remember {
+        GameProgressRepository(
+            NightBiteDatabase
+                .getDatabase(context.applicationContext)
+                .gameProgressDao()
+        )
     }
 
     val userSession by sessionManager.userSessionFlow.collectAsState(
@@ -646,7 +656,7 @@ fun AppNavigation() {
                     stars = earnedStars
                 )
 
-                val currentUserId = activeUserId ?: userSession.userId
+                val currentUserId = activeUserId ?: userSession.userId ?: 0L
 
                 val starsToPersist = earnedStars.coerceIn(0, 3)
 
@@ -659,20 +669,64 @@ fun AppNavigation() {
                     }
 
                 fun saveAndUnlockResultProgress() {
-                    NightProgressData.saveLevelStars(
-                        userId = currentUserId,
-                        levelId = levelId,
-                        stars = starsToPersist
-                    )
+                    coroutineScope.launch {
+                        val completedOrdersToSave =
+                            runtimeTutorialResult?.completedOrders
+                                ?: resultContent.completedOrders
 
-                    if (shouldUnlockNextLevel) {
-                        NightProgressData.unlockNextLevel(
+                        val totalOrdersToSave =
+                            runtimeTutorialResult?.totalOrders
+                                ?: resultContent.totalOrders
+
+                        val elapsedTimeToSave =
+                            runtimeTutorialResult?.elapsedTimeSeconds
+                                ?: 0f
+
+                        val averageDeliveryTimeToSave =
+                            runtimeTutorialResult?.let { tutorialResult ->
+                                if (tutorialResult.completedOrders > 0) {
+                                    tutorialResult.totalDeliveryTimeSeconds / tutorialResult.completedOrders
+                                } else {
+                                    0f
+                                }
+                            } ?: 0f
+
+                        val scoreToSave =
+                            runtimeTutorialResult?.score
+                                ?: (starsToPersist * 100)
+
+                        gameProgressRepository.saveLevelResult(
                             userId = currentUserId,
-                            completedLevelId = levelId
+                            levelId = levelId,
+                            stars = starsToPersist,
+                            score = scoreToSave,
+                            completedOrders = completedOrdersToSave,
+                            totalOrders = totalOrdersToSave,
+                            resultType = resultType.name,
+                            elapsedTimeSeconds = elapsedTimeToSave,
+                            averageDeliveryTimeSeconds = averageDeliveryTimeToSave
                         )
-                    }
 
-                    homeRefreshKey += 1
+                        /*
+                         * Temporal:
+                         * mantenemos NightProgressData por ahora para que HomeScreen
+                         * y AchievementsScreen sigan funcionando hasta conectarlos a Room.
+                         */
+                        NightProgressData.saveLevelStars(
+                            userId = currentUserId,
+                            levelId = levelId,
+                            stars = starsToPersist
+                        )
+
+                        if (shouldUnlockNextLevel) {
+                            NightProgressData.unlockNextLevel(
+                                userId = currentUserId,
+                                completedLevelId = levelId
+                            )
+                        }
+
+                        homeRefreshKey += 1
+                    }
                 }
 
                 LaunchedEffect(
@@ -747,14 +801,26 @@ fun AppNavigation() {
         }
 
         composable(Routes.ACHIEVEMENTS) {
+            val currentUserId = activeUserId ?: userSession.userId ?: 0L
+
+            val roomProgress by gameProgressRepository
+                .observeProgress(currentUserId)
+                .collectAsState(initial = null)
+
+            val roomBadges by gameProgressRepository
+                .observeBadges(currentUserId)
+                .collectAsState(initial = emptyList())
+
+            val earnedBadgeLevels = remember(roomBadges) {
+                roomBadges.map { badge ->
+                    badge.levelId
+                }.toSet()
+            }
+
             AchievementsScreen(
                 userSession = userSession,
-                currentLevel = NightProgressData.getMaxUnlockedLevel(
-                    activeUserId ?: userSession.userId
-                ) + 1,
-                starsByLevel = NightProgressData.getStarsByLevel(
-                    activeUserId ?: userSession.userId
-                ),
+                currentLevel = (roomProgress?.maxUnlockedLevel ?: 0) + 1,
+                earnedBadgeLevels = earnedBadgeLevels,
                 onBackToHome = {
                     navController.popBackStack()
                 }

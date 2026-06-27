@@ -54,7 +54,7 @@ import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 fun AchievementsScreen(
     userSession: UserSession,
     currentLevel: Int,
-    starsByLevel: Map<Int, Int>,
+    earnedBadgeLevels: Set<Int>,
     onBackToHome: () -> Unit
 ) {
     NightScreenContainer(
@@ -77,7 +77,7 @@ fun AchievementsScreen(
                     "NombreUsuario"
                 },
                 currentLevel = currentLevel.coerceIn(1, 5),
-                starsByLevel = starsByLevel,
+                earnedBadgeLevels = earnedBadgeLevels,
                 layout = layout,
                 onBackToHome = onBackToHome
             )
@@ -89,7 +89,7 @@ fun AchievementsScreen(
 private fun AchievementsPanel(
     username: String,
     currentLevel: Int,
-    starsByLevel: Map<Int, Int>,
+    earnedBadgeLevels: Set<Int>,
     layout: AchievementsLayout,
     onBackToHome: () -> Unit
 ) {
@@ -129,7 +129,7 @@ private fun AchievementsPanel(
             Spacer(modifier = Modifier.height(layout.badgesTitleSpacing))
 
             BadgesSection(
-                starsByLevel = starsByLevel,
+                earnedBadgeLevels = earnedBadgeLevels,
                 layout = layout
             )
 
@@ -230,7 +230,7 @@ private fun SectionTitle(
 
 @Composable
 private fun BadgesSection(
-    starsByLevel: Map<Int, Int>,
+    earnedBadgeLevels: Set<Int>,
     layout: AchievementsLayout
 ) {
     Row(
@@ -249,7 +249,7 @@ private fun BadgesSection(
         repeat(TOTAL_LEVELS) { index ->
             BadgeSlot(
                 levelIndex = index,
-                earned = (starsByLevel[index] ?: 0) >= REQUIRED_STARS_FOR_BADGE,
+                earned = index in earnedBadgeLevels,
                 size = layout.badgeSlotSize,
                 badgeSize = layout.badgeImageSize
             )
@@ -536,4 +536,3 @@ private fun achievementsLayoutFor(
 }
 
 private const val TOTAL_LEVELS = 5
-private const val REQUIRED_STARS_FOR_BADGE = 3
