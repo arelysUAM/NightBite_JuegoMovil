@@ -87,7 +87,7 @@ class LoginViewModel(
             normalizedMessage.contains("usuario no encontrado") ||
                     normalizedMessage.contains("cuenta no encontrada") -> {
                 LoginUiState.Error(
-                    message = "Usuario no encontrado. Puedes crear una cuenta para continuar.",
+                    message = "Puedes crear una cuenta para continuar.",
                     type = LoginErrorType.UserNotFound
                 )
             }

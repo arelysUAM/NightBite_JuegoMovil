@@ -1,20 +1,24 @@
 package ni.edu.uam.nightbiteapi.services;
 
 import ni.edu.uam.nightbiteapi.dto.PlayerSummaryResponse;
+import ni.edu.uam.nightbiteapi.dto.UpdateAccountInfoRequest;
 import ni.edu.uam.nightbiteapi.dto.UpdatePasswordRequest;
 import ni.edu.uam.nightbiteapi.dto.UpdateUsernameRequest;
 import ni.edu.uam.nightbiteapi.dto.UserLoginRequest;
 import ni.edu.uam.nightbiteapi.dto.UserRegisterRequest;
 import ni.edu.uam.nightbiteapi.dto.UserResponse;
 import ni.edu.uam.nightbiteapi.dto.UsernameAvailabilityResponse;
+import ni.edu.uam.nightbiteapi.dto.VerifyCurrentPasswordRequest;
 import ni.edu.uam.nightbiteapi.model.Player;
 import ni.edu.uam.nightbiteapi.model.UserAccount;
+import ni.edu.uam.nightbiteapi.repositories.LevelResultRepository;
+import ni.edu.uam.nightbiteapi.repositories.PlayerProgressRepository;
 import ni.edu.uam.nightbiteapi.repositories.PlayerRepository;
 import ni.edu.uam.nightbiteapi.repositories.UserAccountRepository;
+import ni.edu.uam.nightbiteapi.repositories.UserBadgeRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import ni.edu.uam.nightbiteapi.dto.UpdateAccountInfoRequest;
-import ni.edu.uam.nightbiteapi.dto.VerifyCurrentPasswordRequest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,15 +29,24 @@ public class UserAccountService {
     private final UserAccountRepository userAccountRepository;
     private final PlayerRepository playerRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final LevelResultRepository levelResultRepository;
+    private final UserBadgeRepository userBadgeRepository;
+    private final PlayerProgressRepository playerProgressRepository;
 
     public UserAccountService(
             UserAccountRepository userAccountRepository,
             PlayerRepository playerRepository,
-            BCryptPasswordEncoder passwordEncoder
+            BCryptPasswordEncoder passwordEncoder,
+            LevelResultRepository levelResultRepository,
+            UserBadgeRepository userBadgeRepository,
+            PlayerProgressRepository playerProgressRepository
     ) {
         this.userAccountRepository = userAccountRepository;
         this.playerRepository = playerRepository;
         this.passwordEncoder = passwordEncoder;
+        this.levelResultRepository = levelResultRepository;
+        this.userBadgeRepository = userBadgeRepository;
+        this.playerProgressRepository = playerProgressRepository;
     }
 
     public List<UserResponse> getAllUsers() {
@@ -224,6 +237,7 @@ public class UserAccountService {
         userAccountRepository.save(user);
     }
 
+    @Transactional
     public boolean deleteUser(Long id) {
         Optional<UserAccount> optionalUser = userAccountRepository.findById(id);
 
@@ -231,7 +245,12 @@ public class UserAccountService {
             return false;
         }
 
+        levelResultRepository.deleteByUserAccountId(id);
+        userBadgeRepository.deleteByUserAccountId(id);
+        playerProgressRepository.deleteByUserAccountId(id);
+
         userAccountRepository.delete(optionalUser.get());
+
         return true;
     }
 

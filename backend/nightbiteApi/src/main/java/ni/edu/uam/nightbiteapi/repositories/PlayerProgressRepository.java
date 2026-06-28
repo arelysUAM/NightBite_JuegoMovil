@@ -10,4 +10,6 @@ public interface PlayerProgressRepository extends JpaRepository<PlayerProgress, 
     Optional<PlayerProgress> findByUserAccountId(Long userAccountId);
 
     boolean existsByUserAccountId(Long userAccountId);
+
+    void deleteByUserAccountId(Long userAccountId);
 }
