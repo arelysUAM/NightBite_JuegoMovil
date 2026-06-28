@@ -27,6 +27,7 @@ data class AccountCredentialsUiState(
     val showExitConfirmationDialog: Boolean = false,
     val showResetProgressDialog: Boolean = false,
     val showInvalidDataDialog: Boolean = false,
+    val showProgressResetSuccessDialog: Boolean = false,
 
     val showDeleteAccountDialog: Boolean = false,
     val showAccountDeletedDialog: Boolean = false,

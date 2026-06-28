@@ -24,6 +24,7 @@ import ni.edu.uam.nightbiteapp.ui.design.NightSpacing
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.StartUiState
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun StartScreen(
@@ -41,16 +42,32 @@ fun StartScreen(
         viewModel.checkInitialState(requestId)
     }
 
+    val startScreenShownAt = remember {
+        System.currentTimeMillis()
+    }
+
     LaunchedEffect(uiState, requestId) {
         when (val state = uiState) {
             is StartUiState.NavigateToLogin -> {
                 if (state.requestId == requestId) {
+                    val elapsedTime = System.currentTimeMillis() - startScreenShownAt
+                    val remainingTime = (MIN_START_SCREEN_TIME_MILLIS - elapsedTime)
+                        .coerceAtLeast(0L)
+
+                    delay(remainingTime)
+
                     onNavigateToLogin()
                 }
             }
 
             is StartUiState.NavigateToHome -> {
                 if (state.requestId == requestId) {
+                    val elapsedTime = System.currentTimeMillis() - startScreenShownAt
+                    val remainingTime = (MIN_START_SCREEN_TIME_MILLIS - elapsedTime)
+                        .coerceAtLeast(0L)
+
+                    delay(remainingTime)
+
                     onNavigateToHome(state.user)
                 }
             }
@@ -122,3 +139,5 @@ private fun StartServerErrorDialog(
         onConfirm = onRetry
     )
 }
+
+private const val MIN_START_SCREEN_TIME_MILLIS = 3000L

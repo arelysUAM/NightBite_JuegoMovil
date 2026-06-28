@@ -78,7 +78,8 @@ fun AccountScreen(
     userSession: UserSession,
     viewModel: AccountCredentialsViewModel,
     onBackToSettings: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onNavigateToHome: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -161,6 +162,7 @@ fun AccountScreen(
             showCancelConfirmationDialog = uiState.showCancelConfirmationDialog,
             showExitConfirmationDialog = uiState.showExitConfirmationDialog,
             showResetProgressDialog = uiState.showResetProgressDialog,
+            showProgressResetSuccessDialog = uiState.showProgressResetSuccessDialog,
             showInvalidDataDialog = uiState.showInvalidDataDialog,
             onConfirmSaveChanges = {
                 viewModel.confirmSaveChanges(
@@ -168,11 +170,7 @@ fun AccountScreen(
                 )
             },
             onDismissSaveConfirmation = viewModel::dismissSaveConfirmationDialog,
-            onChangesSavedConfirm = {
-                viewModel.finishChangesSavedFlow(
-                    onNavigateToLogin = onNavigateToLogin
-                )
-            },
+            onChangesSavedConfirm = viewModel::dismissChangesSavedDialog,
             onConfirmCancelEditing = viewModel::confirmCancelEditing,
             onDismissCancelEditing = viewModel::dismissCancelConfirmationDialog,
             onConfirmExit = {
@@ -181,7 +179,18 @@ fun AccountScreen(
                 )
             },
             onDismissExit = viewModel::dismissExitConfirmationDialog,
+
+            onConfirmResetProgress = {
+                viewModel.confirmResetProgress(
+                    userId = userSession.userId
+                )
+            },
             onDismissResetProgress = viewModel::dismissResetProgressDialog,
+            onProgressResetSuccessConfirm = {
+                viewModel.finishResetProgressFlow(
+                    onNavigateToHome = onNavigateToHome
+                )
+            },
             onDismissInvalidData = viewModel::dismissInvalidDataDialog
         )
     }
@@ -804,6 +813,7 @@ private fun AccountDialogs(
     showCancelConfirmationDialog: Boolean,
     showExitConfirmationDialog: Boolean,
     showResetProgressDialog: Boolean,
+    showProgressResetSuccessDialog: Boolean,
     showInvalidDataDialog: Boolean,
     onConfirmSaveChanges: () -> Unit,
     onDismissSaveConfirmation: () -> Unit,
@@ -812,13 +822,15 @@ private fun AccountDialogs(
     onDismissCancelEditing: () -> Unit,
     onConfirmExit: () -> Unit,
     onDismissExit: () -> Unit,
+    onConfirmResetProgress: () -> Unit,
     onDismissResetProgress: () -> Unit,
+    onProgressResetSuccessConfirm: () -> Unit,
     onDismissInvalidData: () -> Unit
 ) {
     if (showSaveConfirmationDialog) {
         NightMessageDialog(
             title = "Guardar cambios",
-            message = "Al guardar los cambios deberás volver a iniciar sesión.",
+            message = "¿Deseas guardar los cambios realizados en tu cuenta?",
             confirmText = "Guardar",
             dismissText = "Cancelar",
             icon = Icons.Default.Warning,
@@ -830,9 +842,9 @@ private fun AccountDialogs(
 
     if (showChangesSavedDialog) {
         NightMessageDialog(
-            title = "Cambios guardados",
-            message = "Tu información fue actualizada correctamente. Por seguridad debes iniciar sesión nuevamente.",
-            confirmText = "Ir a inicio",
+            title = "Información actualizada",
+            message = "Los datos de tu cuenta se actualizaron correctamente.",
+            confirmText = "Aceptar",
             icon = Icons.Default.CheckCircle,
             iconColor = CheeseYellow,
             onConfirm = onChangesSavedConfirm
@@ -878,12 +890,27 @@ private fun AccountDialogs(
 
     if (showResetProgressDialog) {
         NightMessageDialog(
-            title = "En desarrollo",
-            message = "La opción para reiniciar progreso todavía no está disponible.",
-            confirmText = "Aceptar",
+            title = "Reiniciar progreso",
+            message = "Esta acción es irreversible. Se borrarán estrellas, niveles desbloqueados e insignias. ¿Deseas continuar?",
+            confirmText = "Reiniciar",
+            dismissText = "Cancelar",
             icon = Icons.Default.Warning,
             iconColor = CheeseYellow,
-            onConfirm = onDismissResetProgress
+            onConfirm = onConfirmResetProgress,
+            onDismiss = onDismissResetProgress
+        )
+    }
+
+    if (showProgressResetSuccessDialog) {
+        NightMessageDialog(
+            title = "Progreso reiniciado",
+            message = "Tu progreso fue reiniciado correctamente. Volverás al inicio del juego.",
+            confirmText = "Aceptar",
+            dismissText = null,
+            icon = Icons.Default.CheckCircle,
+            iconColor = CheeseYellow,
+            onConfirm = onProgressResetSuccessConfirm,
+            onDismiss = null
         )
     }
 }

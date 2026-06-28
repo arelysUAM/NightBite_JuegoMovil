@@ -867,7 +867,10 @@ fun AppNavigation() {
 
         composable(Routes.SETTINGS) {
             val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(
-                factory = AccountCredentialsViewModelFactory(sessionManager)
+                factory = AccountCredentialsViewModelFactory(
+                    sessionManager = sessionManager,
+                    progressSyncRepository = progressSyncRepository
+                )
             )
 
             val accountUiState by accountCredentialsViewModel.uiState.collectAsState()
@@ -1003,7 +1006,10 @@ fun AppNavigation() {
 
         composable(Routes.ACCOUNT) {
             val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(
-                factory = AccountCredentialsViewModelFactory(sessionManager)
+                factory = AccountCredentialsViewModelFactory(
+                    sessionManager = sessionManager,
+                    progressSyncRepository = progressSyncRepository
+                )
             )
 
             AccountScreen(
@@ -1020,6 +1026,22 @@ fun AppNavigation() {
 
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.HOME) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToHome = {
+                    homeRefreshKey += 1
+
+                    activeUserId = userSession.userId
+                    pendingLoginUsername = ""
+                    pendingLoginPassword = ""
+                    showLastStepsWelcomeMessage = false
+                    showHomeWelcomeToast = false
+
+                    navController.navigate(Routes.START) {
+                        popUpTo(0) {
                             inclusive = true
                         }
                         launchSingleTop = true

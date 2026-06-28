@@ -73,6 +73,6 @@ data class TutorialOrder(
     }
 
     companion object {
-        const val DEFAULT_TIME_LIMIT_SECONDS = 5f
+        const val DEFAULT_TIME_LIMIT_SECONDS = 6f
     }
 }

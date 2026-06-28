@@ -109,4 +109,9 @@ interface ApiService {
         @Path("userAccountId") userAccountId: Long,
         @Body request: ProgressSyncRequest
     ): Response<ProgressResponse>
+
+    @POST("api/progress/account/{userAccountId}/reset")
+    suspend fun resetProgress(
+        @Path("userAccountId") userAccountId: Long
+    ): Response<ProgressResponse>
 }

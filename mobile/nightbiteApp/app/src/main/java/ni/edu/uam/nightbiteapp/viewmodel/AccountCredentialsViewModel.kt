@@ -16,10 +16,12 @@ import ni.edu.uam.nightbiteapp.ui.validation.AccountValidators
 import ni.edu.uam.nightbiteapp.ui.validation.PlayerValidators
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import ni.edu.uam.nightbiteapp.data.repository.ProgressSyncRepository
 
 class AccountCredentialsViewModel(
     private val userRepository: UserRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val progressSyncRepository: ProgressSyncRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountCredentialsUiState())
@@ -57,6 +59,7 @@ class AccountCredentialsViewModel(
                         )
                     }
                     return@launch
+
                 }
 
                 val user = response.body()!!
@@ -311,6 +314,8 @@ class AccountCredentialsViewModel(
                         return@launch
                     }
 
+
+
                     val availability = availabilityResponse.body()
 
                     if (availability?.available == false) {
@@ -348,8 +353,36 @@ class AccountCredentialsViewModel(
                     return@launch
                 }
 
+                val updatedUser = response.body()
+
+                val updatedUsername = updatedUser
+                    ?.username
+                    ?: state.username.trim().lowercase()
+
+                val updatedAge = updatedUser
+                    ?.age
+                    ?.toString()
+                    ?: ageValue.toString()
+
+                val updatedGender = updatedUser
+                    ?.player
+                    ?.gender
+                    ?: state.gender
+
                 _uiState.update {
                     it.copy(
+                        username = updatedUsername,
+                        age = updatedAge,
+                        gender = updatedGender,
+
+                        originalUsername = updatedUsername,
+                        originalAge = updatedAge,
+                        originalGender = updatedGender,
+
+                        usernameError = null,
+                        ageError = null,
+                        genderError = null,
+
                         isLoading = false,
                         isEditing = false,
                         showChangesSavedDialog = true,
@@ -367,14 +400,15 @@ class AccountCredentialsViewModel(
         }
     }
 
-    fun finishChangesSavedFlow(onNavigateToLogin: () -> Unit) {
-        viewModelScope.launch {
-            sessionManager.clearSession()
-            _uiState.value = AccountCredentialsUiState()
-            onNavigateToLogin()
+    fun dismissChangesSavedDialog() {
+        _uiState.update {
+            it.copy(
+                showChangesSavedDialog = false,
+                successMessage = null,
+                errorMessage = null
+            )
         }
     }
-
     fun onCancelEditingClick() {
         _uiState.update {
             it.copy(
@@ -438,6 +472,66 @@ class AccountCredentialsViewModel(
                 showResetProgressDialog = false
             )
         }
+    }
+
+    fun confirmResetProgress(userId: Long?) {
+        if (userId == null || userId == 0L) {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    showResetProgressDialog = false,
+                    showProgressResetSuccessDialog = false,
+                    errorMessage = "No se pudo identificar al usuario activo."
+                )
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    showResetProgressDialog = false,
+                    showProgressResetSuccessDialog = false,
+                    errorMessage = null,
+                    successMessage = null
+                )
+            }
+
+            val resetSuccessful = progressSyncRepository.resetProgress(userId)
+
+            if (!resetSuccessful) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "No se pudo reiniciar el progreso. Verifica la conexión con la API."
+                    )
+                }
+                return@launch
+            }
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    errorMessage = null,
+                    successMessage = "Progreso reiniciado correctamente.",
+                    showProgressResetSuccessDialog = true
+                )
+            }
+        }
+    }
+
+    fun finishResetProgressFlow(
+        onNavigateToHome: () -> Unit
+    ) {
+        _uiState.update {
+            it.copy(
+                showProgressResetSuccessDialog = false,
+                successMessage = null,
+                errorMessage = null
+            )
+        }
+        onNavigateToHome()
     }
 
     private fun validateAccountInfoFields(): Boolean {

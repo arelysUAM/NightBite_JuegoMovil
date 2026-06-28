@@ -12,7 +12,6 @@ import ni.edu.uam.nightbiteapp.data.remote.dto.LevelResultSyncRequest
 import ni.edu.uam.nightbiteapp.data.remote.dto.ProgressResponse
 import ni.edu.uam.nightbiteapp.data.remote.dto.ProgressSyncRequest
 
-
 class ProgressSyncRepository(
     private val gameProgressDao: GameProgressDao,
     private val apiService: ApiService
@@ -73,6 +72,42 @@ class ProgressSyncRepository(
         val uploaded = uploadLocalProgressToApi(userId)
 
         return downloaded || uploaded
+    }
+
+    suspend fun resetProgress(userId: Long): Boolean {
+        return try {
+            val response = apiService.resetProgress(userId)
+
+            if (!response.isSuccessful) {
+                return false
+            }
+
+            resetLocalProgress(userId)
+
+            val remoteProgress = response.body()
+            if (remoteProgress != null) {
+                mergeRemoteProgressIntoRoom(
+                    userId = userId,
+                    remoteProgress = remoteProgress
+                )
+            }
+
+            true
+        } catch (exception: Exception) {
+            false
+        }
+    }
+
+    private suspend fun resetLocalProgress(userId: Long) {
+        gameProgressDao.deleteLevelResultsByUserId(userId)
+        gameProgressDao.deleteBadgesByUserId(userId)
+
+        gameProgressDao.upsertProgress(
+            ProgressEntity(
+                userId = userId,
+                maxUnlockedLevel = 0
+            )
+        )
     }
 
     private suspend fun buildProgressSyncRequest(

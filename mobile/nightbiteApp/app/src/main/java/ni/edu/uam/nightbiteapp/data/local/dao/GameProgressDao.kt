@@ -48,6 +48,7 @@ interface GameProgressDao {
         LIMIT 1
         """
     )
+
     suspend fun getBadge(
         userId: Long,
         levelId: Int
@@ -55,4 +56,10 @@ interface GameProgressDao {
 
     @Upsert
     suspend fun upsertBadge(badge: BadgeEntity)
+
+    @Query("DELETE FROM level_results WHERE userId = :userId")
+    suspend fun deleteLevelResultsByUserId(userId: Long)
+
+    @Query("DELETE FROM badges WHERE userId = :userId")
+    suspend fun deleteBadgesByUserId(userId: Long)
 }
