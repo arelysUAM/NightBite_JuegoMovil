@@ -915,7 +915,7 @@ class AccountCredentialsViewModel(
     }
 
     fun deleteAccount(userId: Long?) {
-        if (userId == null) {
+        if (userId == null || userId == 0L) {
             _uiState.update {
                 it.copy(
                     errorMessage = "No se pudo identificar la cuenta del usuario.",
@@ -937,22 +937,30 @@ class AccountCredentialsViewModel(
             try {
                 val response = userRepository.deleteUser(userId)
 
-                if (response.isSuccessful) {
-                    sessionManager.clearSession()
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            showAccountDeletedDialog = true
-                        )
-                    }
-                } else {
+                if (!response.isSuccessful) {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             errorMessage = "No se pudo eliminar la cuenta."
                         )
                     }
+                    return@launch
+                }
+
+                try {
+                    progressSyncRepository.clearLocalProgressForDeletedAccount(userId)
+                } catch (_: Exception) {
+                    // La cuenta ya fue eliminada en la API.
+                    // Si la limpieza local falla por alguna razón, no bloqueamos el flujo.
+                }
+
+                sessionManager.clearSession()
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        showAccountDeletedDialog = true
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.update {

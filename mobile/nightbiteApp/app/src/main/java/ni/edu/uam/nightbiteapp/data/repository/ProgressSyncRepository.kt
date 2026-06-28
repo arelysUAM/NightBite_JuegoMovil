@@ -98,6 +98,12 @@ class ProgressSyncRepository(
         }
     }
 
+    suspend fun clearLocalProgressForDeletedAccount(userId: Long) {
+        gameProgressDao.deleteLevelResultsByUserId(userId)
+        gameProgressDao.deleteBadgesByUserId(userId)
+        gameProgressDao.deleteProgressByUserId(userId)
+    }
+
     private suspend fun resetLocalProgress(userId: Long) {
         gameProgressDao.deleteLevelResultsByUserId(userId)
         gameProgressDao.deleteBadgesByUserId(userId)

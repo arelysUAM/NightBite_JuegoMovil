@@ -62,4 +62,7 @@ interface GameProgressDao {
 
     @Query("DELETE FROM badges WHERE userId = :userId")
     suspend fun deleteBadgesByUserId(userId: Long)
+
+    @Query("DELETE FROM progress WHERE userId = :userId")
+    suspend fun deleteProgressByUserId(userId: Long)
 }
