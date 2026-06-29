@@ -45,7 +45,6 @@ import ni.edu.uam.nightbiteapp.ui.screens.PlayerCreationScreen
 import ni.edu.uam.nightbiteapp.ui.screens.RegisterScreen
 import ni.edu.uam.nightbiteapp.ui.screens.SettingsScreen
 import ni.edu.uam.nightbiteapp.ui.screens.StartScreen
-import ni.edu.uam.nightbiteapp.ui.screens.TutorialLoadingScreen
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModelFactory
@@ -54,13 +53,14 @@ import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModelFactory
 import ni.edu.uam.nightbiteapp.ui.screens.WantedPosterTransitionScreen
-import ni.edu.uam.nightbiteapp.ui.screens.LibGdxTutorialScreen
 import ni.edu.uam.nightbiteapp.game.TutorialGameResult
 import androidx.compose.runtime.key
 import ni.edu.uam.nightbiteapp.data.local.database.NightBiteDatabase
 import ni.edu.uam.nightbiteapp.data.repository.GameProgressRepository
 import ni.edu.uam.nightbiteapp.data.remote.RetrofitClient
 import ni.edu.uam.nightbiteapp.data.repository.ProgressSyncRepository
+import ni.edu.uam.nightbiteapp.ui.screens.TutorialLoadingScreen
+
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -246,6 +246,19 @@ fun AppNavigation() {
             )
         }
 
+        composable(Routes.TUTORIAL_LOADING) {
+            TutorialLoadingScreen(
+                onTutorialLoaded = {
+                    navController.navigate(Routes.gamePlaceholder(0)) {
+                        popUpTo(Routes.TUTORIAL_LOADING) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
         composable(Routes.LOGIN) {
             LoginScreen(
                 initialUsername = pendingLoginUsername,
@@ -385,9 +398,19 @@ fun AppNavigation() {
                     userSession = userSession,
                     onNavigateToLevelIntro = { levelId ->
                         if (levelId == 0) {
-                            navController.navigate(Routes.TUTORIAL_LOADING)
+                            navController.navigate(Routes.TUTORIAL_LOADING) {
+                                popUpTo(Routes.HOME) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         } else {
-                            navController.navigate(Routes.levelIntro(levelId))
+                            navController.navigate(Routes.levelIntro(levelId)) {
+                                popUpTo(Routes.HOME) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     },
                     onNavigateToPlayerCreation = {
@@ -421,46 +444,6 @@ fun AppNavigation() {
                     }
                 )
             }
-        }
-
-        composable(Routes.TUTORIAL_LOADING) {
-            TutorialLoadingScreen(
-                onTutorialLoaded = {
-                    navController.navigate(Routes.TUTORIAL_GAME) {
-                        popUpTo(Routes.TUTORIAL_LOADING) {
-                            inclusive = true
-                        }
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-
-        composable(Routes.TUTORIAL_GAME) {
-            LibGdxTutorialScreen(
-                onTutorialFinished = { result ->
-                    latestTutorialResult = result
-
-                    navController.navigate(
-                        Routes.gameResult(
-                            levelId = 0,
-                            resultType = result.resultTypeName,
-                            stars = result.stars
-                        )
-                    ) {
-                        popUpTo(Routes.TUTORIAL_GAME) {
-                            inclusive = true
-                        }
-                        launchSingleTop = true
-                    }
-                },
-                onBackToHome = {
-                    navigateBackToHome()
-                },
-                onExitApp = {
-                    activity?.moveTaskToBack(true)
-                }
-            )
         }
 
         composable(
@@ -570,13 +553,19 @@ fun AppNavigation() {
                     }
                 },
                 onRestartLevel = {
-                    navController.navigate(
-                        Routes.levelIntro(levelId)
-                    ) {
-                        popUpTo(
-                            Routes.gamePlaceholder(levelId)
-                        ) {
-                            inclusive = true
+                    if (levelId == 0) {
+                        navController.navigate(Routes.TUTORIAL_LOADING) {
+                            popUpTo(Routes.gamePlaceholder(levelId)) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    } else {
+                        navController.navigate(Routes.levelIntro(levelId)) {
+                            popUpTo(Routes.gamePlaceholder(levelId)) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
                     }
                 },
@@ -780,20 +769,11 @@ fun AppNavigation() {
                         latestTutorialResult = null
                         latestRuntimeResultLevelId = null
 
-                        if (levelId == 0 && resultType.isTutorialResult) {
-                            navController.navigate(Routes.TUTORIAL_LOADING) {
-                                popUpTo(Routes.HOME) {
-                                    inclusive = false
-                                }
-                                launchSingleTop = true
+                        navController.navigate(Routes.levelIntro(levelId)) {
+                            popUpTo(Routes.HOME) {
+                                inclusive = false
                             }
-                        } else {
-                            navController.navigate(Routes.levelIntro(levelId)) {
-                                popUpTo(Routes.HOME) {
-                                    inclusive = false
-                                }
-                                launchSingleTop = true
-                            }
+                            launchSingleTop = true
                         }
                     },
                     onContinueToNextLevel = {
