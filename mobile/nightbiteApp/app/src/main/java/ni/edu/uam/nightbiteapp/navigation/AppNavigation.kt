@@ -53,7 +53,7 @@ import ni.edu.uam.nightbiteapp.viewmodel.PlayerCreationViewModelFactory
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModel
 import ni.edu.uam.nightbiteapp.viewmodel.StartViewModelFactory
 import ni.edu.uam.nightbiteapp.ui.screens.WantedPosterTransitionScreen
-import ni.edu.uam.nightbiteapp.game.TutorialGameResult
+import ni.edu.uam.nightbiteapp.ui.model.GameRuntimeResult
 import androidx.compose.runtime.key
 import ni.edu.uam.nightbiteapp.data.local.database.NightBiteDatabase
 import ni.edu.uam.nightbiteapp.data.repository.GameProgressRepository
@@ -116,8 +116,8 @@ fun AppNavigation() {
         mutableStateOf(false)
     }
 
-    var latestTutorialResult by remember {
-        mutableStateOf<TutorialGameResult?>(null)
+    var latestRuntimeResult by remember {
+        mutableStateOf<GameRuntimeResult?>(null)
     }
 
     var latestRuntimeResultLevelId by remember {
@@ -520,7 +520,7 @@ fun AppNavigation() {
             GamePlaceholderScreen(
                 levelId = levelId,
                 onNavigateToResult = { resultType, stars, runtimeResult ->
-                    latestTutorialResult = runtimeResult
+                    latestRuntimeResult = runtimeResult
                     latestRuntimeResultLevelId = levelId
 
                     savePlaceholderResult(
@@ -676,7 +676,7 @@ fun AppNavigation() {
                 val shouldUnlockNextLevel =
                     starsToPersist == 3 && levelId < 4
 
-                val runtimeTutorialResult = latestTutorialResult
+                val runtimeResult = latestRuntimeResult
                     .takeIf {
                         latestRuntimeResultLevelId == levelId
                     }
@@ -684,28 +684,28 @@ fun AppNavigation() {
                 fun saveAndUnlockResultProgress() {
                     coroutineScope.launch {
                         val completedOrdersToSave =
-                            runtimeTutorialResult?.completedOrders
+                            runtimeResult?.completedOrders
                                 ?: resultContent.completedOrders
 
                         val totalOrdersToSave =
-                            runtimeTutorialResult?.totalOrders
+                            runtimeResult?.totalOrders
                                 ?: resultContent.totalOrders
 
                         val elapsedTimeToSave =
-                            runtimeTutorialResult?.elapsedTimeSeconds
+                            runtimeResult?.elapsedTimeSeconds
                                 ?: 0f
 
                         val averageDeliveryTimeToSave =
-                            runtimeTutorialResult?.let { tutorialResult ->
-                                if (tutorialResult.completedOrders > 0) {
-                                    tutorialResult.totalDeliveryTimeSeconds / tutorialResult.completedOrders
+                            runtimeResult?.let { result ->
+                                if (result.completedOrders > 0) {
+                                    result.totalDeliveryTimeSeconds / result.completedOrders
                                 } else {
                                     0f
                                 }
                             } ?: 0f
 
                         val scoreToSave =
-                            runtimeTutorialResult?.score
+                            runtimeResult?.score
                                 ?: (starsToPersist * 100)
 
                         gameProgressRepository.saveLevelResult(
@@ -759,27 +759,36 @@ fun AppNavigation() {
                     levelId = levelId,
                     resultType = resultType,
                     stars = earnedStars,
-                    runtimeTimeText = runtimeTutorialResult?.elapsedTimeText,
-                    runtimeCompletedOrders = runtimeTutorialResult?.completedOrders,
-                    runtimeTotalOrders = runtimeTutorialResult?.totalOrders,
-                    runtimeAverageDeliveryTimeText = runtimeTutorialResult?.averageDeliveryTimeText,
+                    runtimeTimeText = runtimeResult?.elapsedTimeText,
+                    runtimeCompletedOrders = runtimeResult?.completedOrders,
+                    runtimeTotalOrders = runtimeResult?.totalOrders,
+                    runtimeAverageDeliveryTimeText = runtimeResult?.averageDeliveryTimeText,
                     onRetryLevel = {
                         saveAndUnlockResultProgress()
 
-                        latestTutorialResult = null
+                        latestRuntimeResult = null
                         latestRuntimeResultLevelId = null
 
-                        navController.navigate(Routes.levelIntro(levelId)) {
-                            popUpTo(Routes.HOME) {
-                                inclusive = false
+                        if (levelId == 0) {
+                            navController.navigate(Routes.TUTORIAL_LOADING) {
+                                popUpTo(Routes.HOME) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
                             }
-                            launchSingleTop = true
+                        } else {
+                            navController.navigate(Routes.levelIntro(levelId)) {
+                                popUpTo(Routes.HOME) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     },
                     onContinueToNextLevel = {
                         saveAndUnlockResultProgress()
 
-                        latestTutorialResult = null
+                        latestRuntimeResult  = null
                         latestRuntimeResultLevelId = null
 
                         if (resultType == GameResultType.FINAL_WIN) {
@@ -799,10 +808,12 @@ fun AppNavigation() {
                             navigateBackToHome()
                         }
                     },
+
                     onBackToHome = {
                         saveAndUnlockResultProgress()
 
-                        latestTutorialResult = null
+                        latestRuntimeResult = null
+                        latestRuntimeResultLevelId = null
 
                         navigateBackToHome()
                     }

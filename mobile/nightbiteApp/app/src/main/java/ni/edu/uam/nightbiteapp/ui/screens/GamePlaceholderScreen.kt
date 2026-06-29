@@ -78,7 +78,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import ni.edu.uam.nightbiteapp.ui.screens.gameplay.GameMapScene
 import ni.edu.uam.nightbiteapp.ui.screens.gameplay.MapObjectiveMode
 import kotlin.math.hypot
-import ni.edu.uam.nightbiteapp.game.TutorialGameResult
+import ni.edu.uam.nightbiteapp.ui.model.GameRuntimeResult
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -91,7 +91,7 @@ import ni.edu.uam.nightbiteapp.ui.screens.gameplay.JornadaCountdownOverlay
 @Composable
 fun GamePlaceholderScreen(
     levelId: Int,
-    onNavigateToResult: (GameResultType, Int, TutorialGameResult) -> Unit,
+    onNavigateToResult: (GameResultType, Int, GameRuntimeResult) -> Unit,
     onRestartLevel: () -> Unit,
     onBackToHome: () -> Unit
 ) {
@@ -193,8 +193,8 @@ fun GamePlaceholderScreen(
         stars: Int,
         completedOrdersOverride: Int = completedOrders,
         totalDeliveryTimeSecondsOverride: Float = totalDeliveryTimeSeconds
-    ): TutorialGameResult {
-        return TutorialGameResult(
+    ): GameRuntimeResult {
+        return GameRuntimeResult(
             completedOrders = completedOrdersOverride,
             totalOrders = totalOrders,
             score = stars * 100,

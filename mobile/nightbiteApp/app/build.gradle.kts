@@ -76,10 +76,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-    // LibGDX
-    implementation(libs.bundles.libgdx)
-    implementation(libs.androidx.fragment.ktx)
-
     testImplementation(libs.junit)
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
