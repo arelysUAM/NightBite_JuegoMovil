@@ -486,47 +486,11 @@ fun AppNavigation() {
             val levelId = backStackEntry.arguments?.getInt("levelId") ?: 0
             val currentUserId = activeUserId ?: userSession.userId
 
-            fun savePlaceholderResult(
-                resultType: GameResultType,
-                stars: Int
-            ) {
-                val resultContent = GameResultsData.getResultContent(
-                    levelId = levelId,
-                    resultType = resultType,
-                    stars = stars
-                )
-
-                val starsToSave = resultContent.safeStars
-
-                NightProgressData.saveLevelStars(
-                    userId = currentUserId,
-                    levelId = levelId,
-                    stars = starsToSave
-                )
-
-                val shouldUnlockNextLevel =
-                    resultType.unlocksNextLevel &&
-                            starsToSave == 3 &&
-                            levelId < 4
-
-                if (shouldUnlockNextLevel) {
-                    NightProgressData.unlockNextLevel(
-                        userId = currentUserId,
-                        completedLevelId = levelId
-                    )
-                }
-            }
-
             GamePlaceholderScreen(
                 levelId = levelId,
                 onNavigateToResult = { resultType, stars, runtimeResult ->
                     latestRuntimeResult = runtimeResult
                     latestRuntimeResultLevelId = levelId
-
-                    savePlaceholderResult(
-                        resultType = resultType,
-                        stars = stars
-                    )
 
                     val shouldShowWantedPoster =
                         shouldShowWantedPosterTransition(
@@ -766,9 +730,6 @@ fun AppNavigation() {
                     onRetryLevel = {
                         saveAndUnlockResultProgress()
 
-                        latestRuntimeResult = null
-                        latestRuntimeResultLevelId = null
-
                         if (levelId == 0) {
                             navController.navigate(Routes.TUTORIAL_LOADING) {
                                 popUpTo(Routes.HOME) {
@@ -787,9 +748,6 @@ fun AppNavigation() {
                     },
                     onContinueToNextLevel = {
                         saveAndUnlockResultProgress()
-
-                        latestRuntimeResult  = null
-                        latestRuntimeResultLevelId = null
 
                         if (resultType == GameResultType.FINAL_WIN) {
                             navigateBackToHome()
@@ -811,9 +769,6 @@ fun AppNavigation() {
 
                     onBackToHome = {
                         saveAndUnlockResultProgress()
-
-                        latestRuntimeResult = null
-                        latestRuntimeResultLevelId = null
 
                         navigateBackToHome()
                     }

@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.repository.UserRepository
+import ni.edu.uam.nightbiteapp.data.local.session.UserSession
+import ni.edu.uam.nightbiteapp.data.remote.dto.PlayerSummaryResponse
+import ni.edu.uam.nightbiteapp.data.remote.dto.UserResponse
 
 private const val POST_API_SPLASH_DELAY = 3000L
 
@@ -28,31 +31,49 @@ class StartViewModel(
     fun checkInitialState(requestId: Long) {
         checkInitialStateJob?.cancel()
 
-        // Esto se hace fuera del launch para evitar que navegue usando un estado viejo.
         _uiState.value = StartUiState.Loading(
             requestId = requestId
         )
 
         checkInitialStateJob = viewModelScope.launch {
             val nextState = try {
-                val healthResponse = userRepository.checkHealth()
+                val session = sessionManager.userSessionFlow.first()
 
-                if (!healthResponse.isSuccessful) {
-                    StartUiState.ServerError(
-                        message = "El servidor no respondió correctamente.",
+                if (session.isLoggedIn && session.userId != null) {
+                    StartUiState.NavigateToHome(
+                        user = session.toUserResponse(),
                         requestId = requestId
                     )
                 } else {
-                    resolveSessionState(requestId)
+                    val healthResponse = userRepository.checkHealth()
+
+                    if (!healthResponse.isSuccessful) {
+                        StartUiState.ServerError(
+                            message = "El servidor no respondió correctamente.",
+                            requestId = requestId
+                        )
+                    } else {
+                        StartUiState.NavigateToLogin(
+                            requestId = requestId
+                        )
+                    }
                 }
             } catch (e: Exception) {
-                StartUiState.ServerError(
-                    message = "No se pudo conectar con el servidor.",
-                    requestId = requestId
-                )
+                val session = sessionManager.userSessionFlow.first()
+
+                if (session.isLoggedIn && session.userId != null) {
+                    StartUiState.NavigateToHome(
+                        user = session.toUserResponse(),
+                        requestId = requestId
+                    )
+                } else {
+                    StartUiState.ServerError(
+                        message = "No se pudo conectar con el servidor.",
+                        requestId = requestId
+                    )
+                }
             }
 
-            // Se espera después de consultar la API.
             delay(POST_API_SPLASH_DELAY)
 
             _uiState.value = nextState
@@ -93,5 +114,25 @@ class StartViewModel(
                 requestId = requestId
             )
         }
+    }
+
+    private fun UserSession.toUserResponse(): UserResponse {
+        return UserResponse(
+            id = userId ?: 0L,
+            username = username,
+            email = email,
+            age = age ?: 13,
+            player = if (hasPlayer) {
+                PlayerSummaryResponse(
+                    id = 0L,
+                    driverName = username.ifBlank { "Delivery" },
+                    gender = playerGender,
+                    helmetColor = "Negro",
+                    motorcycleType = "Delivery"
+                )
+            } else {
+                null
+            }
+        )
     }
 }

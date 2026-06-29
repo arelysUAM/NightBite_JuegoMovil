@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -61,17 +60,13 @@ fun NightMessageDialog(
             onDismiss?.invoke()
         },
         properties = DialogProperties(
-            usePlatformDefaultWidth = false
+            usePlatformDefaultWidth = true
         )
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            modifier = modifier.width(NightSizes.dialogWidth),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Box(
-                modifier = modifier.width(NightSizes.dialogWidth),
-                contentAlignment = Alignment.TopCenter
-            ) {
                 Card(
                     shape = NightShapes.dialog,
                     colors = CardDefaults.cardColors(
@@ -157,7 +152,6 @@ fun NightMessageDialog(
                         modifier = Modifier.padding(15.dp)
                     )
                 }
-            }
         }
     }
 }
