@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,11 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import ni.edu.uam.nightbiteapp.R
 
 @Composable
 fun GameMapScene(
@@ -91,6 +90,15 @@ fun GameMapScene(
     }
 }
 
+private fun pointerDrawableFor(
+    objectiveMode: MapObjectiveMode
+): Int {
+    return when (objectiveMode) {
+        MapObjectiveMode.GO_TO_PICKUP -> R.drawable.puntero_restaurante
+        MapObjectiveMode.GO_TO_DELIVERY -> R.drawable.puntero_edificio
+    }
+}
+
 @Composable
 private fun ObjectivePointer(
     levelId: Int,
@@ -103,6 +111,7 @@ private fun ObjectivePointer(
     ) {
         val targetPosition = when (objectiveMode) {
             MapObjectiveMode.GO_TO_PICKUP -> GameMapData.getRestaurantPointerBasePosition()
+
             MapObjectiveMode.GO_TO_DELIVERY -> GameMapData.getActiveBuildingPointerBasePosition(
                 levelId = levelId,
                 orderIndex = currentOrderIndex
@@ -112,8 +121,7 @@ private fun ObjectivePointer(
         val pointerX = maxWidth * (targetPosition.x / GameMapData.MAP_BASE_WIDTH)
         val pointerY = maxHeight * (targetPosition.y / GameMapData.MAP_BASE_HEIGHT)
 
-        val pointerWidth = maxWidth * 0.045f
-        val pointerHeight = maxHeight * 0.105f
+        val pointerSize = maxWidth * 0.07f
 
         val transition = rememberInfiniteTransition(
             label = "objectivePointerTransition"
@@ -132,27 +140,17 @@ private fun ObjectivePointer(
             label = "objectivePointerBounce"
         )
 
-        Canvas(
+        Image(
+            painter = painterResource(id = pointerDrawableFor(objectiveMode)),
+            contentDescription = "Puntero del objetivo",
             modifier = Modifier
                 .offset(
-                    x = pointerX - (pointerWidth / 2),
-                    y = pointerY - pointerHeight - 10.dp + bounceOffset.dp
+                    x = pointerX - (pointerSize / 2),
+                    y = pointerY - (pointerSize * 0.92f) + bounceOffset.dp
                 )
-                .width(pointerWidth)
-                .height(pointerHeight)
-        ) {
-            val triangle = Path().apply {
-                moveTo(size.width / 2f, size.height)
-                lineTo(0f, 0f)
-                lineTo(size.width, 0f)
-                close()
-            }
-
-            drawPath(
-                path = triangle,
-                color = Color(0xFF7861D8).copy(alpha = 0.88f)
-            )
-        }
+                .size(pointerSize),
+            contentScale = ContentScale.Fit
+        )
     }
 }
 

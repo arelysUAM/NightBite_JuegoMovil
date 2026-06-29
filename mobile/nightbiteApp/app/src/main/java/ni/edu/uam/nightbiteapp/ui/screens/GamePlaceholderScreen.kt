@@ -79,6 +79,14 @@ import ni.edu.uam.nightbiteapp.ui.screens.gameplay.GameMapScene
 import ni.edu.uam.nightbiteapp.ui.screens.gameplay.MapObjectiveMode
 import kotlin.math.hypot
 import ni.edu.uam.nightbiteapp.game.TutorialGameResult
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import ni.edu.uam.nightbiteapp.data.local.preferences.ControlsLayout
+import ni.edu.uam.nightbiteapp.data.local.preferences.GameplayPreferences
+import ni.edu.uam.nightbiteapp.ui.screens.gameplay.JornadaCountdownOverlay
 
 @Composable
 fun GamePlaceholderScreen(
@@ -88,6 +96,20 @@ fun GamePlaceholderScreen(
     onBackToHome: () -> Unit
 ) {
     val level = NightLevelsData.getLevelById(levelId)
+
+    val context = LocalContext.current
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val controlsLayout by remember(context) {
+        GameplayPreferences.controlsLayoutFlow(context)
+    }.collectAsState(
+        initial = GameplayPreferences.DEFAULT_CONTROLS_LAYOUT
+    )
+
+    var isMusicEnabled by rememberSaveable {
+        mutableStateOf(true)
+    }
 
     var showPauseMenu by remember {
         mutableStateOf(false)
@@ -145,11 +167,22 @@ fun GamePlaceholderScreen(
         mutableFloatStateOf(0f)
     }
 
+    var showJornadaCountdown by remember {
+        mutableStateOf(true)
+    }
+
+    var jornadaCountdownText by remember {
+        mutableStateOf("3")
+    }
+
     var totalDeliveryTimeSeconds by remember {
         mutableFloatStateOf(0f)
     }
 
-    val isPaused = showPauseMenu || showRestartConfirmation || showExitConfirmation
+    val isPaused = showPauseMenu ||
+            showRestartConfirmation ||
+            showExitConfirmation ||
+            showJornadaCountdown
 
     fun resetCurrentObjectiveTimer() {
         objectiveElapsedSeconds = 0f
@@ -336,6 +369,40 @@ fun GamePlaceholderScreen(
         }
     }
 
+    LaunchedEffect(showPauseMenu) {
+        if (showPauseMenu) {
+            heldDirection = null
+            pressedControl = null
+        }
+    }
+
+    LaunchedEffect(levelId) {
+        showJornadaCountdown = true
+        heldDirection = null
+        pressedControl = null
+
+        val steps = listOf(
+            "3",
+            "2",
+            "1",
+            "Inicio de Jornada"
+        )
+
+        steps.forEach { step ->
+            jornadaCountdownText = step
+
+            delay(
+                if (step == "Inicio de Jornada") {
+                    850
+                } else {
+                    650
+                }
+            )
+        }
+
+        showJornadaCountdown = false
+    }
+
     BackHandler {
         when {
             showRestartConfirmation -> showRestartConfirmation = false
@@ -407,6 +474,7 @@ fun GamePlaceholderScreen(
 
             GameControls(
                 pressedControl = pressedControl,
+                controlsLayout = controlsLayout,
                 onControlDown = { control ->
                     pressedControl = control
 
@@ -428,12 +496,11 @@ fun GamePlaceholderScreen(
                     }
                 },
                 size = layout.directionPadSize,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(
-                        end = layout.directionPadEndPadding,
-                        bottom = layout.directionPadBottomPadding
-                    )
+                directionHorizontalPadding = layout.directionPadEndPadding,
+                directionBottomPadding = layout.directionPadBottomPadding,
+                actionHorizontalPadding = 10.dp,
+                actionBottomPadding = 1.dp,
+                modifier = Modifier.fillMaxSize()
             )
 
             GameFrontBushes(
@@ -446,6 +513,21 @@ fun GamePlaceholderScreen(
             if (showPauseMenu) {
                 PauseOverlay(
                     layout = layout,
+                    isMusicEnabled = isMusicEnabled,
+                    controlsLayout = controlsLayout,
+                    onToggleMusic = {
+                        isMusicEnabled = !isMusicEnabled
+                    },
+                    onToggleControls = {
+                        val nextLayout = controlsLayout.opposite()
+
+                        coroutineScope.launch {
+                            GameplayPreferences.setControlsLayout(
+                                context = context,
+                                controlsLayout = nextLayout
+                            )
+                        }
+                    },
                     onContinue = {
                         showPauseMenu = false
                     },
@@ -460,22 +542,21 @@ fun GamePlaceholderScreen(
                 )
             }
 
+            if (showJornadaCountdown) {
+                JornadaCountdownOverlay(
+                    countdownText = jornadaCountdownText,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .zIndex(30f)
+                )
+            }
+
             GamePlaceholderDialogs(
                 showRestartConfirmation = showRestartConfirmation,
                 showExitConfirmation = showExitConfirmation,
                 levelTitle = level?.title ?: "esta noche",
                 onConfirmRestart = {
                     showRestartConfirmation = false
-
-                    elapsedSeconds = 0
-                    objectiveElapsedSeconds = 0f
-                    safeZoneElapsedSeconds = 0f
-                    totalDeliveryTimeSeconds = 0f
-                    completedOrders = 0
-                    currentOrderIndex = 0
-                    currentLives = 3
-                    objectiveMode = MapObjectiveMode.GO_TO_PICKUP
-                    playerMovementState = GamePlayerMovement.startState()
                     heldDirection = null
                     pressedControl = null
 
@@ -664,15 +745,20 @@ private fun PauseButton(
 @Composable
 private fun GameControls(
     pressedControl: GameControlPress?,
+    controlsLayout: ControlsLayout,
     onControlDown: (GameControlPress) -> Unit,
     onControlUp: (GameControlPress) -> Unit,
     size: Dp,
+    directionHorizontalPadding: Dp,
+    directionBottomPadding: Dp,
+    actionHorizontalPadding: Dp,
+    actionBottomPadding: Dp,
     modifier: Modifier = Modifier
 ) {
+    val directionsOnRight = controlsLayout == ControlsLayout.DIRECTIONS_RIGHT
+
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .zIndex(6f)
+        modifier = modifier.zIndex(6f)
     ) {
         DirectionPad(
             pressedControl = pressedControl,
@@ -680,7 +766,18 @@ private fun GameControls(
             onControlUp = onControlUp,
             size = size,
             modifier = Modifier
-                .align(Alignment.BottomEnd)
+                .align(
+                    if (directionsOnRight) {
+                        Alignment.BottomEnd
+                    } else {
+                        Alignment.BottomStart
+                    }
+                )
+                .padding(
+                    start = if (directionsOnRight) 0.dp else directionHorizontalPadding,
+                    end = if (directionsOnRight) directionHorizontalPadding else 0.dp,
+                    bottom = directionBottomPadding
+                )
         )
 
         ActionButtonControl(
@@ -689,10 +786,17 @@ private fun GameControls(
             onControlUp = onControlUp,
             size = size * 1f,
             modifier = Modifier
-                .align(Alignment.BottomStart)
+                .align(
+                    if (directionsOnRight) {
+                        Alignment.BottomStart
+                    } else {
+                        Alignment.BottomEnd
+                    }
+                )
                 .padding(
-                    start = 10.dp,
-                    bottom = 1.dp
+                    start = if (directionsOnRight) 4.dp else 0.dp,
+                    end = if (directionsOnRight) 0.dp else 4.dp,
+                    bottom = 38.dp
                 )
         )
     }
@@ -838,6 +942,10 @@ private fun ControlTouchArea(
 @Composable
 private fun PauseOverlay(
     layout: GamePlaceholderLayout,
+    isMusicEnabled: Boolean,
+    controlsLayout: ControlsLayout,
+    onToggleMusic: () -> Unit,
+    onToggleControls: () -> Unit,
     onContinue: () -> Unit,
     onRestartRequest: () -> Unit,
     onExitRequest: () -> Unit
@@ -846,21 +954,47 @@ private fun PauseOverlay(
         modifier = Modifier
             .fillMaxSize()
             .zIndex(10f)
-            .background(Color.Black.copy(alpha = 0.58f)),
-        contentAlignment = Alignment.Center
     ) {
-        PauseMenuCard(
-            layout = layout,
-            onContinue = onContinue,
-            onRestartRequest = onRestartRequest,
-            onExitRequest = onExitRequest
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.58f))
+                .clickable(
+                    interactionSource = remember {
+                        MutableInteractionSource()
+                    },
+                    indication = null
+                ) {
+                    // Bloquea los clicks del fondo.
+                    // No hace nada al tocar fuera del menú.
+                }
         )
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            PauseMenuCard(
+                layout = layout,
+                isMusicEnabled = isMusicEnabled,
+                controlsLayout = controlsLayout,
+                onToggleMusic = onToggleMusic,
+                onToggleControls = onToggleControls,
+                onContinue = onContinue,
+                onRestartRequest = onRestartRequest,
+                onExitRequest = onExitRequest
+            )
+        }
     }
 }
 
 @Composable
 private fun PauseMenuCard(
     layout: GamePlaceholderLayout,
+    isMusicEnabled: Boolean,
+    controlsLayout: ControlsLayout,
+    onToggleMusic: () -> Unit,
+    onToggleControls: () -> Unit,
     onContinue: () -> Unit,
     onRestartRequest: () -> Unit,
     onExitRequest: () -> Unit
@@ -888,6 +1022,16 @@ private fun PauseMenuCard(
                 ),
             contentAlignment = Alignment.Center
         ) {
+            PauseSettingsStrip(
+                isMusicEnabled = isMusicEnabled,
+                controlsLayout = controlsLayout,
+                onToggleMusic = onToggleMusic,
+                onToggleControls = onToggleControls,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 38.dp)
+            )
+
             PressableImageButton(
                 drawableId = R.drawable.boton_reintentar,
                 contentDescription = "Reiniciar nivel",
@@ -896,7 +1040,7 @@ private fun PauseMenuCard(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(start = layout.pauseSideButtonHorizontalPadding)
-                    .offset(y = layout.pauseSideButtonDownOffset)
+                    .offset(y = layout.pauseSideButtonDownOffset + 28.dp)
             )
 
             PressableImageButton(
@@ -906,7 +1050,7 @@ private fun PauseMenuCard(
                 onClick = onContinue,
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .offset(y = layout.pauseContinueButtonUpOffset)
+                    .offset(y = layout.pauseContinueButtonUpOffset + 28.dp)
             )
 
             PressableImageButton(
@@ -917,7 +1061,7 @@ private fun PauseMenuCard(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .padding(end = layout.pauseSideButtonHorizontalPadding)
-                    .offset(y = layout.pauseSideButtonDownOffset)
+                    .offset(y = layout.pauseSideButtonDownOffset + 28.dp)
             )
         }
 
@@ -963,6 +1107,154 @@ private fun PauseMenuCard(
                 )
             )
         }
+    }
+}
+
+@Composable
+private fun PauseSettingsStrip(
+    isMusicEnabled: Boolean,
+    controlsLayout: ControlsLayout,
+    onToggleMusic: () -> Unit,
+    onToggleControls: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .width(270.dp)
+            .height(46.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF110C4C))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        PauseMusicOption(
+            isEnabled = isMusicEnabled,
+            onClick = onToggleMusic,
+            modifier = Modifier.weight(1f)
+        )
+
+        PauseControlsOption(
+            controlsLayout = controlsLayout,
+            onClick = onToggleControls,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun PauseMusicOption(
+    isEnabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .height(34.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(PauseHeaderPurple)
+            .clickable {
+                onClick()
+            }
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "Música",
+            color = SmokeWhite,
+            fontSize = 12.sp,
+            fontFamily = LilitaOne,
+            fontWeight = FontWeight.Normal,
+            maxLines = 1
+        )
+
+        PauseSwitch(
+            isEnabled = isEnabled
+        )
+    }
+}
+
+@Composable
+private fun PauseControlsOption(
+    controlsLayout: ControlsLayout,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val arrow = if (controlsLayout == ControlsLayout.DIRECTIONS_RIGHT) {
+        "‹"
+    } else {
+        "›"
+    }
+
+    Row(
+        modifier = modifier
+            .height(34.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(PauseHeaderPurple)
+            .clickable {
+                onClick()
+            }
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "Controles",
+            color = SmokeWhite,
+            fontSize = 12.sp,
+            fontFamily = LilitaOne,
+            fontWeight = FontWeight.Normal,
+            maxLines = 1
+        )
+
+        Box(
+            modifier = Modifier
+                .size(width = 34.dp, height = 26.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = arrow,
+                color = Color(0xFF110C4C),
+                fontSize = 24.sp,
+                fontFamily = LilitaOne,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun PauseSwitch(
+    isEnabled: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .size(width = 44.dp, height = 24.dp)
+            .clip(RoundedCornerShape(50))
+            .background(Color(0xFF110C4C)),
+        contentAlignment = if (isEnabled) {
+            Alignment.CenterEnd
+        } else {
+            Alignment.CenterStart
+        }
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 3.dp)
+                .size(18.dp)
+                .clip(CircleShape)
+                .background(
+                    if (isEnabled) {
+                        Color(0xFFFFC21A)
+                    } else {
+                        SmokeWhite
+                    }
+                )
+        )
     }
 }
 
@@ -1181,17 +1473,17 @@ private fun gamePlaceholderLayoutFor(
         frontBushesHeight = if (compactHeight) 46.dp else 58.dp,
 
         pausePanelWidth = if (compactHeight) 300.dp else 325.dp,
-        pausePanelHeight = if (compactHeight) 174.dp else 190.dp,
-        pauseHeaderWidth = if (compactHeight) 165.dp else 182.dp,
-        pauseHeaderHeight = if (compactHeight) 58.dp else 64.dp,
-        pauseHeaderDepthOffset = if (compactHeight) 7.dp else 8.dp,
-        pauseBodyHeight = if (compactHeight) 145.dp else 158.dp,
+        pausePanelHeight = if (compactHeight) 205.dp else 225.dp,
+        pauseHeaderWidth = if (compactHeight) 140.dp else 155.dp,
+        pauseHeaderHeight = if (compactHeight) 46.dp else 52.dp,
+        pauseHeaderDepthOffset = if (compactHeight) 5.dp else 6.dp,
+        pauseBodyHeight = if (compactHeight) 172.dp else 190.dp,
         pauseSideButtonSize = if (compactHeight) 54.dp else 60.dp,
         pauseContinueButtonSize = if (compactHeight) 82.dp else 92.dp,
         pauseSideButtonHorizontalPadding = if (compactHeight) 58.dp else 64.dp,
         pauseSideButtonDownOffset = if (compactHeight) 20.dp else 24.dp,
         pauseContinueButtonUpOffset = if (compactHeight) 4.dp else 6.dp,
-        pauseTitleSize = if (compactHeight) 29.sp else 32.sp
+        pauseTitleSize = if (compactHeight) 24.sp else 27.sp
     )
 }
 
@@ -1252,5 +1544,12 @@ private fun failResultTypeFor(
         0 -> GameResultType.TUTORIAL_FIRED
         4 -> GameResultType.FINAL_OUT_OF_LIVES
         else -> GameResultType.LEVEL_OUT_OF_LIVES
+    }
+}
+
+private fun ControlsLayout.opposite(): ControlsLayout {
+    return when (this) {
+        ControlsLayout.DIRECTIONS_RIGHT -> ControlsLayout.DIRECTIONS_LEFT
+        ControlsLayout.DIRECTIONS_LEFT -> ControlsLayout.DIRECTIONS_RIGHT
     }
 }

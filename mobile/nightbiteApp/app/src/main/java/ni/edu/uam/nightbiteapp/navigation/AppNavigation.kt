@@ -571,9 +571,13 @@ fun AppNavigation() {
                 },
                 onRestartLevel = {
                     navController.navigate(
-                        Routes.gamePlaceholder(levelId)
+                        Routes.levelIntro(levelId)
                     ) {
-                        launchSingleTop = true
+                        popUpTo(
+                            Routes.gamePlaceholder(levelId)
+                        ) {
+                            inclusive = true
+                        }
                     }
                 },
                 onBackToHome = {

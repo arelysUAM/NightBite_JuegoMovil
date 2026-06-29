@@ -72,6 +72,10 @@ import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.PizzaRed
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.viewmodel.AccountCredentialsViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import ni.edu.uam.nightbiteapp.data.local.preferences.GameplayPreferences
 
 @Composable
 fun AccountScreen(
@@ -82,6 +86,9 @@ fun AccountScreen(
     onNavigateToHome: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(userSession.userId) {
         viewModel.loadAccountInfo(userSession.userId)
@@ -187,9 +194,13 @@ fun AccountScreen(
             },
             onDismissResetProgress = viewModel::dismissResetProgressDialog,
             onProgressResetSuccessConfirm = {
-                viewModel.finishResetProgressFlow(
-                    onNavigateToHome = onNavigateToHome
-                )
+                coroutineScope.launch {
+                    GameplayPreferences.resetControlsLayoutToDefault(context)
+
+                    viewModel.finishResetProgressFlow(
+                        onNavigateToHome = onNavigateToHome
+                    )
+                }
             },
             onDismissInvalidData = viewModel::dismissInvalidDataDialog
         )
@@ -904,7 +915,7 @@ private fun AccountDialogs(
     if (showProgressResetSuccessDialog) {
         NightMessageDialog(
             title = "Progreso reiniciado",
-            message = "Tu progreso fue reiniciado correctamente. Volverás al inicio del juego.",
+            message = "Tu progreso fue reiniciado correctamente. También se restauraron los controles predeterminados. Volverás al inicio del juego.",
             confirmText = "Aceptar",
             dismissText = null,
             icon = Icons.Default.CheckCircle,
