@@ -17,6 +17,8 @@ import ni.edu.uam.nightbiteapp.ui.validation.PlayerValidators
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import ni.edu.uam.nightbiteapp.data.repository.ProgressSyncRepository
+import kotlinx.coroutines.flow.first
+import ni.edu.uam.nightbiteapp.data.local.session.UserSession
 
 class AccountCredentialsViewModel(
     private val userRepository: UserRepository,
@@ -31,9 +33,10 @@ class AccountCredentialsViewModel(
     val genderOptions = listOf("Femenino", "Masculino")
 
     fun loadAccountInfo(userId: Long?) {
-        if (userId == null) {
+        if (userId == null || userId == 0L) {
             _uiState.update {
                 it.copy(
+                    isLoading = false,
                     errorMessage = "No se pudo identificar al usuario activo."
                 )
             }
@@ -48,6 +51,12 @@ class AccountCredentialsViewModel(
                 )
             }
 
+            val localSession = sessionManager.userSessionFlow.first()
+
+            if (localSession.isLoggedIn && localSession.userId == userId) {
+                applyLocalSessionToState(localSession)
+            }
+
             try {
                 val response = userRepository.getUserById(userId)
 
@@ -55,11 +64,14 @@ class AccountCredentialsViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "No se pudo cargar la información de la cuenta."
+                            errorMessage = if (it.username.isBlank() && it.email.isBlank()) {
+                                "No se pudo cargar la información de la cuenta."
+                            } else {
+                                null
+                            }
                         )
                     }
                     return@launch
-
                 }
 
                 val user = response.body()!!
@@ -92,7 +104,11 @@ class AccountCredentialsViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Error de conexión con la API."
+                        errorMessage = if (it.username.isBlank() && it.email.isBlank()) {
+                            "Error de conexión con la API."
+                        } else {
+                            null
+                        }
                     )
                 }
             }
@@ -211,6 +227,37 @@ class AccountCredentialsViewModel(
                 usernameError = null,
                 ageError = null,
                 genderError = null,
+                errorMessage = null
+            )
+        }
+    }
+
+    private fun applyLocalSessionToState(
+        session: UserSession
+    ) {
+        val localUsername = session.username
+        val localEmail = session.email
+        val localAge = session.age?.toString().orEmpty()
+        val localGender = session.playerGender
+
+        _uiState.update {
+            it.copy(
+                username = localUsername,
+                email = localEmail,
+                age = localAge,
+                gender = localGender,
+                createdAt = "No disponible sin conexión",
+
+                originalUsername = localUsername,
+                originalAge = localAge,
+                originalGender = localGender,
+
+                usernameError = null,
+                ageError = null,
+                genderError = null,
+
+                isEditing = false,
+                isLoading = false,
                 errorMessage = null
             )
         }
@@ -504,7 +551,7 @@ class AccountCredentialsViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "No se pudo reiniciar el progreso. Verifica la conexión con la API."
+                        errorMessage = "No se pudo reiniciar el progreso."
                     )
                 }
                 return@launch

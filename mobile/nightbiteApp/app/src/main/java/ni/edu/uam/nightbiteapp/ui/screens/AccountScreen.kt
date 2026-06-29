@@ -90,15 +90,44 @@ fun AccountScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
+    val displayUsername = uiState.username.ifBlank {
+        userSession.username
+    }
+
+    val displayEmail = uiState.email.ifBlank {
+        userSession.email
+    }
+
+    val displayAge = uiState.age.ifBlank {
+        userSession.age?.toString().orEmpty()
+    }
+
+    val displayGender = uiState.gender.ifBlank {
+        userSession.playerGender
+    }
+
+    val displayCreatedAt = uiState.createdAt.ifBlank {
+        "No disponible sin conexión"
+    }
+
     LaunchedEffect(userSession.userId) {
         viewModel.loadAccountInfo(userSession.userId)
     }
 
+    var isLeavingAccount by remember {
+        mutableStateOf(false)
+    }
+
     fun requestBack() {
-        if (!uiState.isLoading) {
+        if (isLeavingAccount) return
+
+        if (uiState.isEditing) {
             viewModel.onBackAttempt(
                 onBackToSettings = onBackToSettings
             )
+        } else {
+            isLeavingAccount = true
+            onBackToSettings()
         }
     }
 
@@ -141,11 +170,11 @@ fun AccountScreen(
                     .align(Alignment.Center)
                     .width(cardWidth)
                     .height(cardHeight),
-                username = uiState.username,
-                email = uiState.email,
-                age = uiState.age,
-                gender = uiState.gender,
-                createdAt = uiState.createdAt,
+                username = displayUsername,
+                email = displayEmail,
+                age = displayAge,
+                gender = displayGender,
+                createdAt = displayCreatedAt,
                 isEditing = uiState.isEditing,
                 isLoading = uiState.isLoading,
                 errorMessage = uiState.errorMessage,

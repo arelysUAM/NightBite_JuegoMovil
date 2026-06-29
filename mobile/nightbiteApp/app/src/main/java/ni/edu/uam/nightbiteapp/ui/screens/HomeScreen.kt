@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,11 +59,8 @@ import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
 import ni.edu.uam.nightbiteapp.viewmodel.HomeViewModel
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.draw.clip
-import androidx.lifecycle.Lifecycle
 import androidx.compose.material3.Icon
-import androidx.lifecycle.LifecycleEventObserver
 import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelDepthBlue
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import ni.edu.uam.nightbiteapp.ui.theme.LockedLevelBadgeBackground
@@ -81,6 +77,7 @@ import ni.edu.uam.nightbiteapp.data.repository.GameProgressRepository
 import androidx.compose.ui.zIndex
 import ni.edu.uam.nightbiteapp.data.remote.RetrofitClient
 import ni.edu.uam.nightbiteapp.data.repository.ProgressSyncRepository
+import ni.edu.uam.nightbiteapp.data.local.mock.NightLevelsData
 
 
 @Suppress("UNUSED_PARAMETER")
@@ -144,11 +141,10 @@ fun HomeScreen(
         ?: 0
 
     val levelsFromRoom = remember(
-        uiState.levels,
         roomMaxUnlockedLevel,
         roomStarsByLevel
     ) {
-        uiState.levels.map { level ->
+        NightLevelsData.levels.map { level ->
             val isUnlockedByRoom = level.id <= roomMaxUnlockedLevel
 
             level.copy(
@@ -165,8 +161,7 @@ fun HomeScreen(
     val hasLocalPlayer =
         userSession.hasPlayer || userSession.playerGender.isNotBlank()
 
-    val canStartLevel =
-        uiState.hasPlayer || hasLocalPlayer
+    val canStartLevel = hasLocalPlayer
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -176,28 +171,6 @@ fun HomeScreen(
 
     var lockedLevelSelected by remember {
         mutableStateOf<NightLevel?>(null)
-    }
-
-    LaunchedEffect(resolvedUserId) {
-        homeViewModel.loadHomeData(resolvedUserId)
-
-        if (safeUserId != 0L) {
-            progressSyncRepository.syncProgress(safeUserId)
-        }
-    }
-
-    DisposableEffect(lifecycleOwner, resolvedUserId) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                homeViewModel.loadHomeData(resolvedUserId)
-            }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
     }
 
     BackHandler {
@@ -264,35 +237,25 @@ fun HomeScreen(
                     .height(layout.levelsSectionHeight),
                 contentAlignment = Alignment.Center
             ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        color = CheeseYellow
-                    )
-                } else {
-                    HomeLevelsRow(
-                        levels = levelsFromRoom,
-                        layout = layout,
-                        onLevelClick = { level ->
-                            when {
-                                uiState.userLoadFailed && !canStartLevel -> {
-                                    homeViewModel.loadHomeData(resolvedUserId)
-                                }
+                HomeLevelsRow(
+                    levels = levelsFromRoom,
+                    layout = layout,
+                    onLevelClick = { level ->
+                        when {
+                            !canStartLevel -> {
+                                showMissingPlayerDialog = true
+                            }
 
-                                !canStartLevel -> {
-                                    showMissingPlayerDialog = true
-                                }
+                            level.isUnlocked -> {
+                                onNavigateToLevelIntro(level.id)
+                            }
 
-                                level.isUnlocked -> {
-                                    onNavigateToLevelIntro(level.id)
-                                }
-
-                                else -> {
-                                    lockedLevelSelected = level
-                                }
+                            else -> {
+                                lockedLevelSelected = level
                             }
                         }
-                    )
-                }
+                    }
+                )
             }
 
             if (showMissingPlayerDialog) {

@@ -26,7 +26,6 @@ import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.mock.GameResultsData
 import ni.edu.uam.nightbiteapp.data.local.mock.NightLevelsData
-import ni.edu.uam.nightbiteapp.data.local.mock.NightProgressData
 import ni.edu.uam.nightbiteapp.data.local.session.SessionManager
 import ni.edu.uam.nightbiteapp.data.local.session.UserSession
 import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
@@ -683,24 +682,6 @@ fun AppNavigation() {
                             elapsedTimeSeconds = elapsedTimeToSave,
                             averageDeliveryTimeSeconds = averageDeliveryTimeToSave
                         )
-
-                        /*
-                         * Temporal:
-                         * mantenemos NightProgressData por ahora para que HomeScreen
-                         * y AchievementsScreen sigan funcionando hasta conectarlos a Room.
-                         */
-                        NightProgressData.saveLevelStars(
-                            userId = currentUserId,
-                            levelId = levelId,
-                            stars = starsToPersist
-                        )
-
-                        if (shouldUnlockNextLevel) {
-                            NightProgressData.unlockNextLevel(
-                                userId = currentUserId,
-                                completedLevelId = levelId
-                            )
-                        }
 
                         if (currentUserId != 0L) {
                             progressSyncRepository.syncProgress(currentUserId)

@@ -75,16 +75,17 @@ class ProgressSyncRepository(
     }
 
     suspend fun resetProgress(userId: Long): Boolean {
+        resetLocalProgress(userId)
+
         return try {
             val response = apiService.resetProgress(userId)
 
             if (!response.isSuccessful) {
-                return false
+                return true
             }
 
-            resetLocalProgress(userId)
-
             val remoteProgress = response.body()
+
             if (remoteProgress != null) {
                 mergeRemoteProgressIntoRoom(
                     userId = userId,
@@ -94,7 +95,7 @@ class ProgressSyncRepository(
 
             true
         } catch (exception: Exception) {
-            false
+            true
         }
     }
 
