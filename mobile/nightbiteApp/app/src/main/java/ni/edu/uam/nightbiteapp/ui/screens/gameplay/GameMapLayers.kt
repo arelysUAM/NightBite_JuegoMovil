@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -35,7 +36,9 @@ fun GameMapScene(
     objectiveMode: MapObjectiveMode,
     currentOrderIndex: Int,
     objectiveProgress: Float,
+    showObjectiveProgress: Boolean,
     playerPosition: GamePlayerPosition,
+    enemyPositions: List<GameEnemyPosition>,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -77,11 +80,20 @@ fun GameMapScene(
             modifier = Modifier.matchParentSize()
         )
 
-        ObjectiveProgressBar(
-            objectiveMode = objectiveMode,
-            progress = objectiveProgress,
-            modifier = Modifier.matchParentSize()
-        )
+        if (showObjectiveProgress) {
+            ObjectiveProgressBar(
+                objectiveMode = objectiveMode,
+                progress = objectiveProgress,
+                modifier = Modifier.matchParentSize()
+            )
+        }
+
+        enemyPositions.forEach { enemyPosition ->
+            GameEnemyDot(
+                enemyPosition = enemyPosition,
+                modifier = Modifier.matchParentSize()
+            )
+        }
 
         PlayerCyanBall(
             playerPosition = playerPosition,
@@ -94,7 +106,9 @@ private fun pointerDrawableFor(
     objectiveMode: MapObjectiveMode
 ): Int {
     return when (objectiveMode) {
-        MapObjectiveMode.GO_TO_PICKUP -> R.drawable.puntero_restaurante
+        MapObjectiveMode.GO_TO_PICKUP,
+        MapObjectiveMode.RETURN_TO_SAFE_ZONE -> R.drawable.puntero_restaurante
+
         MapObjectiveMode.GO_TO_DELIVERY -> R.drawable.puntero_edificio
     }
 }
@@ -107,15 +121,20 @@ private fun ObjectivePointer(
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(
-        modifier = modifier.zIndex(4f)
+        modifier = modifier.zIndex(7f)
     ) {
         val targetPosition = when (objectiveMode) {
-            MapObjectiveMode.GO_TO_PICKUP -> GameMapData.getRestaurantPointerBasePosition()
+            MapObjectiveMode.GO_TO_PICKUP,
+            MapObjectiveMode.RETURN_TO_SAFE_ZONE -> {
+                GameMapData.getRestaurantPointerBasePosition()
+            }
 
-            MapObjectiveMode.GO_TO_DELIVERY -> GameMapData.getActiveBuildingPointerBasePosition(
-                levelId = levelId,
-                orderIndex = currentOrderIndex
-            )
+            MapObjectiveMode.GO_TO_DELIVERY -> {
+                GameMapData.getActiveBuildingPointerBasePosition(
+                    levelId = levelId,
+                    orderIndex = currentOrderIndex
+                )
+            }
         }
 
         val pointerX = maxWidth * (targetPosition.x / GameMapData.MAP_BASE_WIDTH)
@@ -148,7 +167,8 @@ private fun ObjectivePointer(
                     x = pointerX - (pointerSize / 2),
                     y = pointerY - (pointerSize * 0.92f) + bounceOffset.dp
                 )
-                .size(pointerSize),
+                .size(pointerSize)
+                .alpha(0.72f),
             contentScale = ContentScale.Fit
         )
     }
@@ -161,7 +181,7 @@ private fun ActiveDeliveryMarker(
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(
-        modifier = modifier.zIndex(3f)
+        modifier = modifier.zIndex(6.8f)
     ) {
         val deliveryPosition = GameMapData.getActiveDeliveryBasePosition(
             levelId = levelId,
@@ -229,7 +249,8 @@ private fun ObjectiveProgressBar(
         val fillColor = when {
             safeProgress <= 0.50f -> Color(0xFFE53935)
 
-            objectiveMode == MapObjectiveMode.GO_TO_PICKUP -> Color(0xFFFFD21F)
+            objectiveMode == MapObjectiveMode.GO_TO_PICKUP ||
+            objectiveMode == MapObjectiveMode.RETURN_TO_SAFE_ZONE -> Color(0xFFFFD21F)
 
             else -> Color(0xFF57DDE3)
         }
@@ -290,6 +311,39 @@ private fun PlayerCyanBall(
                 .border(
                     width = 2.dp,
                     color = Color.White.copy(alpha = 0.85f),
+                    shape = CircleShape
+                )
+        )
+    }
+}
+
+@Composable
+private fun GameEnemyDot(
+    enemyPosition: GameEnemyPosition,
+    modifier: Modifier = Modifier
+) {
+    BoxWithConstraints(
+        modifier = modifier.zIndex(5.7f)
+    ) {
+        val enemySize = maxWidth *
+                (GameMapData.CELL_SIZE / GameMapData.MAP_BASE_WIDTH) *
+                GameEnemyData.sizeInCellsFor(enemyPosition.type)
+
+        val enemyX = maxWidth * (enemyPosition.x / GameMapData.MAP_BASE_WIDTH)
+        val enemyY = maxHeight * (enemyPosition.y / GameMapData.MAP_BASE_HEIGHT)
+
+        Box(
+            modifier = Modifier
+                .offset(
+                    x = enemyX - (enemySize / 2),
+                    y = enemyY - (enemySize / 2)
+                )
+                .size(enemySize)
+                .clip(CircleShape)
+                .background(Color(0xFF2C1A5E).copy(alpha = 0.95f))
+                .border(
+                    width = 2.dp,
+                    color = Color(0xFFB36BFF).copy(alpha = 0.9f),
                     shape = CircleShape
                 )
         )

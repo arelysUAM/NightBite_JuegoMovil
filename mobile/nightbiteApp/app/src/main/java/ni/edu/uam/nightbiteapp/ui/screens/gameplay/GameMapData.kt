@@ -38,8 +38,9 @@ object GameMapData {
     const val TUTORIAL_TOTAL_ORDERS = 8
 
     const val PICKUP_TIMEOUT_SECONDS = 10f
-    const val SAFE_ZONE_TIMEOUT_SECONDS = 10f
-    const val DELIVERY_TIMEOUT_SECONDS = 7f
+    const val SAFE_ZONE_TIMEOUT_SECONDS = 6f
+    const val DELIVERY_TIMEOUT_SECONDS = 6f
+    const val RETURN_TO_SAFE_ZONE_TIMEOUT_SECONDS = 8f
 
     const val DELIVERY_TRIGGER_RADIUS = CELL_SIZE * 0.45f
     const val PICKUP_TRIGGER_RADIUS = CELL_SIZE * 0.55f
@@ -94,7 +95,9 @@ object GameMapData {
         mode: MapObjectiveMode
     ): Int {
         return when (mode) {
-            MapObjectiveMode.GO_TO_PICKUP -> R.drawable.restaurante_activo
+            MapObjectiveMode.GO_TO_PICKUP,
+            MapObjectiveMode.RETURN_TO_SAFE_ZONE -> R.drawable.restaurante_activo
+
             MapObjectiveMode.GO_TO_DELIVERY -> R.drawable.restaurante_neutro
         }
     }
@@ -302,13 +305,13 @@ object GameMapData {
     private val levelTwoOrderPattern = listOf(
         GameOrderTarget(buildingId = 3, deliveryPointIndex = 0),
         GameOrderTarget(buildingId = 5, deliveryPointIndex = 0),
-        GameOrderTarget(buildingId = 7, deliveryPointIndex = 0),
-        GameOrderTarget(buildingId = 10, deliveryPointIndex = 1),
-        GameOrderTarget(buildingId = 12, deliveryPointIndex = 0),
+        GameOrderTarget(buildingId = 7, deliveryPointIndex = 1),
+        GameOrderTarget(buildingId = 10, deliveryPointIndex = 0),
+        GameOrderTarget(buildingId = 12, deliveryPointIndex = 1),
+        GameOrderTarget(buildingId = 11, deliveryPointIndex = 0),
+        GameOrderTarget(buildingId = 16, deliveryPointIndex = 0),
         GameOrderTarget(buildingId = 13, deliveryPointIndex = 0),
-        GameOrderTarget(buildingId = 16, deliveryPointIndex = 1),
         GameOrderTarget(buildingId = 17, deliveryPointIndex = 0),
-        GameOrderTarget(buildingId = 1, deliveryPointIndex = 1),
         GameOrderTarget(buildingId = 6, deliveryPointIndex = 0)
     )
 
@@ -803,5 +806,6 @@ enum class GameMapNodeType {
 
 enum class MapObjectiveMode {
     GO_TO_PICKUP,
-    GO_TO_DELIVERY
+    GO_TO_DELIVERY,
+    RETURN_TO_SAFE_ZONE
 }

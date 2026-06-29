@@ -87,6 +87,8 @@ import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.preferences.ControlsLayout
 import ni.edu.uam.nightbiteapp.data.local.preferences.GameplayPreferences
 import ni.edu.uam.nightbiteapp.ui.screens.gameplay.JornadaCountdownOverlay
+import ni.edu.uam.nightbiteapp.ui.screens.gameplay.GameEnemyData
+import ni.edu.uam.nightbiteapp.ui.screens.gameplay.GameEnemyPosition
 
 @Composable
 fun GamePlaceholderScreen(
@@ -167,6 +169,10 @@ fun GamePlaceholderScreen(
         mutableFloatStateOf(0f)
     }
 
+    var returnToSafeZoneElapsedSeconds by remember {
+        mutableFloatStateOf(0f)
+    }
+
     var showJornadaCountdown by remember {
         mutableStateOf(true)
     }
@@ -179,6 +185,26 @@ fun GamePlaceholderScreen(
         mutableFloatStateOf(0f)
     }
 
+    var enemyElapsedSeconds by remember(levelId) {
+        mutableFloatStateOf(0f)
+    }
+
+    var enemyCollisionCooldownSeconds by remember(levelId) {
+        mutableFloatStateOf(0f)
+    }
+
+    var activeEnemyPositions by remember(levelId) {
+        mutableStateOf(
+            GameEnemyData.initialEnemyPositionsForLevel(levelId)
+        )
+    }
+
+    LaunchedEffect(levelId) {
+        enemyElapsedSeconds = 0f
+        enemyCollisionCooldownSeconds = 0f
+        activeEnemyPositions = GameEnemyData.initialEnemyPositionsForLevel(levelId)
+    }
+
     val isPaused = showPauseMenu ||
             showRestartConfirmation ||
             showExitConfirmation ||
@@ -187,8 +213,8 @@ fun GamePlaceholderScreen(
     fun resetCurrentObjectiveTimer() {
         objectiveElapsedSeconds = 0f
         safeZoneElapsedSeconds = 0f
+        returnToSafeZoneElapsedSeconds = 0f
     }
-
     fun buildGameplayResult(
         stars: Int,
         completedOrdersOverride: Int = completedOrders,
@@ -204,10 +230,22 @@ fun GamePlaceholderScreen(
         )
     }
 
-    fun loseLife() {
+    fun loseLife(
+        resetObjectiveTimer: Boolean = true,
+        respawnPlayer: Boolean = false
+    ) {
         val nextLives = (currentLives - 1).coerceAtLeast(0)
         currentLives = nextLives
-        resetCurrentObjectiveTimer()
+
+        if (resetObjectiveTimer) {
+            resetCurrentObjectiveTimer()
+        }
+
+        if (respawnPlayer) {
+            heldDirection = null
+            pressedControl = null
+            playerMovementState = GamePlayerMovement.startState()
+        }
 
         if (nextLives <= 0) {
             onNavigateToResult(
@@ -241,9 +279,43 @@ fun GamePlaceholderScreen(
                 )
             )
         } else {
+            objectiveMode = MapObjectiveMode.RETURN_TO_SAFE_ZONE
+            objectiveElapsedSeconds = 0f
+            safeZoneElapsedSeconds = 0f
+            returnToSafeZoneElapsedSeconds = 0f
+        }
+    }
+
+    fun failCurrentOrder() {
+        resetCurrentObjectiveTimer()
+
+        if (currentOrderIndex >= totalOrders - 1) {
+            val finalStars = starsForCompletedOrders(
+                completedOrders = completedOrders,
+                totalOrders = totalOrders
+            )
+
+            onNavigateToResult(
+                resultTypeForStars(
+                    levelId = levelId,
+                    stars = finalStars
+                ),
+                finalStars,
+                buildGameplayResult(
+                    stars = finalStars
+                )
+            )
+        } else {
             currentOrderIndex += 1
             objectiveMode = MapObjectiveMode.GO_TO_PICKUP
         }
+    }
+
+    fun moveToNextPickupAfterSafeZoneReturn() {
+        resetCurrentObjectiveTimer()
+
+        currentOrderIndex += 1
+        objectiveMode = MapObjectiveMode.GO_TO_PICKUP
     }
 
     fun handleActionPressed() {
@@ -281,6 +353,10 @@ fun GamePlaceholderScreen(
                     completeCurrentOrder()
                 }
             }
+
+            MapObjectiveMode.RETURN_TO_SAFE_ZONE -> {
+                // No se recoge ni entrega aquí.
+            }
         }
     }
 
@@ -297,23 +373,12 @@ fun GamePlaceholderScreen(
         isPaused,
         objectiveMode,
         currentOrderIndex,
-        currentLives
+        currentLives,
+        playerMovementState.position
     ) {
         if (!isPaused && currentLives > 0) {
             while (true) {
                 delay(100)
-
-                objectiveElapsedSeconds += 0.1f
-
-                val currentTimeout = when (objectiveMode) {
-                    MapObjectiveMode.GO_TO_PICKUP -> GameMapData.PICKUP_TIMEOUT_SECONDS
-                    MapObjectiveMode.GO_TO_DELIVERY -> GameMapData.DELIVERY_TIMEOUT_SECONDS
-                }
-
-                if (objectiveElapsedSeconds >= currentTimeout) {
-                    loseLife()
-                    break
-                }
 
                 val currentCell = GameMapData.cellForBasePosition(
                     x = playerMovementState.position.x,
@@ -325,15 +390,96 @@ fun GamePlaceholderScreen(
                     column = currentCell.column
                 )
 
-                if (objectiveMode == MapObjectiveMode.GO_TO_DELIVERY && isInSafeZone) {
-                    safeZoneElapsedSeconds += 0.1f
-                } else {
-                    safeZoneElapsedSeconds = 0f
-                }
+                when (objectiveMode) {
+                    MapObjectiveMode.GO_TO_PICKUP -> {
+                        objectiveElapsedSeconds = 0f
+                        returnToSafeZoneElapsedSeconds = 0f
 
-                if (safeZoneElapsedSeconds >= GameMapData.SAFE_ZONE_TIMEOUT_SECONDS) {
-                    loseLife()
-                    break
+                        if (isInSafeZone) {
+                            safeZoneElapsedSeconds += 0.1f
+                        } else {
+                            safeZoneElapsedSeconds = 0f
+                        }
+
+                        if (safeZoneElapsedSeconds >= GameMapData.SAFE_ZONE_TIMEOUT_SECONDS) {
+                            loseLife(
+                                resetObjectiveTimer = true,
+                                respawnPlayer = true
+                            )
+                            break
+                        }
+                    }
+
+                    MapObjectiveMode.GO_TO_DELIVERY -> {
+                        safeZoneElapsedSeconds = 0f
+                        returnToSafeZoneElapsedSeconds = 0f
+
+                        objectiveElapsedSeconds += 0.1f
+
+                        if (objectiveElapsedSeconds >= GameMapData.DELIVERY_TIMEOUT_SECONDS) {
+                            failCurrentOrder()
+                            break
+                        }
+                    }
+
+                    MapObjectiveMode.RETURN_TO_SAFE_ZONE -> {
+                        objectiveElapsedSeconds = 0f
+                        safeZoneElapsedSeconds = 0f
+
+                        if (isInSafeZone) {
+                            moveToNextPickupAfterSafeZoneReturn()
+                            break
+                        }
+
+                        returnToSafeZoneElapsedSeconds += 0.1f
+
+                        if (returnToSafeZoneElapsedSeconds >= GameMapData.RETURN_TO_SAFE_ZONE_TIMEOUT_SECONDS) {
+                            loseLife(
+                                resetObjectiveTimer = true,
+                                respawnPlayer = true
+                            )
+
+                            if (currentLives > 1) {
+                                moveToNextPickupAfterSafeZoneReturn()
+                            }
+
+                            break
+                        }
+                    }
+
+                    MapObjectiveMode.GO_TO_DELIVERY -> {
+                        safeZoneElapsedSeconds = 0f
+                        returnToSafeZoneElapsedSeconds = 0f
+
+                        objectiveElapsedSeconds += 0.1f
+
+                        if (objectiveElapsedSeconds >= GameMapData.DELIVERY_TIMEOUT_SECONDS) {
+                            failCurrentOrder()
+                            break
+                        }
+                    }
+
+                    MapObjectiveMode.RETURN_TO_SAFE_ZONE -> {
+                        objectiveElapsedSeconds = 0f
+                        safeZoneElapsedSeconds = 0f
+
+                        if (isInSafeZone) {
+                            moveToNextPickupAfterSafeZoneReturn()
+                            break
+                        }
+
+                        returnToSafeZoneElapsedSeconds += 0.1f
+
+                        if (returnToSafeZoneElapsedSeconds >= GameMapData.RETURN_TO_SAFE_ZONE_TIMEOUT_SECONDS) {
+                            loseLife(
+                                resetObjectiveTimer = true,
+                                respawnPlayer = true
+                            )
+
+                            moveToNextPickupAfterSafeZoneReturn()
+                            break
+                        }
+                    }
                 }
             }
         }
@@ -403,6 +549,74 @@ fun GamePlaceholderScreen(
         showJornadaCountdown = false
     }
 
+    LaunchedEffect(
+        levelId,
+        isPaused,
+        currentLives
+    ) {
+        if (!GameEnemyData.hasEnemiesForLevel(levelId)) {
+            enemyElapsedSeconds = 0f
+            enemyCollisionCooldownSeconds = 0f
+            activeEnemyPositions = emptyList()
+            return@LaunchedEffect
+        }
+
+        if (isPaused || currentLives <= 0) {
+            return@LaunchedEffect
+        }
+
+        var lastFrameTimeNanos = 0L
+
+        while (!isPaused && currentLives > 0) {
+            val frameTimeNanos = withFrameNanos { frameTime ->
+                frameTime
+            }
+
+            if (lastFrameTimeNanos != 0L) {
+                val deltaSeconds = (
+                        frameTimeNanos - lastFrameTimeNanos
+                        ) / 1_000_000_000f
+
+                val safeDeltaSeconds = deltaSeconds.coerceAtMost(0.05f)
+
+                enemyElapsedSeconds += safeDeltaSeconds
+
+                activeEnemyPositions = GameEnemyData.updateEnemyPositionsForLevel(
+                    levelId = levelId,
+                    elapsedSeconds = enemyElapsedSeconds,
+                    deltaSeconds = safeDeltaSeconds,
+                    currentPositions = activeEnemyPositions,
+                    playerPosition = playerMovementState.position
+                )
+
+                enemyCollisionCooldownSeconds =
+                    (enemyCollisionCooldownSeconds - safeDeltaSeconds)
+                        .coerceAtLeast(0f)
+
+                if (enemyCollisionCooldownSeconds <= 0f) {
+                    val touchedEnemy = activeEnemyPositions.any { enemyPosition ->
+                        GameEnemyData.playerCollidesWithEnemy(
+                            playerPosition = playerMovementState.position,
+                            enemyPosition = enemyPosition
+                        )
+                    }
+
+                    if (touchedEnemy) {
+                        enemyCollisionCooldownSeconds =
+                            GameEnemyData.ENEMY_COLLISION_COOLDOWN_SECONDS
+
+                        loseLife(
+                            resetObjectiveTimer = false,
+                            respawnPlayer = true
+                        )
+                    }
+                }
+            }
+
+            lastFrameTimeNanos = frameTimeNanos
+        }
+    }
+
     BackHandler {
         when {
             showRestartConfirmation -> showRestartConfirmation = false
@@ -420,12 +634,38 @@ fun GamePlaceholderScreen(
             maxHeight = maxHeight
         )
 
-        val currentObjectiveTimeout = when (objectiveMode) {
-            MapObjectiveMode.GO_TO_PICKUP -> GameMapData.PICKUP_TIMEOUT_SECONDS
-            MapObjectiveMode.GO_TO_DELIVERY -> GameMapData.DELIVERY_TIMEOUT_SECONDS
+        val currentCell = GameMapData.cellForBasePosition(
+            x = playerMovementState.position.x,
+            y = playerMovementState.position.y
+        )
+
+        val isPlayerInSafeZone = GameMapData.isSafeZoneCell(
+            row = currentCell.row,
+            column = currentCell.column
+        )
+
+        val shouldShowObjectiveProgress = when (objectiveMode) {
+            MapObjectiveMode.GO_TO_PICKUP -> isPlayerInSafeZone
+            MapObjectiveMode.GO_TO_DELIVERY -> true
+            MapObjectiveMode.RETURN_TO_SAFE_ZONE -> !isPlayerInSafeZone
         }
 
-        val objectiveProgress = 1f - (objectiveElapsedSeconds / currentObjectiveTimeout)
+        val objectiveProgress = when (objectiveMode) {
+            MapObjectiveMode.GO_TO_PICKUP -> {
+                1f - (safeZoneElapsedSeconds / GameMapData.SAFE_ZONE_TIMEOUT_SECONDS)
+            }
+
+            MapObjectiveMode.GO_TO_DELIVERY -> {
+                1f - (objectiveElapsedSeconds / GameMapData.DELIVERY_TIMEOUT_SECONDS)
+            }
+
+            MapObjectiveMode.RETURN_TO_SAFE_ZONE -> {
+                1f - (
+                        returnToSafeZoneElapsedSeconds /
+                                GameMapData.RETURN_TO_SAFE_ZONE_TIMEOUT_SECONDS
+                        )
+            }
+        }.coerceIn(0f, 1f)
 
         Box(
             modifier = Modifier.fillMaxSize()
@@ -438,7 +678,9 @@ fun GamePlaceholderScreen(
                 objectiveMode = objectiveMode,
                 currentOrderIndex = currentOrderIndex,
                 objectiveProgress = objectiveProgress,
+                showObjectiveProgress = shouldShowObjectiveProgress,
                 playerPosition = playerMovementState.position,
+                enemyPositions = activeEnemyPositions,
                 modifier = Modifier
                     .align(Alignment.Center)
                     .offset(y = layout.mapVerticalOffset)
@@ -594,9 +836,11 @@ private fun GameMap(
     objectiveMode: MapObjectiveMode,
     currentOrderIndex: Int,
     objectiveProgress: Float,
+    showObjectiveProgress: Boolean,
     playerPosition: GamePlayerPosition,
+    enemyPositions: List<GameEnemyPosition>,
     modifier: Modifier = Modifier
-) {
+){
     Box(
         modifier = modifier
             .width(layout.mapWidth)
@@ -615,6 +859,8 @@ private fun GameMap(
             currentOrderIndex = currentOrderIndex,
             objectiveProgress = objectiveProgress,
             playerPosition = playerPosition,
+            enemyPositions = enemyPositions,
+            showObjectiveProgress = showObjectiveProgress,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -1544,6 +1790,44 @@ private fun failResultTypeFor(
         0 -> GameResultType.TUTORIAL_FIRED
         4 -> GameResultType.FINAL_OUT_OF_LIVES
         else -> GameResultType.LEVEL_OUT_OF_LIVES
+    }
+}
+
+
+private fun resultTypeForStars(
+    levelId: Int,
+    stars: Int
+): GameResultType {
+    val safeStars = stars.coerceIn(0, 3)
+
+    if (safeStars == 3) {
+        return successResultTypeFor(levelId)
+    }
+
+    return when (levelId) {
+        0 -> {
+            when (safeStars) {
+                2 -> GameResultType.TUTORIAL_EIGHTY_PERCENT
+                1 -> GameResultType.TUTORIAL_HALF_DELIVERIES
+                else -> GameResultType.TUTORIAL_FIRED
+            }
+        }
+
+        4 -> {
+            when (safeStars) {
+                2 -> GameResultType.FINAL_INCOMPLETE_AT_LEAST_50
+                1 -> GameResultType.FINAL_INCOMPLETE_UNDER_50
+                else -> GameResultType.FINAL_OUT_OF_LIVES
+            }
+        }
+
+        else -> {
+            when (safeStars) {
+                2 -> GameResultType.LEVEL_INCOMPLETE_AT_LEAST_50
+                1 -> GameResultType.LEVEL_INCOMPLETE_UNDER_50
+                else -> GameResultType.LEVEL_OUT_OF_LIVES
+            }
+        }
     }
 }
 
