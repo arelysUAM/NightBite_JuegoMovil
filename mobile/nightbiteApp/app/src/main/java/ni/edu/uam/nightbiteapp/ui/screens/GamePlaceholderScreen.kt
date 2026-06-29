@@ -5,17 +5,17 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -28,7 +28,9 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -49,26 +51,39 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import kotlinx.coroutines.delay
 import ni.edu.uam.nightbiteapp.R
 import ni.edu.uam.nightbiteapp.data.local.mock.NightLevelsData
 import ni.edu.uam.nightbiteapp.ui.components.dialogs.NightMessageDialog
-import ni.edu.uam.nightbiteapp.ui.design.NightShapes
 import ni.edu.uam.nightbiteapp.ui.model.GameResultType
 import ni.edu.uam.nightbiteapp.ui.theme.CheeseYellow
+import ni.edu.uam.nightbiteapp.ui.theme.DarkText
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.OptionPurple
-import ni.edu.uam.nightbiteapp.ui.theme.OptionRed
-import ni.edu.uam.nightbiteapp.ui.theme.OptionsPanelLavender
 import ni.edu.uam.nightbiteapp.ui.theme.PauseBodyBlue
 import ni.edu.uam.nightbiteapp.ui.theme.PauseHeaderDepthPurple
 import ni.edu.uam.nightbiteapp.ui.theme.PauseHeaderPurple
-import ni.edu.uam.nightbiteapp.ui.theme.SimulatorHeaderPurple
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.input.pointer.pointerInput
+import ni.edu.uam.nightbiteapp.ui.screens.gameplay.GameMapData
+import ni.edu.uam.nightbiteapp.ui.screens.gameplay.GameMapDirection
+import androidx.compose.runtime.withFrameNanos
+import ni.edu.uam.nightbiteapp.ui.screens.gameplay.GamePlayerMovement
+import androidx.compose.ui.draw.clipToBounds
+import ni.edu.uam.nightbiteapp.ui.screens.gameplay.GamePlayerPosition
+import androidx.compose.runtime.mutableFloatStateOf
+import ni.edu.uam.nightbiteapp.ui.screens.gameplay.GameMapScene
+import ni.edu.uam.nightbiteapp.ui.screens.gameplay.MapObjectiveMode
+import kotlin.math.hypot
+import ni.edu.uam.nightbiteapp.game.TutorialGameResult
 
 @Composable
 fun GamePlaceholderScreen(
     levelId: Int,
-    onNavigateToResult: (GameResultType, Int) -> Unit,
+    onNavigateToResult: (GameResultType, Int, TutorialGameResult) -> Unit,
     onRestartLevel: () -> Unit,
     onBackToHome: () -> Unit
 ) {
@@ -86,13 +101,247 @@ fun GamePlaceholderScreen(
         mutableStateOf(false)
     }
 
-    BackHandler(
-        enabled = showPauseMenu || showRestartConfirmation || showExitConfirmation
+    var elapsedSeconds by remember {
+        mutableIntStateOf(0)
+    }
+
+    var pressedControl by remember {
+        mutableStateOf<GameControlPress?>(null)
+    }
+
+    var playerMovementState by remember {
+        mutableStateOf(GamePlayerMovement.startState())
+    }
+
+    var heldDirection by remember {
+        mutableStateOf<GameMapDirection?>(null)
+    }
+
+    val totalOrders = remember(levelId) {
+        GameMapData.getTotalOrdersForLevel(levelId)
+    }
+
+    var objectiveMode by remember {
+        mutableStateOf(MapObjectiveMode.GO_TO_PICKUP)
+    }
+
+    var currentOrderIndex by remember {
+        mutableIntStateOf(0)
+    }
+
+    var completedOrders by remember {
+        mutableIntStateOf(0)
+    }
+
+    var currentLives by remember {
+        mutableIntStateOf(3)
+    }
+
+    var objectiveElapsedSeconds by remember {
+        mutableFloatStateOf(0f)
+    }
+
+    var safeZoneElapsedSeconds by remember {
+        mutableFloatStateOf(0f)
+    }
+
+    var totalDeliveryTimeSeconds by remember {
+        mutableFloatStateOf(0f)
+    }
+
+    val isPaused = showPauseMenu || showRestartConfirmation || showExitConfirmation
+
+    fun resetCurrentObjectiveTimer() {
+        objectiveElapsedSeconds = 0f
+        safeZoneElapsedSeconds = 0f
+    }
+
+    fun buildGameplayResult(
+        stars: Int,
+        completedOrdersOverride: Int = completedOrders,
+        totalDeliveryTimeSecondsOverride: Float = totalDeliveryTimeSeconds
+    ): TutorialGameResult {
+        return TutorialGameResult(
+            completedOrders = completedOrdersOverride,
+            totalOrders = totalOrders,
+            score = stars * 100,
+            elapsedTimeSeconds = elapsedSeconds.toFloat(),
+            totalDeliveryTimeSeconds = totalDeliveryTimeSecondsOverride,
+            stars = stars
+        )
+    }
+
+    fun loseLife() {
+        val nextLives = (currentLives - 1).coerceAtLeast(0)
+        currentLives = nextLives
+        resetCurrentObjectiveTimer()
+
+        if (nextLives <= 0) {
+            onNavigateToResult(
+                failResultTypeFor(levelId),
+                0,
+                buildGameplayResult(
+                    stars = 0
+                )
+            )
+        }
+    }
+
+    fun completeCurrentOrder() {
+        val deliveredOrderTime = objectiveElapsedSeconds.coerceAtLeast(0f)
+        val nextTotalDeliveryTimeSeconds = totalDeliveryTimeSeconds + deliveredOrderTime
+        val nextCompletedOrders = completedOrders + 1
+
+        totalDeliveryTimeSeconds = nextTotalDeliveryTimeSeconds
+        completedOrders = nextCompletedOrders
+
+        resetCurrentObjectiveTimer()
+
+        if (nextCompletedOrders >= totalOrders) {
+            onNavigateToResult(
+                successResultTypeFor(levelId),
+                3,
+                buildGameplayResult(
+                    stars = 3,
+                    completedOrdersOverride = nextCompletedOrders,
+                    totalDeliveryTimeSecondsOverride = nextTotalDeliveryTimeSeconds
+                )
+            )
+        } else {
+            currentOrderIndex += 1
+            objectiveMode = MapObjectiveMode.GO_TO_PICKUP
+        }
+    }
+
+    fun handleActionPressed() {
+        when (objectiveMode) {
+            MapObjectiveMode.GO_TO_PICKUP -> {
+                val pickupPosition = GameMapData.getRestaurantPickupBasePosition()
+
+                if (
+                    isPlayerNearTarget(
+                        playerPosition = playerMovementState.position,
+                        targetX = pickupPosition.x,
+                        targetY = pickupPosition.y,
+                        radius = GameMapData.PICKUP_TRIGGER_RADIUS
+                    )
+                ) {
+                    objectiveMode = MapObjectiveMode.GO_TO_DELIVERY
+                    resetCurrentObjectiveTimer()
+                }
+            }
+
+            MapObjectiveMode.GO_TO_DELIVERY -> {
+                val deliveryPosition = GameMapData.getActiveDeliveryBasePosition(
+                    levelId = levelId,
+                    orderIndex = currentOrderIndex
+                )
+
+                if (
+                    isPlayerNearTarget(
+                        playerPosition = playerMovementState.position,
+                        targetX = deliveryPosition.x,
+                        targetY = deliveryPosition.y,
+                        radius = GameMapData.DELIVERY_TRIGGER_RADIUS
+                    )
+                ) {
+                    completeCurrentOrder()
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(isPaused) {
+        if (!isPaused) {
+            while (true) {
+                delay(1000)
+                elapsedSeconds += 1
+            }
+        }
+    }
+
+    LaunchedEffect(
+        isPaused,
+        objectiveMode,
+        currentOrderIndex,
+        currentLives
     ) {
+        if (!isPaused && currentLives > 0) {
+            while (true) {
+                delay(100)
+
+                objectiveElapsedSeconds += 0.1f
+
+                val currentTimeout = when (objectiveMode) {
+                    MapObjectiveMode.GO_TO_PICKUP -> GameMapData.PICKUP_TIMEOUT_SECONDS
+                    MapObjectiveMode.GO_TO_DELIVERY -> GameMapData.DELIVERY_TIMEOUT_SECONDS
+                }
+
+                if (objectiveElapsedSeconds >= currentTimeout) {
+                    loseLife()
+                    break
+                }
+
+                val currentCell = GameMapData.cellForBasePosition(
+                    x = playerMovementState.position.x,
+                    y = playerMovementState.position.y
+                )
+
+                val isInSafeZone = GameMapData.isSafeZoneCell(
+                    row = currentCell.row,
+                    column = currentCell.column
+                )
+
+                if (objectiveMode == MapObjectiveMode.GO_TO_DELIVERY && isInSafeZone) {
+                    safeZoneElapsedSeconds += 0.1f
+                } else {
+                    safeZoneElapsedSeconds = 0f
+                }
+
+                if (safeZoneElapsedSeconds >= GameMapData.SAFE_ZONE_TIMEOUT_SECONDS) {
+                    loseLife()
+                    break
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(
+        heldDirection,
+        isPaused
+    ) {
+        if (heldDirection == null || isPaused) {
+            playerMovementState = GamePlayerMovement.stop(playerMovementState)
+            return@LaunchedEffect
+        }
+
+        var lastFrameTimeNanos = 0L
+
+        while (heldDirection != null && !isPaused) {
+            val frameTimeNanos = withFrameNanos { frameTime ->
+                frameTime
+            }
+
+            if (lastFrameTimeNanos != 0L) {
+                val deltaSeconds = (frameTimeNanos - lastFrameTimeNanos) / 1_000_000_000f
+
+                playerMovementState = GamePlayerMovement.update(
+                    state = playerMovementState,
+                    desiredDirection = heldDirection,
+                    deltaSeconds = deltaSeconds
+                )
+            }
+
+            lastFrameTimeNanos = frameTimeNanos
+        }
+    }
+
+    BackHandler {
         when {
             showRestartConfirmation -> showRestartConfirmation = false
             showExitConfirmation -> showExitConfirmation = false
             showPauseMenu -> showPauseMenu = false
+            else -> showPauseMenu = true
         }
     }
 
@@ -104,10 +353,44 @@ fun GamePlaceholderScreen(
             maxHeight = maxHeight
         )
 
+        val currentObjectiveTimeout = when (objectiveMode) {
+            MapObjectiveMode.GO_TO_PICKUP -> GameMapData.PICKUP_TIMEOUT_SECONDS
+            MapObjectiveMode.GO_TO_DELIVERY -> GameMapData.DELIVERY_TIMEOUT_SECONDS
+        }
+
+        val objectiveProgress = 1f - (objectiveElapsedSeconds / currentObjectiveTimeout)
+
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
             GameBackground()
+
+            GameMap(
+                levelId = levelId,
+                layout = layout,
+                objectiveMode = objectiveMode,
+                currentOrderIndex = currentOrderIndex,
+                objectiveProgress = objectiveProgress,
+                playerPosition = playerMovementState.position,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(y = layout.mapVerticalOffset)
+            )
+
+            GameTopHud(
+                lives = currentLives,
+                stars = starsForCompletedOrders(
+                    completedOrders = completedOrders,
+                    totalOrders = totalOrders
+                ),
+                completedOrders = completedOrders,
+                totalOrders = totalOrders,
+                elapsedSeconds = elapsedSeconds,
+                layout = layout,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = layout.hudTopPadding)
+            )
 
             PauseButton(
                 size = layout.pauseButtonSize,
@@ -122,26 +405,43 @@ fun GamePlaceholderScreen(
                     )
             )
 
-            Column(
+            GameControls(
+                pressedControl = pressedControl,
+                onControlDown = { control ->
+                    pressedControl = control
+
+                    if (control == GameControlPress.ACTION) {
+                        handleActionPressed()
+                    } else {
+                        control.toMapDirection()?.let { direction ->
+                            heldDirection = direction
+                        }
+                    }
+                },
+                onControlUp = { control ->
+                    if (pressedControl == control) {
+                        pressedControl = null
+                    }
+
+                    if (heldDirection == control.toMapDirection()) {
+                        heldDirection = null
+                    }
+                },
+                size = layout.directionPadSize,
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(top = layout.contentTopOffset),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                SimulatorHeader(
-                    title = "SIMULADOR TEMPORAL",
-                    width = layout.headerWidth,
-                    height = layout.headerHeight
-                )
+                    .align(Alignment.BottomEnd)
+                    .padding(
+                        end = layout.directionPadEndPadding,
+                        bottom = layout.directionPadBottomPadding
+                    )
+            )
 
-                Spacer(modifier = Modifier.height(layout.headerToButtonsSpacing))
-
-                ResultOptionsPanel(
-                    levelId = levelId,
-                    layout = layout,
-                    onNavigateToResult = onNavigateToResult
-                )
-            }
+            GameFrontBushes(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(layout.frontBushesHeight)
+            )
 
             if (showPauseMenu) {
                 PauseOverlay(
@@ -166,6 +466,19 @@ fun GamePlaceholderScreen(
                 levelTitle = level?.title ?: "esta noche",
                 onConfirmRestart = {
                     showRestartConfirmation = false
+
+                    elapsedSeconds = 0
+                    objectiveElapsedSeconds = 0f
+                    safeZoneElapsedSeconds = 0f
+                    totalDeliveryTimeSeconds = 0f
+                    completedOrders = 0
+                    currentOrderIndex = 0
+                    currentLives = 3
+                    objectiveMode = MapObjectiveMode.GO_TO_PICKUP
+                    playerMovementState = GamePlayerMovement.startState()
+                    heldDirection = null
+                    pressedControl = null
+
                     onRestartLevel()
                 },
                 onDismissRestart = {
@@ -186,11 +499,151 @@ fun GamePlaceholderScreen(
 @Composable
 private fun GameBackground() {
     Image(
-        painter = painterResource(id = R.drawable.fondo_game),
-        contentDescription = "Fondo temporal del simulador",
+        painter = painterResource(id = R.drawable.fondo_general_juego),
+        contentDescription = "Fondo general del juego",
         modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop
+        contentScale = ContentScale.FillBounds
     )
+}
+
+@Composable
+private fun GameMap(
+    levelId: Int,
+    layout: GamePlaceholderLayout,
+    objectiveMode: MapObjectiveMode,
+    currentOrderIndex: Int,
+    objectiveProgress: Float,
+    playerPosition: GamePlayerPosition,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .width(layout.mapWidth)
+            .aspectRatio(GameMapData.MAP_ASPECT_RATIO)
+            .clip(RoundedCornerShape(8.dp))
+            .clipToBounds()
+            .border(
+                width = 4.dp,
+                color = OptionPurple.copy(alpha = 0.78f),
+                shape = RoundedCornerShape(8.dp)
+            )
+    ) {
+        GameMapScene(
+            levelId = levelId,
+            objectiveMode = objectiveMode,
+            currentOrderIndex = currentOrderIndex,
+            objectiveProgress = objectiveProgress,
+            playerPosition = playerPosition,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+@Composable
+private fun GameFrontBushes(
+    modifier: Modifier = Modifier
+) {
+    Image(
+        painter = painterResource(id = R.drawable.arbustos_frente),
+        contentDescription = "Arbustos al frente",
+        modifier = modifier.zIndex(4f),
+        contentScale = ContentScale.FillWidth
+    )
+}
+
+@Composable
+private fun GameTopHud(
+    lives: Int,
+    stars: Int,
+    completedOrders: Int,
+    totalOrders: Int,
+    elapsedSeconds: Int,
+    layout: GamePlaceholderLayout,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.zIndex(5f),
+        horizontalArrangement = Arrangement.spacedBy(layout.hudItemSpacing),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = painterResource(id = livesDrawableFor(lives)),
+            contentDescription = "Vidas",
+            modifier = Modifier
+                .offset(x = (-50).dp)
+                .width(layout.hudLivesWidth)
+                .height(layout.hudHeight),
+            contentScale = ContentScale.FillBounds
+        )
+
+        Box(
+            modifier = Modifier.offset(x = (-50).dp)
+        ) {
+            HudTextChip(
+                drawableId = R.drawable.base_timer,
+                value = formatGameTime(elapsedSeconds),
+                width = layout.hudTimerWidth,
+                height = layout.hudHeight,
+                textEndPadding = layout.hudTimerTextEndPadding
+            )
+        }
+
+        Image(
+            painter = painterResource(id = starsDrawableFor(stars)),
+            contentDescription = "Estrellas",
+            modifier = Modifier
+                .offset(x = (50).dp)
+                .width(layout.hudStarsWidth)
+                .height(layout.hudHeight),
+            contentScale = ContentScale.FillBounds
+        )
+
+        Box(
+            modifier = Modifier.offset(x = (50).dp)
+        ) {
+            HudTextChip(
+                drawableId = R.drawable.base_pedidos,
+                value = "$completedOrders/$totalOrders",
+                width = layout.hudOrdersWidth,
+                height = layout.hudHeight,
+                textEndPadding = layout.hudOrdersTextEndPadding
+            )
+        }
+    }
+}
+
+@Composable
+private fun HudTextChip(
+    drawableId: Int,
+    value: String,
+    width: Dp,
+    height: Dp,
+    textEndPadding: Dp
+) {
+    Box(
+        modifier = Modifier
+            .width(width)
+            .height(height),
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        Image(
+            painter = painterResource(id = drawableId),
+            contentDescription = null,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.FillBounds
+        )
+
+        Text(
+            text = value,
+            color = DarkText,
+            fontSize = 17.sp,
+            fontFamily = LilitaOne,
+            fontWeight = FontWeight.Normal,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            modifier = Modifier.padding(end = textEndPadding)
+        )
+    }
 }
 
 @Composable
@@ -204,143 +657,182 @@ private fun PauseButton(
         contentDescription = "Pausar nivel",
         size = size,
         onClick = onClick,
-        modifier = modifier
+        modifier = modifier.zIndex(6f)
     )
 }
 
 @Composable
-private fun SimulatorHeader(
-    title: String,
-    width: Dp,
-    height: Dp
+private fun GameControls(
+    pressedControl: GameControlPress?,
+    onControlDown: (GameControlPress) -> Unit,
+    onControlUp: (GameControlPress) -> Unit,
+    size: Dp,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
-            .width(width)
-            .height(height)
-            .shadow(
-                elevation = 8.dp,
-                shape = NightShapes.panel
-            )
-            .clip(NightShapes.panel)
-            .background(SimulatorHeaderPurple),
-        contentAlignment = Alignment.Center
+        modifier = modifier
+            .fillMaxSize()
+            .zIndex(6f)
     ) {
-        Text(
-            text = title,
-            color = SmokeWhite,
-            fontSize = 25.sp,
-            fontFamily = LilitaOne,
-            fontWeight = FontWeight.Normal,
-            letterSpacing = 0.8.sp,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleLarge.copy(
-                shadow = Shadow(
-                    color = Color.Black.copy(alpha = 0.35f),
-                    offset = Offset(2f, 2f),
-                    blurRadius = 2f
+        DirectionPad(
+            pressedControl = pressedControl,
+            onControlDown = onControlDown,
+            onControlUp = onControlUp,
+            size = size,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+        )
+
+        ActionButtonControl(
+            isPressed = pressedControl == GameControlPress.ACTION,
+            onControlDown = onControlDown,
+            onControlUp = onControlUp,
+            size = size * 1f,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(
+                    start = 10.dp,
+                    bottom = 1.dp
                 )
-            )
         )
     }
 }
 
 @Composable
-private fun ResultOptionsPanel(
-    levelId: Int,
-    layout: GamePlaceholderLayout,
-    onNavigateToResult: (GameResultType, Int) -> Unit
+private fun DirectionPad(
+    pressedControl: GameControlPress?,
+    onControlDown: (GameControlPress) -> Unit,
+    onControlUp: (GameControlPress) -> Unit,
+    size: Dp,
+    modifier: Modifier = Modifier
 ) {
-    val options = resultOptionsFor(levelId)
-
-    Row(
-        modifier = Modifier
-            .width(layout.optionsPanelWidth)
-            .height(layout.optionsPanelHeight)
-            .clip(RoundedCornerShape(20.dp))
-            .background(OptionsPanelLavender)
-            .padding(layout.optionsPanelPadding),
-        horizontalArrangement = Arrangement.spacedBy(
-            space = layout.optionButtonSpacing,
-            alignment = Alignment.CenterHorizontally
-        ),
-        verticalAlignment = Alignment.CenterVertically
+    Box(
+        modifier = modifier
+            .size(size),
+        contentAlignment = Alignment.Center
     ) {
-        options.forEach { option ->
-            ResultOptionButton(
-                text = option.text,
-                width = layout.optionButtonWidth,
-                height = layout.optionButtonHeight,
-                containerColor = option.color,
-                onClick = {
-                    onNavigateToResult(
-                        option.resultType,
-                        option.stars
-                    )
-                }
+        Image(
+            painter = painterResource(id = R.drawable.base_controles),
+            contentDescription = "Controles direccionales",
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Fit
+        )
+
+        val directionOverlay = when (pressedControl) {
+            GameControlPress.UP -> R.drawable.control_arriba
+            GameControlPress.DOWN -> R.drawable.control_abajo
+            GameControlPress.LEFT -> R.drawable.control_izquierda
+            GameControlPress.RIGHT -> R.drawable.control_derecha
+            else -> null
+        }
+
+        if (directionOverlay != null) {
+            Image(
+                painter = painterResource(id = directionOverlay),
+                contentDescription = null,
+                modifier = Modifier.matchParentSize(),
+                contentScale = ContentScale.Fit
             )
         }
+
+        ControlTouchArea(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .size(size * 0.34f),
+            onPressStart = { onControlDown(GameControlPress.UP) },
+            onPressEnd = { onControlUp(GameControlPress.UP) }
+        )
+
+        ControlTouchArea(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .size(size * 0.34f),
+            onPressStart = { onControlDown(GameControlPress.DOWN) },
+            onPressEnd = { onControlUp(GameControlPress.DOWN) }
+        )
+
+        ControlTouchArea(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .size(size * 0.34f),
+            onPressStart = { onControlDown(GameControlPress.LEFT) },
+            onPressEnd = { onControlUp(GameControlPress.LEFT) }
+        )
+
+        ControlTouchArea(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .size(size * 0.34f),
+            onPressStart = { onControlDown(GameControlPress.RIGHT) },
+            onPressEnd = { onControlUp(GameControlPress.RIGHT) }
+        )
     }
 }
 
 @Composable
-private fun ResultOptionButton(
-    text: String,
-    width: Dp,
-    height: Dp,
-    containerColor: Color,
-    onClick: () -> Unit
+private fun ActionButtonControl(
+    isPressed: Boolean,
+    onControlDown: (GameControlPress) -> Unit,
+    onControlUp: (GameControlPress) -> Unit,
+    size: Dp,
+    modifier: Modifier = Modifier
 ) {
-    val interactionSource = remember {
-        MutableInteractionSource()
-    }
-
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1f,
-        label = "resultOptionButtonScale"
-    )
-
-    val alpha by animateFloatAsState(
-        targetValue = if (isPressed) 0.82f else 1f,
-        label = "resultOptionButtonAlpha"
-    )
-
     Box(
-        modifier = Modifier
-            .width(width)
-            .height(height)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                this.alpha = alpha
-            }
-            .shadow(
-                elevation = if (isPressed) 2.dp else 6.dp,
-                shape = RoundedCornerShape(18.dp)
-            )
-            .clip(RoundedCornerShape(18.dp))
-            .background(containerColor)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) {
-                onClick()
-            },
+        modifier = modifier
+            .size(size),
         contentAlignment = Alignment.Center
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.base_accion),
+            contentDescription = "Botón de acción",
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Fit
+        )
+
+        if (isPressed) {
+            Image(
+                painter = painterResource(id = R.drawable.boton_accion),
+                contentDescription = null,
+                modifier = Modifier.matchParentSize(),
+                contentScale = ContentScale.Fit
+            )
+        }
+
         Text(
-            text = text,
-            color = SmokeWhite,
-            fontSize = 15.sp,
-            fontFamily = LilitaOne,
-            fontWeight = FontWeight.Normal,
-            textAlign = TextAlign.Center,
-            lineHeight = 17.sp,
-            modifier = Modifier.padding(horizontal = 8.dp)
+            text = "A",
+            color = Color.White.copy(alpha = 0.92f),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        ControlTouchArea(
+            modifier = Modifier.matchParentSize(),
+            onPressStart = { onControlDown(GameControlPress.ACTION) },
+            onPressEnd = { onControlUp(GameControlPress.ACTION) }
         )
     }
+}
+@Composable
+private fun ControlTouchArea(
+    modifier: Modifier = Modifier,
+    onPressStart: () -> Unit,
+    onPressEnd: () -> Unit
+) {
+    Box(
+        modifier = modifier.pointerInput(Unit) {
+            awaitEachGesture {
+                awaitFirstDown(requireUnconsumed = false)
+
+                onPressStart()
+
+                try {
+                    waitForUpOrCancellation()
+                } finally {
+                    onPressEnd()
+                }
+            }
+        }
+    )
 }
 
 @Composable
@@ -353,6 +845,7 @@ private fun PauseOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .zIndex(10f)
             .background(Color.Black.copy(alpha = 0.58f)),
         contentAlignment = Alignment.Center
     ) {
@@ -554,114 +1047,81 @@ private fun GamePlaceholderDialogs(
     }
 }
 
-private fun resultOptionsFor(
-    levelId: Int
-): List<ResultOption> {
-    return when (levelId) {
-        0 -> listOf(
-            ResultOption(
-                text = "100%\nPedidos",
-                resultType = GameResultType.TUTORIAL_ALL_DELIVERIES,
-                stars = 3,
-                color = OptionPurple
-            ),
-            ResultOption(
-                text = "80%\nPedidos",
-                resultType = GameResultType.TUTORIAL_EIGHTY_PERCENT,
-                stars = 2,
-                color = OptionPurple
-            ),
-            ResultOption(
-                text = "50%\nPedidos",
-                resultType = GameResultType.TUTORIAL_HALF_DELIVERIES,
-                stars = 1,
-                color = OptionPurple
-            ),
-            ResultOption(
-                text = "DESPEDIDO",
-                resultType = GameResultType.TUTORIAL_FIRED,
-                stars = 0,
-                color = OptionRed
-            )
-        )
-
-        4 -> listOf(
-            ResultOption(
-                text = "GANADOR\nFINAL",
-                resultType = GameResultType.FINAL_WIN,
-                stars = 3,
-                color = OptionPurple
-            ),
-            ResultOption(
-                text = "Entregas\n+50%",
-                resultType = GameResultType.FINAL_INCOMPLETE_AT_LEAST_50,
-                stars = 2,
-                color = OptionPurple
-            ),
-            ResultOption(
-                text = "Entregas\n-50%",
-                resultType = GameResultType.FINAL_INCOMPLETE_UNDER_50,
-                stars = 1,
-                color = OptionPurple
-            ),
-            ResultOption(
-                text = "SIN VIDAS",
-                resultType = GameResultType.FINAL_OUT_OF_LIVES,
-                stars = 0,
-                color = OptionRed
-            )
-        )
-
-        else -> listOf(
-            ResultOption(
-                text = "GANADOR",
-                resultType = GameResultType.LEVEL_WIN,
-                stars = 3,
-                color = OptionPurple
-            ),
-            ResultOption(
-                text = "Entregas\n+50%",
-                resultType = GameResultType.LEVEL_INCOMPLETE_AT_LEAST_50,
-                stars = 2,
-                color = OptionPurple
-            ),
-            ResultOption(
-                text = "Entregas\n-50%",
-                resultType = GameResultType.LEVEL_INCOMPLETE_UNDER_50,
-                stars = 1,
-                color = OptionPurple
-            ),
-            ResultOption(
-                text = "SIN VIDAS",
-                resultType = GameResultType.LEVEL_OUT_OF_LIVES,
-                stars = 0,
-                color = OptionRed
-            )
-        )
+private fun livesDrawableFor(
+    lives: Int
+): Int {
+    return when (lives.coerceIn(0, 3)) {
+        3 -> R.drawable.tres_vidas
+        2 -> R.drawable.dos_vidas
+        1 -> R.drawable.una_vida
+        else -> R.drawable.sin_vidas
     }
 }
 
-private data class ResultOption(
-    val text: String,
-    val resultType: GameResultType,
-    val stars: Int,
-    val color: Color
-)
+private fun starsDrawableFor(
+    stars: Int
+): Int {
+    return when (stars.coerceIn(0, 3)) {
+        3 -> R.drawable.tres_estrellas
+        2 -> R.drawable.dos_estrellas
+        1 -> R.drawable.una_estrella
+        else -> R.drawable.sin_estrellas
+    }
+}
 
+private fun controlDrawableFor(
+    control: GameControlPress
+): Int {
+    return when (control) {
+        GameControlPress.UP -> R.drawable.control_arriba
+        GameControlPress.DOWN -> R.drawable.control_abajo
+        GameControlPress.LEFT -> R.drawable.control_izquierda
+        GameControlPress.RIGHT -> R.drawable.control_derecha
+        GameControlPress.ACTION -> R.drawable.boton_accion
+    }
+}
+
+private fun formatGameTime(
+    totalSeconds: Int
+): String {
+    val safeSeconds = totalSeconds.coerceAtLeast(0)
+    val minutes = safeSeconds / 60
+    val seconds = safeSeconds % 60
+
+    return "$minutes:${seconds.toString().padStart(2, '0')}"
+}
+
+private enum class GameControlPress {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    ACTION
+}
 private data class GamePlaceholderLayout(
+    val mapWidth: Dp,
+    val mapVerticalOffset: Dp,
+
     val pauseButtonSize: Dp,
     val pauseTopPadding: Dp,
     val pauseEndPadding: Dp,
-    val contentTopOffset: Dp,
-    val headerWidth: Dp,
-    val headerHeight: Dp,
-    val headerToButtonsSpacing: Dp,
-    val optionsPanelWidth: Dp,
-    val optionsPanelHeight: Dp,
-    val optionsPanelPadding: PaddingValues,
-    val optionButtonWidth: Dp,
-    val optionButtonHeight: Dp,
-    val optionButtonSpacing: Dp,
+
+    val hudTopPadding: Dp,
+    val hudHeight: Dp,
+    val hudItemSpacing: Dp,
+    val hudLivesWidth: Dp,
+    val hudStarsWidth: Dp,
+    val hudTimerWidth: Dp,
+    val hudOrdersWidth: Dp,
+    val hudTimerTextEndPadding: Dp,
+    val hudOrdersTextEndPadding: Dp,
+
+    val directionPadSize: Dp,
+    val directionPadEndPadding: Dp,
+    val directionPadBottomPadding: Dp,
+
+    val frontBushesHeight: Dp,
+
     val pausePanelWidth: Dp,
     val pausePanelHeight: Dp,
     val pauseHeaderWidth: Dp,
@@ -681,49 +1141,45 @@ private fun gamePlaceholderLayoutFor(
     maxHeight: Dp
 ): GamePlaceholderLayout {
     val compactHeight = maxHeight < 390.dp
+    val compactWidth = maxWidth < 760.dp
 
-    val headerWidth = (maxWidth * 0.34f).coerceIn(
-        minimumValue = 320.dp,
-        maximumValue = 390.dp
+    val mapWidth = (maxWidth * 0.72f).coerceIn(
+        minimumValue = if (compactWidth) 520.dp else 640.dp,
+        maximumValue = 980.dp
     )
 
-    val optionsPanelWidth = (maxWidth * 0.55f).coerceIn(
-        minimumValue = 520.dp,
-        maximumValue = 610.dp
+    val hudHeight = if (compactHeight) 34.dp else 40.dp
+    val hudSpacing = if (compactWidth) 8.dp else 16.dp
+
+    val directionPadSize = (maxHeight * 0.32f).coerceIn(
+        minimumValue = if (compactHeight) 96.dp else 110.dp,
+        maximumValue = if (compactHeight) 122.dp else 150.dp
     )
-
-    val optionButtonSpacing = if (compactHeight) 16.dp else 22.dp
-
-    val optionButtonHeight = if (compactHeight) {
-        96.dp
-    } else {
-        108.dp
-    }
-
-    val optionButtonWidth =
-        ((optionsPanelWidth - (optionButtonSpacing * 3) - 48.dp) / 4)
-            .coerceIn(
-                minimumValue = 100.dp,
-                maximumValue = 118.dp
-            )
 
     return GamePlaceholderLayout(
-        pauseButtonSize = if (compactHeight) 54.dp else 60.dp,
-        pauseTopPadding = if (compactHeight) 22.dp else 28.dp,
-        pauseEndPadding = if (compactHeight) 24.dp else 30.dp,
-        contentTopOffset = if (compactHeight) 24.dp else 28.dp,
-        headerWidth = headerWidth,
-        headerHeight = if (compactHeight) 56.dp else 62.dp,
-        headerToButtonsSpacing = if (compactHeight) 90.dp else 110.dp,
-        optionsPanelWidth = optionsPanelWidth,
-        optionsPanelHeight = if (compactHeight) 126.dp else 140.dp,
-        optionsPanelPadding = PaddingValues(
-            horizontal = 24.dp,
-            vertical = if (compactHeight) 14.dp else 16.dp
-        ),
-        optionButtonWidth = optionButtonWidth,
-        optionButtonHeight = optionButtonHeight,
-        optionButtonSpacing = optionButtonSpacing,
+        mapWidth = mapWidth,
+        mapVerticalOffset = if (compactHeight) 8.dp else 12.dp,
+
+        pauseButtonSize = if (compactHeight) 50.dp else 58.dp,
+        pauseTopPadding = if (compactHeight) 14.dp else 20.dp,
+        pauseEndPadding = if (compactHeight) 28.dp else 34.dp,
+
+        hudTopPadding = if (compactHeight) 14.dp else 20.dp,
+        hudHeight = hudHeight,
+        hudItemSpacing = hudSpacing,
+        hudLivesWidth = if (compactWidth) 92.dp else 112.dp,
+        hudStarsWidth = if (compactWidth) 92.dp else 112.dp,
+        hudTimerWidth = if (compactWidth) 98.dp else 118.dp,
+        hudOrdersWidth = if (compactWidth) 98.dp else 118.dp,
+        hudTimerTextEndPadding = if (compactWidth) 18.dp else 26.dp,
+        hudOrdersTextEndPadding = if (compactWidth) 18.dp else 26.dp,
+
+        directionPadSize = directionPadSize,
+        directionPadEndPadding = if (compactHeight) 25.dp else 35.dp,
+        directionPadBottomPadding = if (compactHeight) 44.dp else 58.dp,
+
+        frontBushesHeight = if (compactHeight) 46.dp else 58.dp,
+
         pausePanelWidth = if (compactHeight) 300.dp else 325.dp,
         pausePanelHeight = if (compactHeight) 174.dp else 190.dp,
         pauseHeaderWidth = if (compactHeight) 165.dp else 182.dp,
@@ -737,4 +1193,64 @@ private fun gamePlaceholderLayoutFor(
         pauseContinueButtonUpOffset = if (compactHeight) 4.dp else 6.dp,
         pauseTitleSize = if (compactHeight) 29.sp else 32.sp
     )
+}
+
+private fun GameControlPress.toMapDirection(): GameMapDirection? {
+    return when (this) {
+        GameControlPress.UP -> GameMapDirection.UP
+        GameControlPress.DOWN -> GameMapDirection.DOWN
+        GameControlPress.LEFT -> GameMapDirection.LEFT
+        GameControlPress.RIGHT -> GameMapDirection.RIGHT
+        GameControlPress.ACTION -> null
+    }
+}
+
+private fun isPlayerNearTarget(
+    playerPosition: GamePlayerPosition,
+    targetX: Float,
+    targetY: Float,
+    radius: Float
+): Boolean {
+    val distance = hypot(
+        playerPosition.x - targetX,
+        playerPosition.y - targetY
+    )
+
+    return distance <= radius
+}
+
+private fun starsForCompletedOrders(
+    completedOrders: Int,
+    totalOrders: Int
+): Int {
+    if (totalOrders <= 0) return 0
+
+    val ratio = completedOrders.toFloat() / totalOrders.toFloat()
+
+    return when {
+        ratio >= 1f -> 3
+        ratio >= 0.75f -> 2
+        ratio >= 0.50f -> 1
+        else -> 0
+    }
+}
+
+private fun successResultTypeFor(
+    levelId: Int
+): GameResultType {
+    return when (levelId) {
+        0 -> GameResultType.TUTORIAL_ALL_DELIVERIES
+        4 -> GameResultType.FINAL_WIN
+        else -> GameResultType.LEVEL_WIN
+    }
+}
+
+private fun failResultTypeFor(
+    levelId: Int
+): GameResultType {
+    return when (levelId) {
+        0 -> GameResultType.TUTORIAL_FIRED
+        4 -> GameResultType.FINAL_OUT_OF_LIVES
+        else -> GameResultType.LEVEL_OUT_OF_LIVES
+    }
 }

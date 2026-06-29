@@ -120,6 +120,10 @@ fun AppNavigation() {
         mutableStateOf<TutorialGameResult?>(null)
     }
 
+    var latestRuntimeResultLevelId by remember {
+        mutableStateOf<Int?>(null)
+    }
+
     var homeRefreshKey by remember {
         mutableStateOf(0)
     }
@@ -532,7 +536,10 @@ fun AppNavigation() {
 
             GamePlaceholderScreen(
                 levelId = levelId,
-                onNavigateToResult = { resultType, stars ->
+                onNavigateToResult = { resultType, stars, runtimeResult ->
+                    latestTutorialResult = runtimeResult
+                    latestRuntimeResultLevelId = levelId
+
                     savePlaceholderResult(
                         resultType = resultType,
                         stars = stars
@@ -678,7 +685,7 @@ fun AppNavigation() {
 
                 val runtimeTutorialResult = latestTutorialResult
                     .takeIf {
-                        levelId == 0 && resultType.isTutorialResult
+                        latestRuntimeResultLevelId == levelId
                     }
 
                 fun saveAndUnlockResultProgress() {
@@ -767,6 +774,7 @@ fun AppNavigation() {
                         saveAndUnlockResultProgress()
 
                         latestTutorialResult = null
+                        latestRuntimeResultLevelId = null
 
                         if (levelId == 0 && resultType.isTutorialResult) {
                             navController.navigate(Routes.TUTORIAL_LOADING) {
@@ -788,6 +796,7 @@ fun AppNavigation() {
                         saveAndUnlockResultProgress()
 
                         latestTutorialResult = null
+                        latestRuntimeResultLevelId = null
 
                         if (resultType == GameResultType.FINAL_WIN) {
                             navigateBackToHome()

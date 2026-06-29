@@ -21,7 +21,7 @@ class TutorialGameFragment : AndroidFragmentApplication() {
             useWakelock = true
         }
 
-        val tutorialGame = TutorialGame(
+        val levelGame = NightBiteLevelGame(
             onFinished = { result ->
                 activity?.runOnUiThread {
                     TutorialResultBridge.finishTutorial(result)
@@ -31,11 +31,12 @@ class TutorialGameFragment : AndroidFragmentApplication() {
                 activity?.runOnUiThread {
                     TutorialResultBridge.requestBackToHome()
                 }
-            }
+            },
+            levelConfig = NightBiteLevelConfigs.tutorial
         )
 
         return initializeForView(
-            tutorialGame,
+            levelGame,
             config
         )
     }
