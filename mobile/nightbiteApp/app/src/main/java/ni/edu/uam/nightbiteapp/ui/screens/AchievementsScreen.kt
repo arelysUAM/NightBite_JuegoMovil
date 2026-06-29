@@ -49,6 +49,15 @@ import ni.edu.uam.nightbiteapp.ui.theme.AchievementsTitlePurple
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun AchievementsScreen(
@@ -72,6 +81,10 @@ fun AchievementsScreen(
                 maxHeight = maxHeight
             )
 
+            var selectedRecord by remember {
+                mutableStateOf<AchievementRecord?>(null)
+            }
+
             AchievementsPanel(
                 username = userSession.username.ifBlank {
                     "NombreUsuario"
@@ -79,8 +92,20 @@ fun AchievementsScreen(
                 currentLevel = currentLevel.coerceIn(1, 5),
                 earnedBadgeLevels = earnedBadgeLevels,
                 layout = layout,
+                onRecordClick = { record ->
+                    selectedRecord = record
+                },
                 onBackToHome = onBackToHome
             )
+
+            selectedRecord?.let { record ->
+                AchievementRecordInfoDialog(
+                    record = record,
+                    onClose = {
+                        selectedRecord = null
+                    }
+                )
+            }
         }
     }
 }
@@ -91,6 +116,7 @@ private fun AchievementsPanel(
     currentLevel: Int,
     earnedBadgeLevels: Set<Int>,
     layout: AchievementsLayout,
+    onRecordClick: (AchievementRecord) -> Unit,
     onBackToHome: () -> Unit
 ) {
     Column(
@@ -140,7 +166,9 @@ private fun AchievementsPanel(
             Spacer(modifier = Modifier.height(layout.recordsTopSpacing))
 
             RecordsSection(
-                layout = layout
+                records = achievementRecords,
+                layout = layout,
+                onRecordClick = onRecordClick
             )
         }
     }
@@ -302,7 +330,9 @@ private fun HorizontalDividerLine() {
 
 @Composable
 private fun RecordsSection(
-    layout: AchievementsLayout
+    records: List<AchievementRecord>,
+    layout: AchievementsLayout,
+    onRecordClick: (AchievementRecord) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -327,7 +357,9 @@ private fun RecordsSection(
             horizontalArrangement = Arrangement.Center
         ) {
             RecordsGroup(
-                layout = layout
+                records = records.take(5),
+                layout = layout,
+                onRecordClick = onRecordClick
             )
 
             Spacer(modifier = Modifier.width(layout.recordsMiddleSpacing))
@@ -342,7 +374,9 @@ private fun RecordsSection(
             Spacer(modifier = Modifier.width(layout.recordsMiddleSpacing))
 
             RecordsGroup(
-                layout = layout
+                records = records.drop(5),
+                layout = layout,
+                onRecordClick = onRecordClick
             )
         }
     }
@@ -350,7 +384,9 @@ private fun RecordsSection(
 
 @Composable
 private fun RecordsGroup(
-    layout: AchievementsLayout
+    records: List<AchievementRecord>,
+    layout: AchievementsLayout,
+    onRecordClick: (AchievementRecord) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -365,10 +401,14 @@ private fun RecordsGroup(
         ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        repeat(4) {
+        records.forEach { record ->
             RecordPlaceholder(
+                record = record,
                 size = layout.recordBoxSize,
-                plusSize = layout.recordPlusSize
+                plusSize = layout.recordPlusSize,
+                onClick = {
+                    onRecordClick(record)
+                }
             )
         }
     }
@@ -376,14 +416,26 @@ private fun RecordsGroup(
 
 @Composable
 private fun RecordPlaceholder(
+    record: AchievementRecord,
     size: Dp,
-    plusSize: TextUnit
+    plusSize: TextUnit,
+    onClick: () -> Unit
 ) {
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
     Box(
         modifier = Modifier
             .size(size)
             .clip(RoundedCornerShape(18.dp))
-            .background(AchievementsItemBlue),
+            .background(AchievementsItemBlue)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
+                onClick()
+            },
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -394,6 +446,147 @@ private fun RecordPlaceholder(
             fontWeight = FontWeight.Normal,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+
+@Composable
+private fun AchievementRecordInfoDialog(
+    record: AchievementRecord,
+    onClose: () -> Unit
+) {
+    BackHandler {
+        onClose()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x880B1026))
+            .clickable(
+                interactionSource = remember {
+                    MutableInteractionSource()
+                },
+                indication = null
+            ) {
+                onClose()
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .width(430.dp)
+                .clip(RoundedCornerShape(30.dp))
+                .background(AchievementsItemBlue)
+                .border(
+                    width = 6.dp,
+                    color = AchievementsTitlePurple,
+                    shape = RoundedCornerShape(30.dp)
+                )
+                .clickable(
+                    interactionSource = remember {
+                        MutableInteractionSource()
+                    },
+                    indication = null
+                ) {
+                    // Evita que tocar dentro del cuadro cierre el dialog.
+                }
+                .padding(
+                    horizontal = 28.dp,
+                    vertical = 24.dp
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Información del logro",
+                    tint = SmokeWhite,
+                    modifier = Modifier.size(42.dp)
+                )
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Text(
+                    text = record.name,
+                    color = SmokeWhite,
+                    fontSize = 28.sp,
+                    fontFamily = LilitaOne,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(
+                        width = 2.dp,
+                        color = SmokeWhite.copy(alpha = 0.55f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(
+                        horizontal = 42.dp,
+                        vertical = 7.dp
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = record.scopeLabel,
+                    color = SmokeWhite,
+                    fontSize = 17.sp,
+                    fontFamily = LilitaOne,
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = 1.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = record.description,
+                color = SmokeWhite,
+                fontSize = 18.sp,
+                fontFamily = LilitaOne,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center,
+                lineHeight = 23.sp
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(210.dp)
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(AchievementsTitlePurple)
+                    .clickable(
+                        interactionSource = remember {
+                            MutableInteractionSource()
+                        },
+                        indication = null
+                    ) {
+                        onClose()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Cerrar",
+                    color = SmokeWhite,
+                    fontSize = 18.sp,
+                    fontFamily = LilitaOne,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }
 
@@ -526,13 +719,83 @@ private fun achievementsLayoutFor(
         recordsTitleSize = if (compactHeight) 14.sp else 16.sp,
         recordsTitleSpacing = if (compactHeight) 4.dp else 6.dp,
         recordsRowHeight = if (compactHeight) 64.dp else 74.dp,
-        recordsGroupWidth = panelWidth * 0.36f,
+        recordsGroupWidth = panelWidth * 0.40f,
         recordsGroupHeight = recordsGroupHeight,
         recordsGap = recordsGap,
-        recordsMiddleSpacing = if (compactHeight) 24.dp else 30.dp,
+        recordsMiddleSpacing = if (compactHeight) 16.dp else 20.dp,
         recordBoxSize = recordBoxSize,
         recordPlusSize = if (compactHeight) 22.sp else 26.sp
     )
 }
+
+private data class AchievementRecord(
+    val id: Int,
+    val name: String,
+    val scopeLabel: String,
+    val description: String
+)
+
+private val achievementRecords = listOf(
+    AchievementRecord(
+        id = 1,
+        name = "RUTA IMPECABLE",
+        scopeLabel = "CUALQUIER JORNADA",
+        description = "Completa una jornada entregando todos los pedidos sin fallar ninguno."
+    ),
+    AchievementRecord(
+        id = 2,
+        name = "CONDUCTOR NOCTURNO",
+        scopeLabel = "TODAS LAS JORNADAS",
+        description = "Completa todas las jornadas, sin importar la cantidad de estrellas obtenidas."
+    ),
+    AchievementRecord(
+        id = 3,
+        name = "SIN MIEDO A LA OSCURIDAD",
+        scopeLabel = "JORNADA DESBLOQUEADA",
+        description = "Completa una jornada que antes estaba bloqueada después de superarla."
+    ),
+    AchievementRecord(
+        id = 4,
+        name = "PEDIDO FANTASMA",
+        scopeLabel = "ZONA DE PELIGRO",
+        description = "Entrega un pedido mientras el tiempo está en zona de peligro."
+    ),
+    AchievementRecord(
+        id = 5,
+        name = "NOCHE PERFECTA",
+        scopeLabel = "CUALQUIER JORNADA",
+        description = "Completa cualquier jornada con 3 estrellas y sin perder vidas."
+    ),
+    AchievementRecord(
+        id = 6,
+        name = "CERO RETRASOS",
+        scopeLabel = "PROMEDIO DE ENTREGA",
+        description = "Completa una jornada con un promedio de entrega de 5 segundos o menos."
+    ),
+    AchievementRecord(
+        id = 7,
+        name = "PEDIDO CALIENTE",
+        scopeLabel = "ENTREGA RÁPIDA",
+        description = "Entrega un pedido en menos de 3 segundos."
+    ),
+    AchievementRecord(
+        id = 8,
+        name = "TEMERARIO NOCTURNO",
+        scopeLabel = "JORNADA 5",
+        description = "Completa la Jornada 5 permaneciendo en la zona segura más de 2 segundos por pedido."
+    ),
+    AchievementRecord(
+        id = 9,
+        name = "REPARTIDOR DEL MES",
+        scopeLabel = "TODAS LAS JORNADAS",
+        description = "Completa todas las jornadas con 3 estrellas."
+    ),
+    AchievementRecord(
+        id = 10,
+        name = "LEYENDA DE NIGHTBITE",
+        scopeLabel = "LOGRO FINAL",
+        description = "Desbloquea todas las insignias y todos los logros disponibles."
+    )
+)
 
 private const val TOTAL_LEVELS = 5

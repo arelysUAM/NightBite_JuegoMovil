@@ -59,6 +59,17 @@ import ni.edu.uam.nightbiteapp.data.repository.GameProgressRepository
 import ni.edu.uam.nightbiteapp.data.remote.RetrofitClient
 import ni.edu.uam.nightbiteapp.data.repository.ProgressSyncRepository
 import ni.edu.uam.nightbiteapp.ui.screens.TutorialLoadingScreen
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import ni.edu.uam.nightbiteapp.ui.components.feedback.BadgeUnlockedNotification
+import ni.edu.uam.nightbiteapp.ui.components.feedback.BadgeUnlockedToast
+import ni.edu.uam.nightbiteapp.data.local.entity.BadgeEntity
 
 @Composable
 fun AppNavigation() {
@@ -125,6 +136,14 @@ fun AppNavigation() {
 
     var homeRefreshKey by remember {
         mutableStateOf(0)
+    }
+
+    var badgeNotification by remember {
+        mutableStateOf<BadgeUnlockedNotification?>(null)
+    }
+
+    var shownBadgeNotificationKeys by remember {
+        mutableStateOf<Set<String>>(emptySet())
     }
 
     fun navigateBackToHome() {
@@ -201,10 +220,13 @@ fun AppNavigation() {
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = Routes.START
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
+        NavHost(
+            navController = navController,
+            startDestination = Routes.START
+        ) {
         composable(Routes.START) {
             val startViewModel: StartViewModel = viewModel(
                 factory = StartViewModelFactory(sessionManager)
@@ -671,6 +693,21 @@ fun AppNavigation() {
                             runtimeResult?.score
                                 ?: (starsToPersist * 100)
 
+                        val badgeNotificationKey = "$currentUserId-$levelId"
+
+                        val hadBadgeBefore =
+                            currentUserId != 0L &&
+                                    gameProgressDao.getBadge(
+                                        userId = currentUserId,
+                                        levelId = levelId
+                                    ) != null
+
+                        val shouldShowBadgeToast =
+                            currentUserId != 0L &&
+                                    starsToPersist == 3 &&
+                                    !hadBadgeBefore &&
+                                    badgeNotificationKey !in shownBadgeNotificationKeys
+
                         gameProgressRepository.saveLevelResult(
                             userId = currentUserId,
                             levelId = levelId,
@@ -682,6 +719,15 @@ fun AppNavigation() {
                             elapsedTimeSeconds = elapsedTimeToSave,
                             averageDeliveryTimeSeconds = averageDeliveryTimeToSave
                         )
+
+                        if (shouldShowBadgeToast) {
+                            shownBadgeNotificationKeys = shownBadgeNotificationKeys + badgeNotificationKey
+
+                            badgeNotification = BadgeUnlockedNotification(
+                                levelId = levelId,
+                                message = badgeUnlockedMessageFor(levelId)
+                            )
+                        }
 
                         if (currentUserId != 0L) {
                             progressSyncRepository.syncProgress(currentUserId)
@@ -766,7 +812,7 @@ fun AppNavigation() {
 
             val roomBadges by gameProgressRepository
                 .observeBadges(currentUserId)
-                .collectAsState(initial = emptyList())
+                .collectAsState(initial = emptyList<BadgeEntity>())
 
             val earnedBadgeLevels = remember(roomBadges) {
                 roomBadges.map { badge ->
@@ -944,48 +990,63 @@ fun AppNavigation() {
             )
         }
 
-        composable(Routes.ACCOUNT) {
-            val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(
-                factory = AccountCredentialsViewModelFactory(
-                    sessionManager = sessionManager,
-                    progressSyncRepository = progressSyncRepository
+            composable(Routes.ACCOUNT) {
+                val accountCredentialsViewModel: AccountCredentialsViewModel = viewModel(
+                    factory = AccountCredentialsViewModelFactory(
+                        sessionManager = sessionManager,
+                        progressSyncRepository = progressSyncRepository
+                    )
                 )
-            )
 
-            AccountScreen(
-                userSession = userSession,
-                viewModel = accountCredentialsViewModel,
-                onBackToSettings = {
-                    navController.popBackStack()
-                },
-                onNavigateToLogin = {
-                    activeUserId = null
-                    pendingLoginUsername = ""
-                    pendingLoginPassword = ""
-                    showLastStepsWelcomeMessage = false
+                AccountScreen(
+                    userSession = userSession,
+                    viewModel = accountCredentialsViewModel,
+                    onBackToSettings = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToLogin = {
+                        activeUserId = null
+                        pendingLoginUsername = ""
+                        pendingLoginPassword = ""
+                        showLastStepsWelcomeMessage = false
 
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.HOME) {
-                            inclusive = true
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.HOME) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
-                        launchSingleTop = true
-                    }
-                },
-                onNavigateToHome = {
-                    homeRefreshKey += 1
+                    },
+                    onNavigateToHome = {
+                        homeRefreshKey += 1
 
-                    activeUserId = userSession.userId
-                    pendingLoginUsername = ""
-                    pendingLoginPassword = ""
-                    showLastStepsWelcomeMessage = false
-                    showHomeWelcomeToast = false
+                        activeUserId = userSession.userId
+                        pendingLoginUsername = ""
+                        pendingLoginPassword = ""
+                        showLastStepsWelcomeMessage = false
+                        showHomeWelcomeToast = false
 
-                    navController.navigate(Routes.START) {
-                        popUpTo(0) {
-                            inclusive = true
+                        navController.navigate(Routes.START) {
+                            popUpTo(0) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
-                        launchSingleTop = true
                     }
+                )
+            }
+        }
+
+        badgeNotification?.let { notification ->
+            BadgeUnlockedToast(
+                notification = notification,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 62.dp)
+                    .offset(x = 70.dp)
+                    .zIndex(50f),
+                onFinished = {
+                    badgeNotification = null
                 }
             )
         }
@@ -1003,6 +1064,15 @@ private fun shouldShowWantedPosterTransition(
     val isAfterTutorial = levelId in 1..4
 
     return isAfterTutorial && isOutOfLivesResult
+}
+
+private fun badgeUnlockedMessageFor(
+    levelId: Int
+): String {
+    return when (levelId) {
+        0 -> "Has completado el tutorial con puntuación perfecta."
+        else -> "Has completado la Jornada $levelId con puntuación perfecta."
+    }
 }
 
 private const val INACTIVITY_LIMIT_MILLIS = 10 * 60 * 1000L
