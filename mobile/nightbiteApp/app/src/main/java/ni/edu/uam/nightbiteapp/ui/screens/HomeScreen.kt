@@ -408,7 +408,12 @@ private fun HomeSideMenuItem(
             contentDescription = label,
             modifier = Modifier
                 .size(iconSize)
-                .clickable {
+                .clickable(
+                    indication = null,
+                    interactionSource = remember {
+                        MutableInteractionSource()
+                    }
+                ) {
                     onClick()
                 },
             contentScale = ContentScale.Fit

@@ -42,6 +42,14 @@ enum class GameResultType(
         isLossResult = true
     ),
 
+    TUTORIAL_TIME_EXPIRED(
+        defaultStars = 0,
+        isTutorialResult = true,
+        isFinalLevelResult = false,
+        isWinResult = false,
+        isLossResult = true
+    ),
+
     /*
      * Niveles 1, 2 y 3
      */
@@ -77,6 +85,14 @@ enum class GameResultType(
         isLossResult = true
     ),
 
+    LEVEL_TIME_EXPIRED(
+        defaultStars = 0,
+        isTutorialResult = false,
+        isFinalLevelResult = false,
+        isWinResult = false,
+        isLossResult = true
+    ),
+
     /*
      * Nivel 4 - Final
      */
@@ -106,6 +122,14 @@ enum class GameResultType(
 
     FINAL_INCOMPLETE_UNDER_50(
         defaultStars = 1,
+        isTutorialResult = false,
+        isFinalLevelResult = true,
+        isWinResult = false,
+        isLossResult = true
+    ),
+
+    FINAL_TIME_EXPIRED(
+        defaultStars = 0,
         isTutorialResult = false,
         isFinalLevelResult = true,
         isWinResult = false,

@@ -129,6 +129,10 @@ fun GamePlaceholderScreen(
         mutableIntStateOf(0)
     }
 
+    var hasFinishedLevel by remember {
+        mutableStateOf(false)
+    }
+
     var pressedControl by remember {
         mutableStateOf<GameControlPress?>(null)
     }
@@ -230,10 +234,33 @@ fun GamePlaceholderScreen(
         )
     }
 
+    fun finishLevelByTimeLimit() {
+        if (hasFinishedLevel) return
+
+        hasFinishedLevel = true
+        heldDirection = null
+        pressedControl = null
+
+        val finalStars = starsForCompletedOrders(
+            completedOrders = completedOrders,
+            totalOrders = totalOrders
+        )
+
+        onNavigateToResult(
+            timeExpiredResultTypeFor(levelId),
+            finalStars,
+            buildGameplayResult(
+                stars = finalStars
+            )
+        )
+    }
+
     fun loseLife(
         resetObjectiveTimer: Boolean = true,
         respawnPlayer: Boolean = false
     ) {
+        if (hasFinishedLevel) return
+
         val nextLives = (currentLives - 1).coerceAtLeast(0)
         currentLives = nextLives
 
@@ -259,6 +286,8 @@ fun GamePlaceholderScreen(
     }
 
     fun completeCurrentOrder() {
+        if (hasFinishedLevel) return
+
         val deliveredOrderTime = objectiveElapsedSeconds.coerceAtLeast(0f)
         val nextTotalDeliveryTimeSeconds = totalDeliveryTimeSeconds + deliveredOrderTime
         val nextCompletedOrders = completedOrders + 1
@@ -294,6 +323,8 @@ fun GamePlaceholderScreen(
     }
 
     fun failCurrentOrder() {
+        if (hasFinishedLevel) return
+
         resetCurrentObjectiveTimer()
 
         val isLastOrder = currentOrderIndex >= totalOrders - 1
@@ -369,11 +400,16 @@ fun GamePlaceholderScreen(
         }
     }
 
-    LaunchedEffect(isPaused) {
-        if (!isPaused) {
-            while (true) {
+    LaunchedEffect(isPaused, hasFinishedLevel, currentLives) {
+        if (!isPaused && !hasFinishedLevel && currentLives > 0) {
+            while (!hasFinishedLevel && currentLives > 0) {
                 delay(1000)
                 elapsedSeconds += 1
+
+                if (elapsedSeconds >= GameMapData.LEVEL_MAX_TIME_SECONDS) {
+                    finishLevelByTimeLimit()
+                    break
+                }
             }
         }
     }
@@ -646,6 +682,13 @@ fun GamePlaceholderScreen(
             }
         }.coerceIn(0f, 1f)
 
+        val remainingLevelSeconds = (
+                GameMapData.LEVEL_MAX_TIME_SECONDS - elapsedSeconds
+                ).coerceAtLeast(0)
+
+        val isLevelTimeInDanger = remainingLevelSeconds <=
+                GameMapData.LEVEL_MAX_TIME_DANGER_SECONDS
+
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -674,6 +717,7 @@ fun GamePlaceholderScreen(
                 completedOrders = completedOrders,
                 totalOrders = totalOrders,
                 elapsedSeconds = elapsedSeconds,
+                isLevelTimeInDanger = isLevelTimeInDanger,
                 layout = layout,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -864,6 +908,7 @@ private fun GameTopHud(
     completedOrders: Int,
     totalOrders: Int,
     elapsedSeconds: Int,
+    isLevelTimeInDanger: Boolean,
     layout: GamePlaceholderLayout,
     modifier: Modifier = Modifier
 ) {
@@ -886,11 +931,20 @@ private fun GameTopHud(
             modifier = Modifier.offset(x = (-50).dp)
         ) {
             HudTextChip(
-                drawableId = R.drawable.base_timer,
+                drawableId = if (isLevelTimeInDanger) {
+                    R.drawable.base_timer_peligro
+                } else {
+                    R.drawable.base_timer
+                },
                 value = formatGameTime(elapsedSeconds),
                 width = layout.hudTimerWidth,
                 height = layout.hudHeight,
-                textEndPadding = layout.hudTimerTextEndPadding
+                textEndPadding = layout.hudTimerTextEndPadding,
+                textColor = if (isLevelTimeInDanger) {
+                    SmokeWhite
+                } else {
+                    DarkText
+                }
             )
         }
 
@@ -924,7 +978,8 @@ private fun HudTextChip(
     value: String,
     width: Dp,
     height: Dp,
-    textEndPadding: Dp
+    textEndPadding: Dp,
+    textColor: Color = DarkText
 ) {
     Box(
         modifier = Modifier
@@ -941,7 +996,7 @@ private fun HudTextChip(
 
         Text(
             text = value,
-            color = DarkText,
+            color = textColor,
             fontSize = 17.sp,
             fontFamily = LilitaOne,
             fontWeight = FontWeight.Normal,
@@ -1772,7 +1827,15 @@ private fun failResultTypeFor(
     }
 }
 
-
+private fun timeExpiredResultTypeFor(
+    levelId: Int
+): GameResultType {
+    return when (levelId) {
+        0 -> GameResultType.TUTORIAL_TIME_EXPIRED
+        4 -> GameResultType.FINAL_TIME_EXPIRED
+        else -> GameResultType.LEVEL_TIME_EXPIRED
+    }
+}
 private fun resultTypeForStars(
     levelId: Int,
     stars: Int

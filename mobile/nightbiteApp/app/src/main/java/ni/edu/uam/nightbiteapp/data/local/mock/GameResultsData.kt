@@ -45,6 +45,10 @@ object GameResultsData {
 
             GameResultType.TUTORIAL_FIRED -> tutorialFired()
 
+            GameResultType.TUTORIAL_TIME_EXPIRED -> tutorialTimeExpired(
+                stars = safeStars
+            )
+
             /*
              * Noches 2, 3 y 4
              */
@@ -67,6 +71,11 @@ object GameResultsData {
                 levelId = safeLevelId
             )
 
+            GameResultType.LEVEL_TIME_EXPIRED -> levelTimeExpired(
+                levelId = safeLevelId,
+                stars = safeStars
+            )
+
             /*
              * Noche 5 - Final
              */
@@ -83,6 +92,10 @@ object GameResultsData {
             )
 
             GameResultType.FINAL_OUT_OF_LIVES -> finalOutOfLives()
+
+            GameResultType.FINAL_TIME_EXPIRED -> finalTimeExpired(
+                stars = safeStars
+            )
         }
     }
 
@@ -192,6 +205,33 @@ object GameResultsData {
                 "El restaurante ha terminado tu contrato"
             ),
             illustrationDescription = "Contrato de repartidor marcado como despedido",
+            showContinueButton = false,
+            showRetryButton = true,
+            showHomeButton = true
+        )
+    }
+
+    private fun tutorialTimeExpired(
+        stars: Int
+    ): GameResultContent {
+        val totalOrders = TUTORIAL_TOTAL_ORDERS
+
+        return GameResultContent(
+            title = "Tiempo agotado",
+            subtitle = "La noche avanzó demasiado rápido",
+            message = "Debiste moverte más rápido si querías completar tu primera jornada.",
+            stars = stars.coerceIn(MIN_STARS, MAX_STARS),
+            timeText = "3:00",
+            completedOrders = 0,
+            totalOrders = totalOrders,
+            palette = GameResultPalette.RED,
+            details = listOf(
+                "Tiempo máximo alcanzado: 3:00",
+                "Pedidos entregados: 0/$totalOrders",
+                "Calificación obtenida: ${stars.coerceIn(MIN_STARS, MAX_STARS)} estrellas",
+                "Debes mejorar tu ritmo para sobrevivir a la noche"
+            ),
+            illustrationDescription = "Reloj nocturno marcando el final del turno",
             showContinueButton = false,
             showRetryButton = true,
             showHomeButton = true
@@ -319,6 +359,35 @@ object GameResultsData {
         )
     }
 
+    private fun levelTimeExpired(
+        levelId: Int,
+        stars: Int
+    ): GameResultContent {
+        val totalOrders = totalOrdersForLevel(levelId)
+        val safeStars = stars.coerceIn(MIN_STARS, MAX_STARS)
+
+        return GameResultContent(
+            title = "Tiempo agotado",
+            subtitle = "La noche no espera a nadie",
+            message = "La jornada terminó antes de que pudieras completar la ruta.",
+            stars = safeStars,
+            timeText = "3:00",
+            completedOrders = 0,
+            totalOrders = totalOrders,
+            palette = GameResultPalette.RED,
+            details = listOf(
+                "Noche jugada: ${displayNightNumber(levelId)}",
+                "Tiempo máximo alcanzado: 3:00",
+                "Calificación obtenida: $safeStars estrellas",
+                "Necesitas completar más entregas antes de que termine la noche"
+            ),
+            illustrationDescription = "Reloj nocturno sobre una calle vacía",
+            showContinueButton = false,
+            showRetryButton = true,
+            showHomeButton = true
+        )
+    }
+
     private fun finalWin(
         stars: Int
     ): GameResultContent {
@@ -432,6 +501,35 @@ object GameResultsData {
                 "Calificación obtenida: 0 estrellas"
             ),
             illustrationDescription = "El repartidor perdido dentro de la dimensión alterna",
+            isFinalResult = true,
+            showContinueButton = false,
+            showRetryButton = true,
+            showHomeButton = true
+        )
+    }
+
+    private fun finalTimeExpired(
+        stars: Int
+    ): GameResultContent {
+        val totalOrders = FINAL_TOTAL_ORDERS
+        val safeStars = stars.coerceIn(MIN_STARS, MAX_STARS)
+
+        return GameResultContent(
+            title = "Tiempo agotado",
+            subtitle = "La última noche llegó a su límite",
+            message = "Estuviste cerca de volver a casa, pero la noche terminó antes que tu ruta.",
+            stars = safeStars,
+            timeText = "3:00",
+            completedOrders = 0,
+            totalOrders = totalOrders,
+            palette = GameResultPalette.RED,
+            details = listOf(
+                "Noche jugada: ${displayNightNumber(FINAL_LEVEL_ID)}",
+                "Tiempo máximo alcanzado: 3:00",
+                "Calificación obtenida: $safeStars estrellas",
+                "El repartidor no logró cerrar la jornada final"
+            ),
+            illustrationDescription = "La luna cubierta marcando el final del turno",
             isFinalResult = true,
             showContinueButton = false,
             showRetryButton = true,

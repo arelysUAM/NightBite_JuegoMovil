@@ -74,6 +74,13 @@ import ni.edu.uam.nightbiteapp.ui.components.feedback.JourneyCompletedNotificati
 import ni.edu.uam.nightbiteapp.ui.components.feedback.JourneyCompletedToast
 import ni.edu.uam.nightbiteapp.ui.screens.MoonTransitionScreen
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import kotlinx.coroutines.delay
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 
 @Composable
 fun AppNavigation() {
@@ -158,12 +165,53 @@ fun AppNavigation() {
         mutableStateOf<Set<String>>(emptySet())
     }
 
+    var isNavigationLocked by remember {
+        mutableStateOf(false)
+    }
+
+    fun runLockedNavigation(
+        action: () -> Unit
+    ) {
+        if (isNavigationLocked) return
+
+        isNavigationLocked = true
+        action()
+
+        coroutineScope.launch {
+            delay(720)
+            isNavigationLocked = false
+        }
+    }
+
     fun navigateBackToHome() {
-        navController.navigate(Routes.HOME) {
-            popUpTo(Routes.HOME) {
-                inclusive = false
+        runLockedNavigation {
+            if (navController.currentDestination?.route == Routes.HOME) {
+                return@runLockedNavigation
             }
-            launchSingleTop = true
+
+            navController.navigate(Routes.HOME) {
+                popUpTo(Routes.HOME) {
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
+        }
+    }
+
+    fun navigateFromHomeSingleTop(
+        route: String
+    ) {
+        runLockedNavigation {
+            val currentRoute = navController.currentDestination?.route
+
+            if (currentRoute == route) return@runLockedNavigation
+
+            navController.navigate(route) {
+                popUpTo(Routes.HOME) {
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
         }
     }
 
@@ -262,7 +310,39 @@ fun AppNavigation() {
     ) {
         NavHost(
             navController = navController,
-            startDestination = Routes.START
+            startDestination = Routes.START,
+            enterTransition = {
+                fadeIn(
+                    animationSpec = tween(
+                        durationMillis = 520,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            },
+            exitTransition = {
+                fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 320,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            },
+            popEnterTransition = {
+                fadeIn(
+                    animationSpec = tween(
+                        durationMillis = 520,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            },
+            popExitTransition = {
+                fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 320,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            }
         ) {
         composable(Routes.START) {
             val startViewModel: StartViewModel = viewModel(
@@ -510,10 +590,10 @@ fun AppNavigation() {
                         navController.navigate(Routes.PLAYER_CREATION)
                     },
                     onNavigateToAchievements = {
-                        navController.navigate(Routes.ACHIEVEMENTS)
+                        navigateFromHomeSingleTop(Routes.ACHIEVEMENTS)
                     },
                     onNavigateToSettings = {
-                        navController.navigate(Routes.SETTINGS)
+                        navigateFromHomeSingleTop(Routes.SETTINGS)
                     },
                     onLogout = {
                         activeUserId = null
@@ -577,7 +657,6 @@ fun AppNavigation() {
             )
         ) { backStackEntry ->
             val levelId = backStackEntry.arguments?.getInt("levelId") ?: 0
-            val currentUserId = activeUserId ?: userSession.userId
 
             GamePlaceholderScreen(
                 levelId = levelId,
@@ -897,7 +976,7 @@ fun AppNavigation() {
                 currentLevel = (roomProgress?.maxUnlockedLevel ?: 0) + 1,
                 earnedBadgeLevels = earnedBadgeLevels,
                 onBackToHome = {
-                    navController.popBackStack()
+                    navigateBackToHome()
                 }
             )
         }
@@ -945,7 +1024,7 @@ fun AppNavigation() {
                 SettingsScreen(
                     userSession = userSession,
                     onBackToHome = {
-                        navController.popBackStack()
+                        navigateBackToHome()
                     },
                     onNavigateToAccount = {
                         navController.navigate(Routes.ACCOUNT)
@@ -1107,6 +1186,22 @@ fun AppNavigation() {
                     }
                 )
             }
+        }
+
+        if (isNavigationLocked) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(40f)
+                    .clickable(
+                        interactionSource = remember {
+                            MutableInteractionSource()
+                        },
+                        indication = null
+                    ) {
+                        // Bloquea toques durante la transición.
+                    }
+            )
         }
 
         badgeNotification?.let { notification ->

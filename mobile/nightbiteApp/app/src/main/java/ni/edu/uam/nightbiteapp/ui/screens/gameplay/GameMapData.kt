@@ -34,13 +34,12 @@ object GameMapData {
     // =========================================================
     // TIEMPOS BASE
     // =========================================================
-
-    const val TUTORIAL_TOTAL_ORDERS = 8
-
-    const val PICKUP_TIMEOUT_SECONDS = 10f
     const val SAFE_ZONE_TIMEOUT_SECONDS = 10f
     const val DELIVERY_TIMEOUT_SECONDS = 10f
     const val RETURN_TO_SAFE_ZONE_TIMEOUT_SECONDS = 10f
+
+    const val LEVEL_MAX_TIME_SECONDS = 180
+    const val LEVEL_MAX_TIME_DANGER_SECONDS = 20
 
     const val DELIVERY_TRIGGER_RADIUS = CELL_SIZE * 0.45f
     const val PICKUP_TRIGGER_RADIUS = CELL_SIZE * 0.55f
@@ -292,14 +291,14 @@ object GameMapData {
     )
 
     private val levelOneOrderPattern = listOf(
-        GameOrderTarget(buildingId = 2, deliveryPointIndex = 0),
-        GameOrderTarget(buildingId = 4, deliveryPointIndex = 0),
-        GameOrderTarget(buildingId = 8, deliveryPointIndex = 0),
-        GameOrderTarget(buildingId = 11, deliveryPointIndex = 0),
+        GameOrderTarget(buildingId = 1, deliveryPointIndex = 0),
         GameOrderTarget(buildingId = 14, deliveryPointIndex = 0),
-        GameOrderTarget(buildingId = 15, deliveryPointIndex = 0),
+        GameOrderTarget(buildingId = 5, deliveryPointIndex = 1),
         GameOrderTarget(buildingId = 6, deliveryPointIndex = 0),
-        GameOrderTarget(buildingId = 9, deliveryPointIndex = 0)
+        GameOrderTarget(buildingId = 12, deliveryPointIndex = 0),
+        GameOrderTarget(buildingId = 10, deliveryPointIndex = 0),
+        GameOrderTarget(buildingId = 11, deliveryPointIndex = 0),
+        GameOrderTarget(buildingId = 16, deliveryPointIndex = 1)
     )
 
     private val levelTwoOrderPattern = listOf(

@@ -49,7 +49,6 @@ import ni.edu.uam.nightbiteapp.ui.theme.AchievementsTitlePurple
 import ni.edu.uam.nightbiteapp.ui.theme.LilitaOne
 import ni.edu.uam.nightbiteapp.ui.theme.NightSurface
 import ni.edu.uam.nightbiteapp.ui.theme.SmokeWhite
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -58,6 +57,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun AchievementsScreen(
@@ -455,136 +456,141 @@ private fun AchievementRecordInfoDialog(
     record: AchievementRecord,
     onClose: () -> Unit
 ) {
-    BackHandler {
-        onClose()
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0x880B1026))
-            .clickable(
-                interactionSource = remember {
-                    MutableInteractionSource()
-                },
-                indication = null
-            ) {
-                onClose()
-            },
-        contentAlignment = Alignment.Center
+    Dialog(
+        onDismissRequest = onClose,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+            usePlatformDefaultWidth = false
+        )
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .width(430.dp)
-                .clip(RoundedCornerShape(30.dp))
-                .background(AchievementsItemBlue)
-                .border(
-                    width = 6.dp,
-                    color = AchievementsTitlePurple,
-                    shape = RoundedCornerShape(30.dp)
-                )
+                .fillMaxSize()
+                .background(Color(0x990B1026))
                 .clickable(
                     interactionSource = remember {
                         MutableInteractionSource()
                     },
                     indication = null
                 ) {
-                    // Evita que tocar dentro del cuadro cierre el dialog.
-                }
-                .padding(
-                    horizontal = 28.dp,
-                    vertical = 24.dp
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally
+                    onClose()
+                },
+            contentAlignment = Alignment.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Información del logro",
-                    tint = SmokeWhite,
-                    modifier = Modifier.size(42.dp)
-                )
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Text(
-                    text = record.name,
-                    color = SmokeWhite,
-                    fontSize = 28.sp,
-                    fontFamily = LilitaOne,
-                    fontWeight = FontWeight.Normal,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Box(
+            Column(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
+                    .width(430.dp)
+                    .clip(RoundedCornerShape(30.dp))
+                    .background(AchievementsItemBlue)
                     .border(
-                        width = 2.dp,
-                        color = SmokeWhite.copy(alpha = 0.55f),
-                        shape = RoundedCornerShape(8.dp)
+                        width = 6.dp,
+                        color = AchievementsTitlePurple,
+                        shape = RoundedCornerShape(30.dp)
                     )
-                    .padding(
-                        horizontal = 42.dp,
-                        vertical = 7.dp
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = record.scopeLabel,
-                    color = SmokeWhite,
-                    fontSize = 17.sp,
-                    fontFamily = LilitaOne,
-                    fontWeight = FontWeight.Normal,
-                    letterSpacing = 1.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = record.description,
-                color = SmokeWhite,
-                fontSize = 18.sp,
-                fontFamily = LilitaOne,
-                fontWeight = FontWeight.Normal,
-                textAlign = TextAlign.Center,
-                lineHeight = 23.sp
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            Box(
-                modifier = Modifier
-                    .width(210.dp)
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(50.dp))
-                    .background(AchievementsTitlePurple)
                     .clickable(
                         interactionSource = remember {
                             MutableInteractionSource()
                         },
                         indication = null
                     ) {
-                        onClose()
-                    },
-                contentAlignment = Alignment.Center
+                        // Evita que tocar dentro del cuadro cierre el dialog.
+                    }
+                    .padding(
+                        horizontal = 28.dp,
+                        vertical = 24.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Información del logro",
+                        tint = SmokeWhite,
+                        modifier = Modifier.size(42.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Text(
+                        text = record.name,
+                        color = SmokeWhite,
+                        fontSize = 28.sp,
+                        fontFamily = LilitaOne,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(
+                            width = 2.dp,
+                            color = SmokeWhite.copy(alpha = 0.55f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(
+                            horizontal = 42.dp,
+                            vertical = 7.dp
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = record.scopeLabel,
+                        color = SmokeWhite,
+                        fontSize = 17.sp,
+                        fontFamily = LilitaOne,
+                        fontWeight = FontWeight.Normal,
+                        letterSpacing = 1.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
-                    text = "Cerrar",
+                    text = record.description,
                     color = SmokeWhite,
                     fontSize = 18.sp,
                     fontFamily = LilitaOne,
                     fontWeight = FontWeight.Normal,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    lineHeight = 23.sp
                 )
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                Box(
+                    modifier = Modifier
+                        .width(210.dp)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(AchievementsTitlePurple)
+                        .clickable(
+                            interactionSource = remember {
+                                MutableInteractionSource()
+                            },
+                            indication = null
+                        ) {
+                            onClose()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Cerrar",
+                        color = SmokeWhite,
+                        fontSize = 18.sp,
+                        fontFamily = LilitaOne,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
