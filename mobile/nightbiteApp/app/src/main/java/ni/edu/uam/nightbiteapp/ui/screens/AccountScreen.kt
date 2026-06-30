@@ -48,6 +48,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,7 +81,6 @@ import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.preferences.GameplayPreferences
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.zIndex
-
 @Composable
 fun AccountScreen(
     userSession: UserSession,
@@ -215,9 +217,6 @@ fun AccountScreen(
                 onCancelClick = viewModel::onCancelEditingClick,
                 onSaveClick = viewModel::onSaveChangesClick
             )
-            if (isResetProgressBlocking && !uiState.showProgressResetSuccessDialog) {
-                AccountResetLoadingOverlay()
-            }
         }
 
         AccountDialogs(
@@ -266,70 +265,74 @@ fun AccountScreen(
             onDismissInvalidData = viewModel::dismissInvalidDataDialog
         )
     }
+
+    if (isResetProgressBlocking && !uiState.showProgressResetSuccessDialog) {
+        AccountResetLoadingDialog()
+    }
 }
 
 @Composable
-private fun AccountResetLoadingOverlay() {
-    val interactionSource = remember {
-        MutableInteractionSource()
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .zIndex(20f)
-            .background(Color.Black.copy(alpha = 0.58f))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) {
-                // Bloquea cualquier toque mientras reinicia.
-            },
-        contentAlignment = Alignment.Center
+private fun AccountResetLoadingDialog() {
+    Dialog(
+        onDismissRequest = {
+            // No se puede cerrar tocando afuera.
+        },
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false
+        )
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .width(260.dp)
-                .clip(NightShapes.panel)
-                .background(AccountPanelBlue)
-                .border(
-                    width = 3.dp,
-                    color = AccountBorderBlue,
-                    shape = NightShapes.panel
-                )
-                .padding(
-                    horizontal = 26.dp,
-                    vertical = 24.dp
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .fillMaxSize()
+                .background(Color(0xAA0B1026)),
+            contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(
-                color = CheeseYellow,
-                strokeWidth = 4.dp,
-                modifier = Modifier.size(52.dp)
-            )
+            Column(
+                modifier = Modifier
+                    .width(330.dp)
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(AccountPanelBlue)
+                    .border(
+                        width = 4.dp,
+                        color = AccountBorderBlue,
+                        shape = RoundedCornerShape(28.dp)
+                    )
+                    .padding(
+                        horizontal = 30.dp,
+                        vertical = 28.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(
+                    color = CheeseYellow,
+                    strokeWidth = 5.dp,
+                    modifier = Modifier.size(64.dp)
+                )
 
-            Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(22.dp))
 
-            Text(
-                text = "Reiniciando progreso...",
-                color = SmokeWhite,
-                fontSize = 18.sp,
-                fontFamily = LilitaOne,
-                fontWeight = FontWeight.Normal,
-                textAlign = TextAlign.Center
-            )
+                Text(
+                    text = "Reiniciando progreso...",
+                    color = SmokeWhite,
+                    fontSize = 22.sp,
+                    fontFamily = LilitaOne,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center
+                )
 
-            Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = "Espera un momento",
-                color = SmokeWhite.copy(alpha = 0.85f),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
+                Text(
+                    text = "Espera un momento",
+                    color = SmokeWhite.copy(alpha = 0.86f),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
