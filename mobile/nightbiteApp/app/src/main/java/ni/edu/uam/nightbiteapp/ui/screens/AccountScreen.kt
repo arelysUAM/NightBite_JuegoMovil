@@ -76,6 +76,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 import ni.edu.uam.nightbiteapp.data.local.preferences.GameplayPreferences
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.zIndex
 
 @Composable
 fun AccountScreen(
@@ -118,8 +120,12 @@ fun AccountScreen(
         mutableStateOf(false)
     }
 
+    var isResetProgressBlocking by remember {
+        mutableStateOf(false)
+    }
+
     fun requestBack() {
-        if (isLeavingAccount) return
+        if (isLeavingAccount || isResetProgressBlocking) return
 
         if (uiState.isEditing) {
             viewModel.onBackAttempt(
@@ -133,6 +139,23 @@ fun AccountScreen(
 
     BackHandler {
         requestBack()
+    }
+
+    LaunchedEffect(
+        uiState.isLoading,
+        uiState.showProgressResetSuccessDialog,
+        uiState.errorMessage
+    ) {
+        val resetFinished =
+            !uiState.isLoading &&
+                    (
+                            uiState.showProgressResetSuccessDialog ||
+                                    uiState.errorMessage != null
+                            )
+
+        if (isResetProgressBlocking && resetFinished) {
+            isResetProgressBlocking = false
+        }
     }
 
     NightScreenContainer(
@@ -159,7 +182,9 @@ fun AccountScreen(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .size(dimensions.iconButtonSize)
-                    .clickable {
+                    .clickable(
+                        enabled = !isResetProgressBlocking
+                    ) {
                         requestBack()
                     },
                 contentScale = ContentScale.Fit
@@ -190,6 +215,9 @@ fun AccountScreen(
                 onCancelClick = viewModel::onCancelEditingClick,
                 onSaveClick = viewModel::onSaveChangesClick
             )
+            if (isResetProgressBlocking && !uiState.showProgressResetSuccessDialog) {
+                AccountResetLoadingOverlay()
+            }
         }
 
         AccountDialogs(
@@ -217,12 +245,16 @@ fun AccountScreen(
             onDismissExit = viewModel::dismissExitConfirmationDialog,
 
             onConfirmResetProgress = {
+                isResetProgressBlocking = true
+
                 viewModel.confirmResetProgress(
                     userId = userSession.userId
                 )
             },
             onDismissResetProgress = viewModel::dismissResetProgressDialog,
             onProgressResetSuccessConfirm = {
+                isResetProgressBlocking = true
+
                 coroutineScope.launch {
                     GameplayPreferences.resetControlsLayoutToDefault(context)
 
@@ -233,6 +265,72 @@ fun AccountScreen(
             },
             onDismissInvalidData = viewModel::dismissInvalidDataDialog
         )
+    }
+}
+
+@Composable
+private fun AccountResetLoadingOverlay() {
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(20f)
+            .background(Color.Black.copy(alpha = 0.58f))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
+                // Bloquea cualquier toque mientras reinicia.
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .width(260.dp)
+                .clip(NightShapes.panel)
+                .background(AccountPanelBlue)
+                .border(
+                    width = 3.dp,
+                    color = AccountBorderBlue,
+                    shape = NightShapes.panel
+                )
+                .padding(
+                    horizontal = 26.dp,
+                    vertical = 24.dp
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator(
+                color = CheeseYellow,
+                strokeWidth = 4.dp,
+                modifier = Modifier.size(52.dp)
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Text(
+                text = "Reiniciando progreso...",
+                color = SmokeWhite,
+                fontSize = 18.sp,
+                fontFamily = LilitaOne,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Espera un momento",
+                color = SmokeWhite.copy(alpha = 0.85f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

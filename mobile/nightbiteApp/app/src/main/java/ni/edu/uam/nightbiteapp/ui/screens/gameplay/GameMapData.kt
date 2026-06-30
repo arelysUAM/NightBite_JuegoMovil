@@ -38,9 +38,9 @@ object GameMapData {
     const val TUTORIAL_TOTAL_ORDERS = 8
 
     const val PICKUP_TIMEOUT_SECONDS = 10f
-    const val SAFE_ZONE_TIMEOUT_SECONDS = 6f
-    const val DELIVERY_TIMEOUT_SECONDS = 6f
-    const val RETURN_TO_SAFE_ZONE_TIMEOUT_SECONDS = 8f
+    const val SAFE_ZONE_TIMEOUT_SECONDS = 10f
+    const val DELIVERY_TIMEOUT_SECONDS = 10f
+    const val RETURN_TO_SAFE_ZONE_TIMEOUT_SECONDS = 10f
 
     const val DELIVERY_TRIGGER_RADIUS = CELL_SIZE * 0.45f
     const val PICKUP_TRIGGER_RADIUS = CELL_SIZE * 0.55f

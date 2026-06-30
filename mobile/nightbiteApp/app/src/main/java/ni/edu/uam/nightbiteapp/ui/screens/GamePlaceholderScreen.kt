@@ -268,28 +268,37 @@ fun GamePlaceholderScreen(
 
         resetCurrentObjectiveTimer()
 
-        if (nextCompletedOrders >= totalOrders) {
+        val isLastOrder = currentOrderIndex >= totalOrders - 1
+
+        if (isLastOrder) {
+            val finalStars = starsForCompletedOrders(
+                completedOrders = nextCompletedOrders,
+                totalOrders = totalOrders
+            )
+
             onNavigateToResult(
-                successResultTypeFor(levelId),
-                3,
+                resultTypeForStars(
+                    levelId = levelId,
+                    stars = finalStars
+                ),
+                finalStars,
                 buildGameplayResult(
-                    stars = 3,
+                    stars = finalStars,
                     completedOrdersOverride = nextCompletedOrders,
                     totalDeliveryTimeSecondsOverride = nextTotalDeliveryTimeSeconds
                 )
             )
         } else {
             objectiveMode = MapObjectiveMode.RETURN_TO_SAFE_ZONE
-            objectiveElapsedSeconds = 0f
-            safeZoneElapsedSeconds = 0f
-            returnToSafeZoneElapsedSeconds = 0f
         }
     }
 
     fun failCurrentOrder() {
         resetCurrentObjectiveTimer()
 
-        if (currentOrderIndex >= totalOrders - 1) {
+        val isLastOrder = currentOrderIndex >= totalOrders - 1
+
+        if (isLastOrder) {
             val finalStars = starsForCompletedOrders(
                 completedOrders = completedOrders,
                 totalOrders = totalOrders
@@ -373,8 +382,7 @@ fun GamePlaceholderScreen(
         isPaused,
         objectiveMode,
         currentOrderIndex,
-        currentLives,
-        playerMovementState.position
+        currentLives
     ) {
         if (!isPaused && currentLives > 0) {
             while (true) {
@@ -433,50 +441,21 @@ fun GamePlaceholderScreen(
 
                         returnToSafeZoneElapsedSeconds += 0.1f
 
-                        if (returnToSafeZoneElapsedSeconds >= GameMapData.RETURN_TO_SAFE_ZONE_TIMEOUT_SECONDS) {
+                        if (
+                            returnToSafeZoneElapsedSeconds >=
+                            GameMapData.RETURN_TO_SAFE_ZONE_TIMEOUT_SECONDS
+                        ) {
+                            val shouldContinueAfterLifeLoss = currentLives > 1
+
                             loseLife(
                                 resetObjectiveTimer = true,
                                 respawnPlayer = true
                             )
 
-                            if (currentLives > 1) {
+                            if (shouldContinueAfterLifeLoss) {
                                 moveToNextPickupAfterSafeZoneReturn()
                             }
 
-                            break
-                        }
-                    }
-
-                    MapObjectiveMode.GO_TO_DELIVERY -> {
-                        safeZoneElapsedSeconds = 0f
-                        returnToSafeZoneElapsedSeconds = 0f
-
-                        objectiveElapsedSeconds += 0.1f
-
-                        if (objectiveElapsedSeconds >= GameMapData.DELIVERY_TIMEOUT_SECONDS) {
-                            failCurrentOrder()
-                            break
-                        }
-                    }
-
-                    MapObjectiveMode.RETURN_TO_SAFE_ZONE -> {
-                        objectiveElapsedSeconds = 0f
-                        safeZoneElapsedSeconds = 0f
-
-                        if (isInSafeZone) {
-                            moveToNextPickupAfterSafeZoneReturn()
-                            break
-                        }
-
-                        returnToSafeZoneElapsedSeconds += 0.1f
-
-                        if (returnToSafeZoneElapsedSeconds >= GameMapData.RETURN_TO_SAFE_ZONE_TIMEOUT_SECONDS) {
-                            loseLife(
-                                resetObjectiveTimer = true,
-                                respawnPlayer = true
-                            )
-
-                            moveToNextPickupAfterSafeZoneReturn()
                             break
                         }
                     }

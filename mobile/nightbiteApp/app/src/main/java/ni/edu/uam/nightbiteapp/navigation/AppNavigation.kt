@@ -70,6 +70,10 @@ import androidx.compose.ui.zIndex
 import ni.edu.uam.nightbiteapp.ui.components.feedback.BadgeUnlockedNotification
 import ni.edu.uam.nightbiteapp.ui.components.feedback.BadgeUnlockedToast
 import ni.edu.uam.nightbiteapp.data.local.entity.BadgeEntity
+import ni.edu.uam.nightbiteapp.ui.components.feedback.JourneyCompletedNotification
+import ni.edu.uam.nightbiteapp.ui.components.feedback.JourneyCompletedToast
+import ni.edu.uam.nightbiteapp.ui.screens.MoonTransitionScreen
+import androidx.compose.runtime.saveable.rememberSaveable
 
 @Composable
 fun AppNavigation() {
@@ -142,6 +146,14 @@ fun AppNavigation() {
         mutableStateOf<BadgeUnlockedNotification?>(null)
     }
 
+    var journeyCompletedNotification by remember {
+        mutableStateOf<JourneyCompletedNotification?>(null)
+    }
+
+    var hasShownCheeseMoonTransition by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     var shownBadgeNotificationKeys by remember {
         mutableStateOf<Set<String>>(emptySet())
     }
@@ -152,6 +164,31 @@ fun AppNavigation() {
                 inclusive = false
             }
             launchSingleTop = true
+        }
+    }
+
+    fun navigateToLevelIntroWithTransition(
+        levelId: Int
+    ) {
+        val shouldShowCheeseMoon =
+            levelId == 1 && !hasShownCheeseMoonTransition
+
+        if (shouldShowCheeseMoon) {
+            hasShownCheeseMoonTransition = true
+
+            navController.navigate(Routes.cheeseMoonTransition(levelId)) {
+                popUpTo(Routes.HOME) {
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
+        } else {
+            navController.navigate(Routes.levelIntro(levelId)) {
+                popUpTo(Routes.HOME) {
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
         }
     }
 
@@ -279,6 +316,46 @@ fun AppNavigation() {
                 }
             )
         }
+
+            composable(Routes.NORMAL_WORLD_RETURN) {
+                MoonTransitionScreen(
+                    message = "Volviendo al inicio...",
+                    framePrefix = "luna_normal",
+                    firstFrame = 27,
+                    lastFrame = 1,
+                    durationMillis = 3000L,
+                    onFinished = {
+                        navigateBackToHome()
+                    }
+                )
+            }
+
+            composable(
+                route = Routes.CHEESE_MOON_TRANSITION,
+                arguments = listOf(
+                    navArgument("levelId") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStackEntry ->
+                val levelId = backStackEntry.arguments?.getInt("levelId") ?: 1
+
+                MoonTransitionScreen(
+                    message = "Sobrevive la jornada completa...",
+                    framePrefix = "luna_queso",
+                    firstFrame = 1,
+                    lastFrame = 26,
+                    durationMillis = 3000L,
+                    onFinished = {
+                        navController.navigate(Routes.levelIntro(levelId)) {
+                            popUpTo(Routes.CHEESE_MOON_TRANSITION) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
 
         composable(Routes.LOGIN) {
             LoginScreen(
@@ -426,12 +503,7 @@ fun AppNavigation() {
                                 launchSingleTop = true
                             }
                         } else {
-                            navController.navigate(Routes.levelIntro(levelId)) {
-                                popUpTo(Routes.HOME) {
-                                    inclusive = false
-                                }
-                                launchSingleTop = true
-                            }
+                            navigateToLevelIntroWithTransition(levelId)
                         }
                     },
                     onNavigateToPlayerCreation = {
@@ -777,18 +849,18 @@ fun AppNavigation() {
                         saveAndUnlockResultProgress()
 
                         if (resultType == GameResultType.FINAL_WIN) {
-                            navigateBackToHome()
-                        } else if (shouldUnlockNextLevel) {
-                            val nextLevelId = levelId + 1
+                            journeyCompletedNotification = JourneyCompletedNotification()
 
-                            navController.navigate(
-                                Routes.levelIntro(nextLevelId)
-                            ) {
+                            navController.navigate(Routes.NORMAL_WORLD_RETURN) {
                                 popUpTo(Routes.HOME) {
                                     inclusive = false
                                 }
                                 launchSingleTop = true
                             }
+                        } else if (shouldUnlockNextLevel) {
+                            val nextLevelId = levelId + 1
+
+                            navigateToLevelIntroWithTransition(nextLevelId)
                         } else {
                             navigateBackToHome()
                         }
@@ -1047,6 +1119,20 @@ fun AppNavigation() {
                     .zIndex(50f),
                 onFinished = {
                     badgeNotification = null
+                }
+            )
+        }
+
+        journeyCompletedNotification?.let { notification ->
+            JourneyCompletedToast(
+                notification = notification,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 62.dp)
+                    .offset(x = 70.dp)
+                    .zIndex(51f),
+                onFinished = {
+                    journeyCompletedNotification = null
                 }
             )
         }

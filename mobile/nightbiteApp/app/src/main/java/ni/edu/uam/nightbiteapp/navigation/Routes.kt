@@ -10,6 +10,11 @@ object Routes {
     const val REGISTER = "register"
     const val REGISTER_WITH_AGE = "register/{age}"
 
+    const val NORMAL_WORLD_RETURN = "normal_world_return"
+
+    const val CHEESE_MOON_TRANSITION =
+        "cheese_moon_transition/{levelId}"
+
     const val GENDER_SELECTION = "gender_selection"
 
     const val HOME = "home"
@@ -30,6 +35,12 @@ object Routes {
         "wanted_poster_transition/{levelId}/{resultType}/{stars}"
 
     const val GAME_RESULT = "game_result/{levelId}/{resultType}/{stars}"
+
+    fun cheeseMoonTransition(
+        levelId: Int
+    ): String {
+        return "cheese_moon_transition/${levelId.coerceIn(0, 4)}"
+    }
 
     fun registerWithAge(
         age: Int
