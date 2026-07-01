@@ -1,161 +1,189 @@
 # NightBite
 
-NightBite es un videojuego móvil 2D de terror psicológico y comedia desarrollado para la clase de POO II.
+**NightBite** es un videojuego móvil 2D desarrollado en Android Studio.
 
-El jugador toma el papel de un repartidor nocturno atrapado en una dimensión paranormal después de aceptar un pedido extraño dentro de una aplicación de delivery. Durante la partida, deberá completar entregas, evitar monstruos y trampas, acumular puntaje y sobrevivir antes de que termine el tiempo.
+El jugador toma el papel de un repartidor nocturno que queda atrapado en una dimensión paranormal después de aceptar un pedido extraño. Para sobrevivir, debe completar entregas durante distintas jornadas nocturnas, evitar enemigos, administrar el tiempo y regresar al restaurante cuando sea necesario.
+
+El juego combina una estética nocturna tipo arcade con elementos de terror ligero, comedia y mecánicas de entrega bajo presión.
+
+---
 
 ## Género
 
-Terror psicológico • Arcade • Comedia • Exploración 2D
+Arcade • Exploración 2D • Juego móvil
+
+---
 
 ## Plataforma
 
 Android
 
-## Descripción general del proyecto
+La aplicación está diseñada principalmente para jugarse en orientación horizontal.
 
-El proyecto se organiza como una aplicación cliente-servidor:
+---
 
-* El frontend móvil se desarrolla en Android Studio.
-* El backend se desarrolla con Spring Boot en IntelliJ IDEA.
-* La base de datos utiliza PostgreSQL.
-* La app móvil consume la API mediante Retrofit.
-* Room se utiliza para almacenamiento local en el dispositivo.
-* La lógica del videojuego incluye movimiento del jugador, pedidos, puntaje, vidas, tiempo límite e inteligencia artificial básica para los monstruos.
+## Descripción general
+
+NightBite funciona como una aplicación móvil con lógica de juego, almacenamiento local y conexión con backend.
+
+La app permite registrar usuarios, iniciar sesión, seleccionar datos iniciales del jugador, jugar diferentes jornadas, guardar progreso local, desbloquear niveles, obtener estrellas, visualizar insignias y consultar logros.
+
+El progreso del jugador se guarda principalmente de forma local usando **Room**, mientras que la sesión y preferencias del juego se manejan con **DataStore**.
+
+---
+
+## Historia del juego
+
+El jugador trabaja como repartidor nocturno. Durante una noche aparentemente normal, acepta un pedido extraño desde una aplicación de delivery y termina atrapado en una dimensión paranormal.
+
+Para avanzar, debe completar jornadas de reparto entre las 12:00 a.m. y las 3:00 a.m., enfrentándose a amenazas cada vez más extrañas. El objetivo es sobrevivir, completar los pedidos y encontrar la forma de volver a casa.
+
+---
+
+## Mecánicas principales
+
+- Movimiento del jugador en un mapa 2D.
+- Zona segura ubicada en el restaurante.
+- Recogida de pedidos en el restaurante.
+- Entrega de pedidos en edificios del mapa.
+- Sistema de vidas.
+- Sistema de estrellas según pedidos completados.
+- Tiempo límite por pedido.
+- Tiempo límite para permanecer en la zona segura.
+- Tiempo límite para regresar al restaurante después de entregar.
+- Tiempo máximo general por nivel.
+- Enemigos con rutas y comportamiento básico.
+- Colisión con enemigos.
+- Desbloqueo progresivo de jornadas.
+- Pantalla de resultados.
+- Insignias por completar jornadas con 3 estrellas.
+- Logros informativos dentro de la pantalla de logros.
+- Preferencias de controles y opciones del juego.
+
+---
+
+## Jornadas disponibles
+
+El juego está dividido en cinco jornadas principales:
+
+| Nivel interno | Jornada visual | Nombre |
+|--------------|----------------|--------|
+| 0 | Tutorial | Tutorial |
+| 1 | Jornada 2 | Sombras errantes |
+| 2 | Jornada 3 | Lobos callejeros |
+| 3 | Jornada 4 | Clientes deformes |
+| 4 | Jornada 5 | Repartidores perdidos |
+
+El tutorial introduce la lógica básica del juego. Las jornadas posteriores agregan más dificultad, enemigos y rutas de entrega más exigentes.
+
+---
+
+## Sistema de progreso
+
+El progreso se guarda localmente mediante Room.
+
+Cada jornada registra:
+
+- Nivel desbloqueado.
+- Cantidad de estrellas obtenidas.
+- Pedidos completados.
+- Mejor resultado alcanzado.
+- Insignias desbloqueadas.
+
+Las estrellas se calculan según la cantidad de pedidos completados durante la jornada. El resultado máximo obtenido en un nivel se conserva, por lo que una partida posterior con menor puntuación no reduce el progreso anterior.
+
+---
+
+## Sistema de resultados
+
+Al finalizar una jornada, el jugador puede obtener distintos resultados dependiendo de su desempeño:
+
+- Victoria con 3 estrellas.
+- Victoria parcial.
+- Jornada incompleta.
+- Derrota por quedarse sin vidas.
+- Derrota por agotarse el tiempo máximo del nivel.
+
+La pantalla de resultados muestra:
+
+- Estrellas obtenidas.
+- Pedidos entregados.
+- Tiempo usado.
+- Mensaje narrativo según el resultado.
+- Opciones para continuar, reintentar o volver al inicio.
+
+---
 
 ## Tecnologías principales
 
-### Frontend móvil
+### Aplicación móvil
 
-* Android Studio
-* Kotlin
-* Jetpack Compose
-* Material Design
-* Retrofit
-* Room
-* LibGDX
-* Tiled Map Editor
+- Android Studio
+- Kotlin
+- Jetpack Compose
+- Navigation Compose
+- Room
+- DataStore
+- Retrofit
+- Material 3
 
 ### Backend
 
-* IntelliJ IDEA
-* Java
-* Spring Boot
-* Spring Web
-* Spring Data JPA
-* PostgreSQL Driver
-* Lombok
-* Maven
+- Java
+- Spring Boot
+- Spring Web
+- Spring Data JPA
+- Maven
+- API REST
 
-### Base de datos
+### Herramientas
 
-* PostgreSQL
+- Git
+- GitHub
+- Postman
+- Android Emulator
+- Dispositivo Android físico para pruebas
 
-### Herramientas de prueba y documentación
+### Pantallas principales
+- Pantalla de inicio.
+- Pantalla de inicio de sesión.
+- Pantalla de registro.
+- Verificación de edad.
+- Selección inicial del jugador.
+- Pantalla principal del juego.
+- Introducción de nivel.
+- Pantalla jugable.
+- Pantalla de resultados.
+- Pantalla de configuración.
+- Pantalla de cuenta.
+- Pantalla de logros e insignias.
 
-* Postman
-* GitHub
-* Git
+### Almacenamiento local
+NightBite utiliza almacenamiento local para permitir que el progreso del jugador se conserve en el dispositivo.
 
-## Estructura del repositorio
+Se utiliza:
+- Room para progreso, niveles, insignias y datos relacionados al juego.
+- DataStore para sesión activa y preferencias del usuario.
 
-```text
-NightBite_JuegoMovil/
-│
-├── assets_design/
-│   └── Recursos visuales, bocetos, referencias, personajes, mapas y elementos gráficos del proyecto.
-│
-├── backend/
-│   └── Proyecto de API REST desarrollado con Spring Boot en IntelliJ IDEA.
-│
-├── database/
-│   └── Scripts SQL, modelo de base de datos, inserts de prueba y diagramas relacionados con PostgreSQL.
-│
-├── docs/
-│   └── Documentación del proyecto, avances, manual técnico, manual de usuario, diagramas y evidencias.
-│
-├── mobile/
-│   └── Proyecto móvil desarrollado en Android Studio.
-│
-├── .gitignore
-│   └── Archivo para excluir configuraciones locales, archivos generados, builds y datos sensibles.
-│
-└── README.md
-    └── Descripción general del proyecto y estructura del repositorio.
-```
+### Conexión con backend
+La aplicación puede comunicarse con una API REST desarrollada en Spring Boot mediante Retrofit. El backend se utiliza para operaciones como:
+- Registro de usuarios.
+- Inicio de sesión.
+- Gestión de datos de cuenta.
+- Creación y actualización de información del jugador.
 
-## Explicación de carpetas
-
-### `assets_design/`
-
-Contiene recursos de diseño que sirven como apoyo visual para el proyecto. Aquí pueden almacenarse bocetos, imágenes de referencia, diseños de personajes, mapas preliminares, paleta de colores y elementos gráficos antes de integrarlos al proyecto móvil.
-
-### `backend/`
-
-Contiene la API REST del proyecto. Esta API se encargará de gestionar los datos del jugador, progreso, puntajes y otra información que deba guardarse en la base de datos.
-
-El backend se desarrolla con Spring Boot y se conecta a PostgreSQL mediante Spring Data JPA.
-
-### `database/`
-
-Contiene los scripts relacionados con la base de datos PostgreSQL. Aquí se pueden guardar archivos como:
-
-* creación de tablas;
-* inserts de prueba;
-* consultas SQL;
-* diagramas entidad-relación;
-* respaldo de estructura de base de datos.
-
-### `docs/`
-
-Contiene la documentación académica y técnica del proyecto. Esta carpeta puede incluir:
-
-* propuesta del proyecto;
-* diagramas de arquitectura;
-* diagramas de flujo;
-* avances semanales;
-* capturas de evidencia;
-* manual técnico;
-* manual de usuario.
-
-### `mobile/`
-
-Contiene el frontend móvil del videojuego. Este proyecto se desarrolla en Android Studio y representa la aplicación que usará el jugador.
-
-Aquí se implementan las pantallas, navegación, conexión con la API mediante Retrofit, almacenamiento local con Room y la lógica del juego.
-
-## Arquitectura general
-
-```text
-Aplicación Android
-        ↓
-Retrofit
-        ↓
-API REST Spring Boot
-        ↓
-Spring Data JPA
-        ↓
-PostgreSQL
-```
-
-Room se utiliza como almacenamiento local dentro del dispositivo para guardar datos temporales o progreso local, especialmente cuando no haya conexión inmediata con el backend.
-
-## Funcionalidades principales esperadas
-
-* Registro e inicio de sesión del jugador.
-* Consulta y guardado del progreso.
-* Registro de puntajes.
-* Ranking o historial de partidas.
-* Juego 2D tipo arcade.
-* Sistema de vidas.
-* Tiempo límite por partida.
-* Entregas de pedidos.
-* Monstruos con inteligencia artificial básica.
-* Trampas dentro del mapa.
-* Puntaje acumulativo según entregas realizadas.
-
-## Estado del proyecto
-
-Proyecto en desarrollo.
-
-Actualmente se está organizando la estructura base del repositorio, separando frontend móvil, backend, base de datos, documentación y recursos de diseño.
+###Estado actual del proyecto
+Actualmente cuenta con:
+- Flujo de registro e inicio de sesión.
+- Persistencia de sesión.
+- Progreso local con Room.
+- Pantalla principal con niveles desbloqueables.
+- Gameplay funcional en mapa 2D.
+- Sistema de pedidos.
+- Sistema de vidas.
+- Sistema de estrellas.
+- Enemigos por nivel.
+- Pantalla de resultados.
+- Insignias desbloqueables.
+- Pantalla de logros.
+- Configuraciones básicas del juego.
