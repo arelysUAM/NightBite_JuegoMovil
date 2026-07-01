@@ -172,7 +172,7 @@ La aplicación puede comunicarse con una API REST desarrollada en Spring Boot me
 - Gestión de datos de cuenta.
 - Creación y actualización de información del jugador.
 
-###Estado actual del proyecto
+### Estado actual del proyecto
 Actualmente cuenta con:
 - Flujo de registro e inicio de sesión.
 - Persistencia de sesión.
